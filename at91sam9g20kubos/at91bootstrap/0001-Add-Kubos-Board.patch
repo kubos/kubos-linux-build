@@ -1,0 +1,1840 @@
+From b04fe6ffd39944095202f499d1268d08af7aad09 Mon Sep 17 00:00:00 2001
+From: Wenyou Yang <wenyou.yang@atmel.com>
+Date: Mon, 26 Sep 2016 13:43:47 +0800
+Subject: [PATCH 01/20] driver: load_kernel: Add board_override_cmd_line() weak
+ version
+
+Define the char *board_override_cmd_line() with the weak attribute
+to fix the linking failure in the case when the board doesn't
+provide this function definition, and the CONFIG_OVERRIDE_CMDLINE
+option being set.
+
+Reported-by: Jens Thoms Toerring <jt@toerring.de>
+Signed-off-by: Wenyou Yang <wenyou.yang@atmel.com>
+---
+ driver/load_kernel.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/driver/load_kernel.c b/driver/load_kernel.c
+index fbdb094..ed4ecec 100644
+--- a/driver/load_kernel.c
++++ b/driver/load_kernel.c
+@@ -42,7 +42,7 @@
+ 
+ #include "debug.h"
+ 
+-static char *bootargs = CMDLINE;
++static char *bootargs;
+ 
+ #ifdef CONFIG_OF_LIBFDT
+ 
+@@ -341,6 +341,11 @@ static int load_kernel_image(struct image_info *image)
+ 	return 0;
+ }
+ 
++__attribute__((weak)) char *board_override_cmd_line(void)
++{
++	return CMDLINE;
++}
++
+ int load_kernel(struct image_info *image)
+ {
+ 	unsigned char *addr;
+@@ -351,9 +356,7 @@ int load_kernel(struct image_info *image)
+ 
+ 	void (*kernel_entry)(int zero, int arch, unsigned int params);
+ 
+-#ifdef CONFIG_OVERRIDE_CMDLINE
+ 	bootargs = board_override_cmd_line();
+-#endif
+ 
+ 	ret = load_kernel_image(image);
+ 	if (ret)
+-- 
+2.7.4
+
+
+From 3e24c246bd32383e07d1f4807675723c82116722 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Wed, 5 Oct 2016 15:03:22 -0500
+Subject: [PATCH 02/20] Adding ISIS board
+
+---
+ Config.in.kernel                                   |   1 +
+ board/Config.in                                    |   2 +
+ board/at91sam9g20kubos/Config.in.board             |  18 +
+ board/at91sam9g20kubos/Config.in.linux_arg         |   3 +
+ board/at91sam9g20kubos/at91sam9g20kubos.c          | 362 +++++++++++++++++++++
+ board/at91sam9g20kubos/at91sam9g20kubos.h          |  84 +++++
+ .../at91sam9g20kubosnf_linux_image_defconfig       |   6 +
+ .../at91sam9g20kubosnf_linux_image_dt_defconfig    |   5 +
+ board/at91sam9g20kubos/board.mk                    |   2 +
+ include/board.h                                    |   4 +
+ 10 files changed, 487 insertions(+)
+ create mode 100644 board/at91sam9g20kubos/Config.in.board
+ create mode 100644 board/at91sam9g20kubos/Config.in.linux_arg
+ create mode 100644 board/at91sam9g20kubos/at91sam9g20kubos.c
+ create mode 100644 board/at91sam9g20kubos/at91sam9g20kubos.h
+ create mode 100644 board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
+ create mode 100644 board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
+ create mode 100644 board/at91sam9g20kubos/board.mk
+
+diff --git a/Config.in.kernel b/Config.in.kernel
+index 477ae17..c25ae41 100644
+--- a/Config.in.kernel
++++ b/Config.in.kernel
+@@ -26,6 +26,7 @@ source "board/sama5d4ek/Config.in.linux_arg"
+ source "board/sama5d4_xplained/Config.in.linux_arg"
+ source "board/sama5d2_ptc/Config.in.linux_arg"
+ source "board/sama5d2_xplained/Config.in.linux_arg"
++source "board/at91sam9g20kubos/Config.in.linux_arg"
+ source "contrib/board/Config.in.linux_arg"
+ 
+ config CONFIG_LINUX_KERNEL_ARG_STRING
+diff --git a/board/Config.in b/board/Config.in
+index 4b63347..e04fd6a 100644
+--- a/board/Config.in
++++ b/board/Config.in
+@@ -25,6 +25,7 @@ source "board/sama5d4ek/Config.in.board"
+ source "board/sama5d4_xplained/Config.in.board"
+ source "board/sama5d2_ptc/Config.in.board"
+ source "board/sama5d2_xplained/Config.in.board"
++source "board/at91sam9g20kubos/Config.in.board"
+ source "contrib/board/Config.in.board"
+ 
+ endchoice
+@@ -48,6 +49,7 @@ config CONFIG_BOARDNAME
+ 	default "sama5d4ek" if CONFIG_SAMA5D4EK
+ 	default "sama5d2_ptc" if CONFIG_SAMA5D2_PTC
+ 	default "sama5d2_xplained" if CONFIG_SAMA5D2_XPLAINED
++	default "at91sam9g20kubos" if CONFIG_AT91SAM9G20KUBOS
+ source "contrib/board/Config.in.boardname"
+ 
+ config AT91SAM9260
+diff --git a/board/at91sam9g20kubos/Config.in.board b/board/at91sam9g20kubos/Config.in.board
+new file mode 100644
+index 0000000..715b523
+--- /dev/null
++++ b/board/at91sam9g20kubos/Config.in.board
+@@ -0,0 +1,18 @@
++config	CONFIG_at91sam9g20kubos
++	bool "at91sam9g20kubos"
++	select AT91SAM9G20
++	select CONFIG_SDRAM
++	select ALLOW_DATAFLASH
++	select ALLOW_NANDFLASH
++	select ALLOW_FLASH
++	select ALLOW_SDCARD
++	select ALLOW_CPU_CLK_400MHZ
++	select ALLOW_CRYSTAL_18_432MHZ
++	select ALLOW_BOOT_FROM_DATAFLASH_CS0
++	select ALLOW_BOOT_FROM_DATAFLASH_CS1
++	select ALLOW_DATAFLASH_RECOVERY
++	select ALLOW_NANDFLASH_RECOVERY
++	select ALLOW_FLASH_RECOVERY
++	select SUPPORT_BUS_SPEED_133MHZ
++	help
++	    Use the at91sam9g20kubos Development board
+diff --git a/board/at91sam9g20kubos/Config.in.linux_arg b/board/at91sam9g20kubos/Config.in.linux_arg
+new file mode 100644
+index 0000000..fe99b72
+--- /dev/null
++++ b/board/at91sam9g20kubos/Config.in.linux_arg
+@@ -0,0 +1,3 @@
++config CONFIG_LINUX_KERNEL_ARG_STRING
++	default "mem=32M console=ttyS0,115200 mtdparts=atmel_nand:8M(bootstrap/kernel),60M(rootfs),-(spare) root=/dev/mtdblock1 rw rootfstype=jffs2" if CONFIG_at91sam9g20kubos && !CONFIG_SDCARD
++	default "mem=23M console=ttyS0,115200 root=/dev/mmcblk0p2 rootdelay=2" if CONFIG_at91sam9g20kubos && CONFIG_SDCARD
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+new file mode 100644
+index 0000000..b712e73
+--- /dev/null
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -0,0 +1,362 @@
++/* ----------------------------------------------------------------------------
++ *         ATMEL Microcontroller Software Support
++ * ----------------------------------------------------------------------------
++ * Copyright (c) 2008, Atmel Corporation
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * - Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the disclaimer below.
++ *
++ * Atmel's name may not be used to endorse or promote products derived from
++ * this software without specific prior written permission.
++ *
++ * DISCLAIMER: THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
++ * DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
++ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
++ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++#include "common.h"
++#include "hardware.h"
++#include "arch/at91_ccfg.h"
++#include "arch/at91_matrix.h"
++#include "arch/at91_rstc.h"
++#include "arch/at91_pmc.h"
++#include "arch/at91_smc.h"
++#include "arch/at91_pio.h"
++#include "arch/at91_sdramc.h"
++#include "spi.h"
++#include "gpio.h"
++#include "pmc.h"
++#include "usart.h"
++#include "debug.h"
++#include "sdramc.h"
++#include "timer.h"
++#include "watchdog.h"
++#include "string.h"
++#include "at91sam9g20kubos.h"
++
++static void at91_dbgu_hw_init(void)
++{
++	/* Configure DBGU pin */
++	const struct pio_desc dbgu_pins[] = {
++		{"RXD", AT91C_PIN_PB(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"TXD", AT91C_PIN_PB(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	/* Configure the dbgu pins */
++	pmc_enable_periph_clock(AT91C_ID_PIOB);
++	pio_configure(dbgu_pins);
++}
++
++static void initialize_dbgu(void)
++{
++	at91_dbgu_hw_init();
++
++	usart_init(BAUDRATE(MASTER_CLOCK, 115200));
++}
++
++#ifdef CONFIG_SDRAM
++static void sdramc_hw_init(void)
++{
++	/* Configure sdramc pins */
++	const struct pio_desc sdramc_pins[] = {
++		{"D16", AT91C_PIN_PC(16), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D17", AT91C_PIN_PC(17), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D18", AT91C_PIN_PC(18), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D19", AT91C_PIN_PC(19), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D20", AT91C_PIN_PC(20), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D21", AT91C_PIN_PC(21), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D22", AT91C_PIN_PC(22), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D23", AT91C_PIN_PC(23), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D24", AT91C_PIN_PC(24), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D25", AT91C_PIN_PC(25), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D26", AT91C_PIN_PC(26), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D27", AT91C_PIN_PC(27), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D28", AT91C_PIN_PC(28), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D29", AT91C_PIN_PC(29), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D30", AT91C_PIN_PC(30), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"D31", AT91C_PIN_PC(31), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{(char *) 0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	/* Configure the SDRAMC PINs */
++	pmc_enable_periph_clock(AT91C_ID_PIOC);
++	pio_configure(sdramc_pins);
++}
++
++static void sdramc_init(void)
++{
++	struct sdramc_register sdramc_config;
++
++	sdramc_config.cr = AT91C_SDRAMC_NC_9 | AT91C_SDRAMC_NR_13 | AT91C_SDRAMC_CAS_3
++				| AT91C_SDRAMC_NB_4_BANKS | AT91C_SDRAMC_DBW_32_BITS
++				| AT91C_SDRAMC_TWR_3 | AT91C_SDRAMC_TRC_9
++				| AT91C_SDRAMC_TRP_3 | AT91C_SDRAMC_TRCD_3
++				| AT91C_SDRAMC_TRAS_6 | AT91C_SDRAMC_TXSR_10;
++
++	sdramc_config.tr = (MASTER_CLOCK * 7) / 1000000;
++	sdramc_config.mdr = AT91C_SDRAMC_MD_SDRAM;
++
++	sdramc_hw_init();
++
++	/* Initialize the matrix (memory voltage = 3.3) */
++	writel((readl(AT91C_BASE_CCFG + CCFG_EBICSA))
++		| AT91C_EBI_CS1A_SDRAMC | AT91C_VDDIOM_SEL_33V
++		| (0x01 << 17), /*  set I/O slew selection */
++		AT91C_BASE_CCFG + CCFG_EBICSA);
++
++	sdramc_initialize(&sdramc_config, AT91C_BASE_CS1);
++}
++#endif /* #ifdef CONFIG_SDRAM */
++
++#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY || defined(CONFIG_FLASH_RECOVERY))
++static void recovery_buttons_hw_init(void)
++{
++	/* Configure recovery button PINs */
++	const struct pio_desc recovery_button_pins[] = {
++		{"RECOVERY_BUTTON", CONFIG_SYS_RECOVERY_BUTTON_PIN, 0, PIO_PULLUP, PIO_INPUT},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	pmc_enable_periph_clock(AT91C_ID_PIOA);
++	pio_configure(recovery_button_pins);
++}
++#endif /* #if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY) */
++
++#ifdef CONFIG_HW_INIT
++void hw_init(void)
++{
++	/* Disable watchdog */
++	at91_disable_wdt();
++
++	/*
++	 * At this stage the main oscillator is supposed to be enabled
++	 * PCK = MCK = MOSC
++	 */
++	pmc_init_pll(0);
++
++	/* Configure PLLA = MOSC * (PLL_MULA + 1) / PLL_DIVA */
++	pmc_cfg_plla(PLLA_SETTINGS);
++
++	/* PCK = PLLA/2 = 3 * MCK */
++	pmc_cfg_mck(MCKR_SETTINGS);
++
++	/* Switch MCK on PLLA output */
++	pmc_cfg_mck(MCKR_CSS_SETTINGS);
++
++	/* Enable External Reset */
++	writel(AT91C_RSTC_KEY_UNLOCK | AT91C_RSTC_URSTEN, AT91C_BASE_RSTC + RSTC_RMR);
++
++	/* Configure the EBI Slave Slot Cycle to 64 */
++	writel((readl((AT91C_BASE_MATRIX + MATRIX_SCFG3)) & ~0xFF) | 0x40,
++		(AT91C_BASE_MATRIX + MATRIX_SCFG3));
++
++	/* Init timer */
++	timer_init();
++
++	/* Initialize dbgu */
++	initialize_dbgu();
++
++#ifdef CONFIG_SDRAM
++	/* Initlialize sdram controller */
++	sdramc_init();
++#endif
++
++#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY || defined(CONFIG_FLASH_RECOVERY))
++	/* Init the recovery buttons pins */
++	recovery_buttons_hw_init();
++#endif
++}
++#endif /* #ifdef CONFIG_HW_INIT */
++
++#ifdef CONFIG_DATAFLASH
++void at91_spi0_hw_init(void)
++{
++	/* Configure spi0 PINs */
++	const struct pio_desc spi0_pins[] = {
++		{"MISO",	AT91C_PIN_PA(0),	0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"MOSI",	AT91C_PIN_PA(1),	0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"SPCK",	AT91C_PIN_PA(2),	0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"NPCS",	CONFIG_SYS_SPI_PCS,	1, PIO_PULLUP, PIO_OUTPUT},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	/* Configure the spi0 pins */
++	pio_configure(spi0_pins);
++#if (AT91C_SPI_PCS_DATAFLASH == AT91C_SPI_PCS0_DATAFLASH)
++	pmc_enable_periph_clock(AT91C_ID_PIOA);
++#endif
++
++#if (AT91C_SPI_PCS_DATAFLASH == AT91C_SPI_PCS1_DATAFLASH)
++	pmc_enable_periph_clock(AT91C_ID_PIOA);
++	pmc_enable_periph_clock(AT91C_ID_PIOC);
++#endif
++
++	/* Enable the spi0 clock */
++	pmc_enable_periph_clock(AT91C_ID_SPI0);
++}
++#endif /* #ifdef CONFIG_DATAFLASH */
++
++#ifdef CONFIG_SDCARD
++#ifdef CONFIG_OF_LIBFDT
++void at91_board_set_dtb_name(char *of_name)
++{
++	strcpy(of_name, "at91sam9g20kubos.dtb");
++}
++#endif
++
++void at91_mci0_hw_init(void)
++{
++	const struct pio_desc mci_pins[] = {
++		{"MCCK",	AT91C_PIN_PA(8), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{"MCCDA",	AT91C_PIN_PA(7), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{"MCDA0",	AT91C_PIN_PA(6), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{"MCDA1",	AT91C_PIN_PA(9), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{"MCDA2",	AT91C_PIN_PA(10), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{"MCDA3",	AT91C_PIN_PA(11), 0, PIO_PULLUP, PIO_PERIPH_A},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++
++	};
++
++	/* Configure the PIO controller */
++	pmc_enable_periph_clock(AT91C_ID_PIOA);
++	pio_configure(mci_pins);
++
++	/* Enable the clock */
++	pmc_enable_periph_clock(AT91C_ID_MCI);
++}
++#endif /* #ifdef CONFIG_SDCARD */
++
++/* Copied from sama5d3xek.c
++ * TODO: Verify pins for sam9g20
++ */
++#ifdef CONFIG_FLASH
++void norflash_hw_init(void)
++{
++	const struct pio_desc flash_pins[] = {
++		{"FLASH_A1",  AT91C_PIN_PE(1),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A2",  AT91C_PIN_PE(2),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A3",  AT91C_PIN_PE(3),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A4",  AT91C_PIN_PE(4),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A5",  AT91C_PIN_PE(5),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A6",  AT91C_PIN_PE(6),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A7",  AT91C_PIN_PE(7),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A8",  AT91C_PIN_PE(8),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A9",  AT91C_PIN_PE(9),  0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A10", AT91C_PIN_PE(10), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A11", AT91C_PIN_PE(11), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A12", AT91C_PIN_PE(12), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A13", AT91C_PIN_PE(13), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A14", AT91C_PIN_PE(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A15", AT91C_PIN_PE(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A16", AT91C_PIN_PE(16), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A17", AT91C_PIN_PE(17), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A18", AT91C_PIN_PE(18), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A19", AT91C_PIN_PE(19), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A20", AT91C_PIN_PE(20), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A21", AT91C_PIN_PE(21), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A22", AT91C_PIN_PE(22), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_A23", AT91C_PIN_PE(23), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"FLASH_CS0", AT91C_PIN_PE(26), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	/* Enable the clock */
++	pmc_enable_periph_clock(AT91C_ID_SMC);
++
++	/* Configure SMC CS0 for NOR flash */
++	writel(AT91C_SMC_SETUP_NWE(1)
++		| AT91C_SMC_SETUP_NCS_WR(0)
++		| AT91C_SMC_SETUP_NRD(2)
++		| AT91C_SMC_SETUP_NCS_RD(0),
++		(ATMEL_BASE_SMC + SMC_SETUP0));
++
++	writel(AT91C_SMC_PULSE_NWE(10)
++		| AT91C_SMC_PULSE_NCS_WR(11)
++		| AT91C_SMC_PULSE_NRD(10)
++		| AT91C_SMC_PULSE_NCS_RD(11),
++		(ATMEL_BASE_SMC + SMC_PULSE0));
++
++	writel(AT91C_SMC_CYCLE_NWE(11)
++		| AT91C_SMC_CYCLE_NRD(14),
++		(ATMEL_BASE_SMC + SMC_CYCLE0));
++
++	writel(AT91C_SMC_TIMINGS_TCLR(0)
++		| AT91C_SMC_TIMINGS_TADL(0)
++		| AT91C_SMC_TIMINGS_TAR(0)
++		| AT91C_SMC_TIMINGS_TRR(0)
++		| AT91C_SMC_TIMINGS_TWB(0)
++		| AT91C_SMC_TIMINGS_RBNSEL(0)
++		| AT91C_SMC_TIMINGS_NFSEL,
++		(ATMEL_BASE_SMC + SMC_TIMINGS0));
++
++	writel(AT91C_SMC_MODE_READMODE_NRD_CTRL
++		| AT91C_SMC_MODE_WRITEMODE_NWE_CTRL
++		| AT91C_SMC_MODE_EXNWMODE_DISABLED
++		| AT91C_SMC_MODE_DBW_16
++		| AT91C_SMC_MODE_TDF_CYCLES(1),
++		(ATMEL_BASE_SMC + SMC_MODE0));
++
++	/* Configure the PIO controller. */
++	pio_configure(flash_pins);
++}
++#endif /* #ifdef CONFIG_FLASH */
++
++#ifdef CONFIG_NANDFLASH
++void nandflash_hw_init(void)
++{
++	unsigned int reg;
++
++	/* Configure PIOs */
++	const struct pio_desc nand_pins[] = {
++		{"NANDCS",	CONFIG_SYS_NAND_ENABLE_PIN,	1, PIO_PULLUP, PIO_OUTPUT},
++		{(char *)0, 	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++
++	/* Setup Smart Media, first enable the address range of CS3 in HMATRIX user interface  */
++	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
++	reg |= AT91C_EBI_CS3A_SM;
++
++	writel(reg, AT91C_BASE_CCFG + CCFG_EBICSA);
++
++	/* Configure SMC CS3 */
++	writel((AT91C_SMC_NWESETUP_(2)
++		| AT91C_SMC_NCS_WRSETUP_(0)
++		| AT91C_SMC_NRDSETUP_(2)
++		| AT91C_SMC_NCS_RDSETUP_(0)),
++		AT91C_BASE_SMC + SMC_SETUP3);
++
++	writel((AT91C_SMC_NWEPULSE_(4)
++		| AT91C_SMC_NCS_WRPULSE_(4)
++		| AT91C_SMC_NRDPULSE_(4)
++		| AT91C_SMC_NCS_RDPULSE_(4)),
++		AT91C_BASE_SMC + SMC_PULSE3);
++
++	writel((AT91C_SMC_NWECYCLE_(7)
++		|  AT91C_SMC_NRDCYCLE_(7)),
++		AT91C_BASE_SMC + SMC_CYCLE3);
++
++	writel((AT91C_SMC_READMODE
++		| AT91C_SMC_WRITEMODE
++		| AT91C_SMC_NWAITM_NWAIT_DISABLE
++		| AT91C_SMC_DBW_WIDTH_BITS_8
++		| AT91_SMC_TDF_(3)),
++		AT91C_BASE_SMC + SMC_CTRL3);
++
++	/* Configure the PIO controller */
++	pmc_enable_periph_clock(AT91C_ID_PIOC);
++	pio_configure(nand_pins);
++}
++#endif /* #ifdef CONFIG_NANDFLASH */
++
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.h b/board/at91sam9g20kubos/at91sam9g20kubos.h
+new file mode 100644
+index 0000000..4bea9fc
+--- /dev/null
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.h
+@@ -0,0 +1,84 @@
++/* ----------------------------------------------------------------------------
++ *         ATMEL Microcontroller Software Support
++ * ----------------------------------------------------------------------------
++ * Copyright (c) 2008, Atmel Corporation
++ *
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * - Redistributions of source code must retain the above copyright notice,
++ * this list of conditions and the disclaimer below.
++ *
++ * Atmel's name may not be used to endorse or promote products derived from
++ * this software without specific prior written permission.
++ *
++ * DISCLAIMER: THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
++ * DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
++ * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
++ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++#ifndef __AT91SAM9G20KUBOS_H__
++#define __AT91SAM9G20KUBOS_H__
++
++/*
++ * PMC Setting
++ *
++ * The main oscillator is enabled as soon as possible in the c_startup
++ * and MCK is switched on the main oscillator.
++ * PLL initialization is done later in the hw_init() function
++ */
++#define MASTER_CLOCK		132096000
++
++#define PLLA_SETTINGS		0x202A3F01
++
++/* Switch MCK on PLLA output PCK = PLLA/2 = 3 * MCK */
++#define MCKR_SETTINGS		0x1300
++#define MCKR_CSS_SETTINGS	(AT91C_PMC_CSS_PLLA_CLK | MCKR_SETTINGS)
++
++/*
++* DataFlash Settings
++*/
++#define CONFIG_SYS_SPI_CLOCK	AT91C_SPI_CLK
++#define CONFIG_SYS_SPI_MODE	SPI_MODE0
++
++#if defined(CONFIG_SPI_BUS0)
++#define CONFIG_SYS_BASE_SPI	AT91C_BASE_SPI0
++#elif defined(CONFIG_SPI_BUS1)
++#define CONFIG_SYS_BASE_SPI	AT91C_BASE_SPI1
++#endif
++
++#if (AT91C_SPI_PCS_DATAFLASH == AT91C_SPI_PCS0_DATAFLASH)
++#define CONFIG_SYS_SPI_PCS	AT91C_PIN_PA(3)
++#elif (AT91C_SPI_PCS_DATAFLASH == AT91C_SPI_PCS1_DATAFLASH)
++#define CONFIG_SYS_SPI_PCS	AT91C_PIN_PC(11)
++#endif
++
++/*
++ * NandFlash Settings
++ */
++#define CONFIG_SYS_NAND_BASE		AT91C_BASE_CS3
++#define CONFIG_SYS_NAND_MASK_ALE	(1 << 21)
++#define CONFIG_SYS_NAND_MASK_CLE	(1 << 22)
++
++#define CONFIG_SYS_NAND_ENABLE_PIN	AT91C_PIN_PC(14)
++
++/*
++ * MCI Settings
++ */
++#define CONFIG_SYS_BASE_MCI	AT91C_BASE_MCI
++
++/*
++ * Recovery
++ */
++#define CONFIG_SYS_RECOVERY_BUTTON_PIN	AT91C_PIN_PA(31)
++#define RECOVERY_BUTTON_NAME	"BP4"
++
++#endif	/* #ifndef __at91sam9g20kubos_H__ */
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
+new file mode 100644
+index 0000000..1f3005c
+--- /dev/null
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
+@@ -0,0 +1,6 @@
++CONFIG_at91sam9g20kubos=y
++CONFIG_FLASH=y
++CONFIG_LOAD_LINUX=y
++# CONFIG_OF_LIBFDT is not set
++CONFIG_DEBUG=y
++CONFIG_THUMB=y
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
+new file mode 100644
+index 0000000..79e3760
+--- /dev/null
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
+@@ -0,0 +1,5 @@
++CONFIG_at91sam9g20kubos=y
++CONFIG_FLASH=y
++CONFIG_LOAD_LINUX=y
++CONFIG_DEBUG=y
++CONFIG_THUMB=y
+diff --git a/board/at91sam9g20kubos/board.mk b/board/at91sam9g20kubos/board.mk
+new file mode 100644
+index 0000000..bf13137
+--- /dev/null
++++ b/board/at91sam9g20kubos/board.mk
+@@ -0,0 +1,2 @@
++CPPFLAGS += -DCONFIG_at91sam9g20kubos
++ASFLAGS += -DCONFIG_at91sam9g20kubos
+diff --git a/include/board.h b/include/board.h
+index 36f9c20..e454c88 100644
+--- a/include/board.h
++++ b/include/board.h
+@@ -96,6 +96,10 @@
+ #include "sama5d2_xplained.h"
+ #endif
+ 
++#ifdef CONFIG_AT91SAM9G20KUBOS
++#include "at91sam9g20kubos.h"
++#endif
++
+ #include "contrib_board.h"
+ 
+ /*
+-- 
+2.7.4
+
+
+From ae1baf8c777599a3aa76df39d9a8cfce4584956e Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Thu, 6 Oct 2016 09:12:53 -0500
+Subject: [PATCH 03/20] Made changes so build would complete successfully
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c          | 61 +++++++++-------------
+ .../at91sam9g20kubosnf_linux_image_defconfig       |  2 +-
+ .../at91sam9g20kubosnf_linux_image_dt_defconfig    |  2 +-
+ 3 files changed, 27 insertions(+), 38 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index b712e73..ec440fc 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -120,7 +120,7 @@ static void sdramc_init(void)
+ }
+ #endif /* #ifdef CONFIG_SDRAM */
+ 
+-#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY || defined(CONFIG_FLASH_RECOVERY))
++#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY)
+ static void recovery_buttons_hw_init(void)
+ {
+ 	/* Configure recovery button PINs */
+@@ -173,7 +173,7 @@ void hw_init(void)
+ 	sdramc_init();
+ #endif
+ 
+-#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY || defined(CONFIG_FLASH_RECOVERY))
++#if defined(CONFIG_NANDFLASH_RECOVERY) || defined(CONFIG_DATAFLASH_RECOVERY)
+ 	/* Init the recovery buttons pins */
+ 	recovery_buttons_hw_init();
+ #endif
+@@ -272,43 +272,32 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	/* Enable the clock */
+-	pmc_enable_periph_clock(AT91C_ID_SMC);
+-
+ 	/* Configure SMC CS0 for NOR flash */
+-	writel(AT91C_SMC_SETUP_NWE(1)
+-		| AT91C_SMC_SETUP_NCS_WR(0)
+-		| AT91C_SMC_SETUP_NRD(2)
+-		| AT91C_SMC_SETUP_NCS_RD(0),
+-		(ATMEL_BASE_SMC + SMC_SETUP0));
+-
+-	writel(AT91C_SMC_PULSE_NWE(10)
+-		| AT91C_SMC_PULSE_NCS_WR(11)
+-		| AT91C_SMC_PULSE_NRD(10)
+-		| AT91C_SMC_PULSE_NCS_RD(11),
+-		(ATMEL_BASE_SMC + SMC_PULSE0));
+-
+-	writel(AT91C_SMC_CYCLE_NWE(11)
+-		| AT91C_SMC_CYCLE_NRD(14),
+-		(ATMEL_BASE_SMC + SMC_CYCLE0));
+-
+-	writel(AT91C_SMC_TIMINGS_TCLR(0)
+-		| AT91C_SMC_TIMINGS_TADL(0)
+-		| AT91C_SMC_TIMINGS_TAR(0)
+-		| AT91C_SMC_TIMINGS_TRR(0)
+-		| AT91C_SMC_TIMINGS_TWB(0)
+-		| AT91C_SMC_TIMINGS_RBNSEL(0)
+-		| AT91C_SMC_TIMINGS_NFSEL,
+-		(ATMEL_BASE_SMC + SMC_TIMINGS0));
+-
+-	writel(AT91C_SMC_MODE_READMODE_NRD_CTRL
+-		| AT91C_SMC_MODE_WRITEMODE_NWE_CTRL
+-		| AT91C_SMC_MODE_EXNWMODE_DISABLED
+-		| AT91C_SMC_MODE_DBW_16
+-		| AT91C_SMC_MODE_TDF_CYCLES(1),
+-		(ATMEL_BASE_SMC + SMC_MODE0));
++	writel(AT91C_SMC_NWESETUP_(1)
++		| AT91C_SMC_NCS_WRSETUP_(0)
++		| AT91C_SMC_NRDSETUP_(2)
++		| AT91C_SMC_NCS_RDSETUP_(0),
++		(AT91C_BASE_SMC + SMC_SETUP0));
++
++	writel(AT91C_SMC_NWEPULSE_(10)
++		| AT91C_SMC_NCS_WRPULSE_(11)
++		| AT91C_SMC_NRDPULSE_(10)
++		| AT91C_SMC_NCS_RDPULSE_(11),
++		(AT91C_BASE_SMC + SMC_PULSE0));
++
++	writel(AT91C_SMC_NWECYCLE_(11)
++		| AT91C_SMC_NRDCYCLE_(14),
++		(AT91C_BASE_SMC + SMC_CYCLE0));
++
++	writel((AT91C_SMC_READMODE
++			| AT91C_SMC_WRITEMODE
++			| AT91C_SMC_NWAITM_NWAIT_DISABLE
++			| AT91C_SMC_DBW_WIDTH_BITS_8
++			| AT91_SMC_TDF_(0)),
++			AT91C_BASE_SMC + SMC_CTRL0);
+ 
+ 	/* Configure the PIO controller. */
++	pmc_enable_periph_clock(AT91C_ID_PIOC);
+ 	pio_configure(flash_pins);
+ }
+ #endif /* #ifdef CONFIG_FLASH */
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
+index 1f3005c..888daea 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_defconfig
+@@ -1,4 +1,4 @@
+-CONFIG_at91sam9g20kubos=y
++CONFIG_AT91SAM9G20KUBOS=y
+ CONFIG_FLASH=y
+ CONFIG_LOAD_LINUX=y
+ # CONFIG_OF_LIBFDT is not set
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
+index 79e3760..72710ef 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_linux_image_dt_defconfig
+@@ -1,4 +1,4 @@
+-CONFIG_at91sam9g20kubos=y
++CONFIG_AT91SAM9G20KUBOS=y
+ CONFIG_FLASH=y
+ CONFIG_LOAD_LINUX=y
+ CONFIG_DEBUG=y
+-- 
+2.7.4
+
+
+From 7764a021fc72e21f527cb799d06388e33bf8c947 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Wed, 12 Oct 2016 15:44:50 -0500
+Subject: [PATCH 04/20] Fixing kubos config and adding boot to u-boot defconfig
+
+---
+ Config.in.kernel                                   |  2 +-
+ board/at91sam9g20kubos/at91sam9g20kubos.c          | 40 ++++++++++++++++------
+ .../at91sam9g20kubosnf_uboot_defconfig             |  4 +++
+ 3 files changed, 35 insertions(+), 11 deletions(-)
+ create mode 100644 board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+
+diff --git a/Config.in.kernel b/Config.in.kernel
+index c25ae41..3d17357 100644
+--- a/Config.in.kernel
++++ b/Config.in.kernel
+@@ -14,6 +14,7 @@ source "board/at91sam9261ek/Config.in.linux_arg"
+ source "board/at91sam9263ek/Config.in.linux_arg"
+ source "board/at91sam9g10ek/Config.in.linux_arg"
+ source "board/at91sam9g20ek/Config.in.linux_arg"
++source "board/at91sam9g20kubos/Config.in.linux_arg"
+ source "board/at91sam9rlek/Config.in.linux_arg"
+ source "board/at91sam9xeek/Config.in.linux_arg"
+ source "board/at91sam9m10g45ek/Config.in.linux_arg"
+@@ -26,7 +27,6 @@ source "board/sama5d4ek/Config.in.linux_arg"
+ source "board/sama5d4_xplained/Config.in.linux_arg"
+ source "board/sama5d2_ptc/Config.in.linux_arg"
+ source "board/sama5d2_xplained/Config.in.linux_arg"
+-source "board/at91sam9g20kubos/Config.in.linux_arg"
+ source "contrib/board/Config.in.linux_arg"
+ 
+ config CONFIG_LINUX_KERNEL_ARG_STRING
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index ec440fc..68f2380 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -238,7 +238,7 @@ void at91_mci0_hw_init(void)
+ }
+ #endif /* #ifdef CONFIG_SDCARD */
+ 
+-/* Copied from sama5d3xek.c
++/*
+  * TODO: Verify pins for sam9g20
+  */
+ #ifdef CONFIG_FLASH
+@@ -272,28 +272,48 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
++/*
++  	writel(AT91C_FLASH_NWE_SETUP
++		| AT91C_FLASH_NCS_WR_SETUP
++		| AT91C_FLASH_NRD_SETUP
++		| AT91C_FLASH_NCS_RD_SETUP,
++		(AT91C_BASE_SMC + SMC_SETUP0));
++
++	writel(AT91C_FLASH_NWE_PULSE
++		| AT91C_FLASH_NCS_WR_PULSE
++		| AT91C_FLASH_NRD_PULSE
++		| AT91C_FLASH_NCS_RD_PULSE,
++		(AT91C_BASE_SMC + SMC_PULSE0));
++
++	writel(AT91C_FLASH_NWE_CYCLE
++		| AT91C_FLASH_NRD_CYCLE,
++		(AT91C_BASE_SMC + SMC_CYCLE0));
++ */
++
+ 	/* Configure SMC CS0 for NOR flash */
+-	writel(AT91C_SMC_NWESETUP_(1)
++	/* Settings copied from ISIS code */
++	writel(AT91C_SMC_NWESETUP_(2)
+ 		| AT91C_SMC_NCS_WRSETUP_(0)
+-		| AT91C_SMC_NRDSETUP_(2)
++		| AT91C_SMC_NRDSETUP_(0)
+ 		| AT91C_SMC_NCS_RDSETUP_(0),
+ 		(AT91C_BASE_SMC + SMC_SETUP0));
+ 
+-	writel(AT91C_SMC_NWEPULSE_(10)
+-		| AT91C_SMC_NCS_WRPULSE_(11)
++	writel(AT91C_SMC_NWEPULSE_(6)
++		| AT91C_SMC_NCS_WRPULSE_(10)
+ 		| AT91C_SMC_NRDPULSE_(10)
+-		| AT91C_SMC_NCS_RDPULSE_(11),
++		| AT91C_SMC_NCS_RDPULSE_(10),
+ 		(AT91C_BASE_SMC + SMC_PULSE0));
+ 
+-	writel(AT91C_SMC_NWECYCLE_(11)
+-		| AT91C_SMC_NRDCYCLE_(14),
++	writel(AT91C_SMC_NWECYCLE_(10)
++		| AT91C_SMC_NRDCYCLE_(10),
+ 		(AT91C_BASE_SMC + SMC_CYCLE0));
+ 
++	/* TODO: Verify bus width */
+ 	writel((AT91C_SMC_READMODE
+ 			| AT91C_SMC_WRITEMODE
+ 			| AT91C_SMC_NWAITM_NWAIT_DISABLE
+-			| AT91C_SMC_DBW_WIDTH_BITS_8
+-			| AT91_SMC_TDF_(0)),
++			| AT91C_SMC_DBW_WIDTH_BITS_16
++			| AT91_SMC_TDF_(1)),
+ 			AT91C_BASE_SMC + SMC_CTRL0);
+ 
+ 	/* Configure the PIO controller. */
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+new file mode 100644
+index 0000000..dbc1af9
+--- /dev/null
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+@@ -0,0 +1,4 @@
++CONFIG_AT91SAM9G20KUBOS=y
++CONFIG_FLASH=y
++CONFIG_DEBUG=y
++CONFIG_THUMB=y
+-- 
+2.7.4
+
+
+From 122bd81258c9631da41ce0d6f7a884770bb2ff62 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Wed, 12 Oct 2016 15:52:44 -0500
+Subject: [PATCH 05/20] Fixing casing
+
+---
+ board/at91sam9g20kubos/Config.in.board     | 2 +-
+ board/at91sam9g20kubos/Config.in.linux_arg | 4 ++--
+ board/at91sam9g20kubos/board.mk            | 4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/Config.in.board b/board/at91sam9g20kubos/Config.in.board
+index 715b523..1a3c65a 100644
+--- a/board/at91sam9g20kubos/Config.in.board
++++ b/board/at91sam9g20kubos/Config.in.board
+@@ -1,4 +1,4 @@
+-config	CONFIG_at91sam9g20kubos
++config	CONFIG_AT91SAM9G20KUBOS
+ 	bool "at91sam9g20kubos"
+ 	select AT91SAM9G20
+ 	select CONFIG_SDRAM
+diff --git a/board/at91sam9g20kubos/Config.in.linux_arg b/board/at91sam9g20kubos/Config.in.linux_arg
+index fe99b72..64e2bf1 100644
+--- a/board/at91sam9g20kubos/Config.in.linux_arg
++++ b/board/at91sam9g20kubos/Config.in.linux_arg
+@@ -1,3 +1,3 @@
+ config CONFIG_LINUX_KERNEL_ARG_STRING
+-	default "mem=32M console=ttyS0,115200 mtdparts=atmel_nand:8M(bootstrap/kernel),60M(rootfs),-(spare) root=/dev/mtdblock1 rw rootfstype=jffs2" if CONFIG_at91sam9g20kubos && !CONFIG_SDCARD
+-	default "mem=23M console=ttyS0,115200 root=/dev/mmcblk0p2 rootdelay=2" if CONFIG_at91sam9g20kubos && CONFIG_SDCARD
++	default "mem=32M console=ttyS0,115200 mtdparts=atmel_nand:8M(bootstrap/kernel),60M(rootfs),-(spare) root=/dev/mtdblock1 rw rootfstype=jffs2" if CONFIG_AT91SAM9G20KUBOS && !CONFIG_SDCARD
++	default "mem=23M console=ttyS0,115200 root=/dev/mmcblk0p2 rootdelay=2" if CONFIG_AT91SAM9G20KUBOS && CONFIG_SDCARD
+diff --git a/board/at91sam9g20kubos/board.mk b/board/at91sam9g20kubos/board.mk
+index bf13137..6e3acdd 100644
+--- a/board/at91sam9g20kubos/board.mk
++++ b/board/at91sam9g20kubos/board.mk
+@@ -1,2 +1,2 @@
+-CPPFLAGS += -DCONFIG_at91sam9g20kubos
+-ASFLAGS += -DCONFIG_at91sam9g20kubos
++CPPFLAGS += -DCONFIG_AT91SAM9G20KUBOS
++ASFLAGS += -DCONFIG_AT91SAM9G20KUBOS
+-- 
+2.7.4
+
+
+From 01127932c0a1dd53bec983e5b47f66fba05f8987 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Wed, 12 Oct 2016 16:15:43 -0500
+Subject: [PATCH 06/20] Fixing uboot flash location
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+index dbc1af9..0282bd4 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+@@ -1,4 +1,6 @@
+ CONFIG_AT91SAM9G20KUBOS=y
+ CONFIG_FLASH=y
++CONFIG_IMG_ADDRESS="0x0000C000"
++CONFIG_IMG_SIZE="0x00044000"
+ CONFIG_DEBUG=y
+ CONFIG_THUMB=y
+-- 
+2.7.4
+
+
+From 8526de7c6a69f61bf18262a0bde872e1c9bd59bd Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Wed, 12 Oct 2016 16:21:42 -0500
+Subject: [PATCH 07/20] Fixing RAM size
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+index 0282bd4..4b021e0 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+@@ -1,5 +1,6 @@
+ CONFIG_AT91SAM9G20KUBOS=y
+ CONFIG_FLASH=y
++CONFIG_RAM_32MB=y
+ CONFIG_IMG_ADDRESS="0x0000C000"
+ CONFIG_IMG_SIZE="0x00044000"
+ CONFIG_DEBUG=y
+-- 
+2.7.4
+
+
+From faf2f26d24db4dd2732a8b66a510341fc9fba0dd Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Fri, 14 Oct 2016 16:01:48 -0500
+Subject: [PATCH 08/20] Adding debug lines
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index 68f2380..2095477 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -64,11 +64,15 @@ static void initialize_dbgu(void)
+ 	at91_dbgu_hw_init();
+ 
+ 	usart_init(BAUDRATE(MASTER_CLOCK, 115200));
++
++	dbg_very_loud("INFO: AT91Booststrap Debug Uart Initialized\r\n");
+ }
+ 
+ #ifdef CONFIG_SDRAM
+ static void sdramc_hw_init(void)
+ {
++	dbg_very_loud("INFO: sdramc_hw_init\r\n");
++
+ 	/* Configure sdramc pins */
+ 	const struct pio_desc sdramc_pins[] = {
+ 		{"D16", AT91C_PIN_PC(16), 0, PIO_DEFAULT, PIO_PERIPH_A},
+@@ -99,6 +103,8 @@ static void sdramc_init(void)
+ {
+ 	struct sdramc_register sdramc_config;
+ 
++	dbg_very_loud("INFO: sdramc_init\r\n");
++
+ 	sdramc_config.cr = AT91C_SDRAMC_NC_9 | AT91C_SDRAMC_NR_13 | AT91C_SDRAMC_CAS_3
+ 				| AT91C_SDRAMC_NB_4_BANKS | AT91C_SDRAMC_DBW_32_BITS
+ 				| AT91C_SDRAMC_TWR_3 | AT91C_SDRAMC_TRC_9
+@@ -177,6 +183,8 @@ void hw_init(void)
+ 	/* Init the recovery buttons pins */
+ 	recovery_buttons_hw_init();
+ #endif
++
++	dbg_very_loud("INFO: end of hw_init\r\n");
+ }
+ #endif /* #ifdef CONFIG_HW_INIT */
+ 
+@@ -192,6 +200,8 @@ void at91_spi0_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
++	dbg_very_loud("INFO: at91_spi0_hw_init\r\n");
++
+ 	/* Configure the spi0 pins */
+ 	pio_configure(spi0_pins);
+ #if (AT91C_SPI_PCS_DATAFLASH == AT91C_SPI_PCS0_DATAFLASH)
+@@ -212,6 +222,7 @@ void at91_spi0_hw_init(void)
+ #ifdef CONFIG_OF_LIBFDT
+ void at91_board_set_dtb_name(char *of_name)
+ {
++	dbg_very_loud("INFO: at91_board_set_dtb_name\r\n");
+ 	strcpy(of_name, "at91sam9g20kubos.dtb");
+ }
+ #endif
+@@ -229,6 +240,8 @@ void at91_mci0_hw_init(void)
+ 
+ 	};
+ 
++	dbg_very_loud("INFO: at91_mci0_hw_init\r\n");
++
+ 	/* Configure the PIO controller */
+ 	pmc_enable_periph_clock(AT91C_ID_PIOA);
+ 	pio_configure(mci_pins);
+@@ -272,6 +285,8 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
++	dbg_very_loud("INFO: config_flash\r\n");
++
+ /*
+   	writel(AT91C_FLASH_NWE_SETUP
+ 		| AT91C_FLASH_NCS_WR_SETUP
+@@ -333,6 +348,8 @@ void nandflash_hw_init(void)
+ 		{(char *)0, 	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
++	dbg_very_loud("INFO: nandflash_hw_init\r\n");
++
+ 	/* Setup Smart Media, first enable the address range of CS3 in HMATRIX user interface  */
+ 	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
+ 	reg |= AT91C_EBI_CS3A_SM;
+-- 
+2.7.4
+
+
+From 5b1ab284747f902cb363a1b92c724f1bf29dd1d6 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 09:54:44 -0500
+Subject: [PATCH 09/20] More debug lines.  Adjusted debug baud rate
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c | 21 +++++++++++----------
+ main.c                                    |  7 +++++++
+ 2 files changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index 2095477..ca49d16 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -63,15 +63,16 @@ static void initialize_dbgu(void)
+ {
+ 	at91_dbgu_hw_init();
+ 
+-	usart_init(BAUDRATE(MASTER_CLOCK, 115200));
++	/*usart_init(BAUDRATE(MASTER_CLOCK, 115200));*/
++	usart_init(BAUDRATE(MASTER_CLOCK, 2000000));
+ 
+-	dbg_very_loud("INFO: AT91Booststrap Debug Uart Initialized\r\n");
++	dbg_info("INFO: AT91Booststrap Debug Uart Initialized\r\n");
+ }
+ 
+ #ifdef CONFIG_SDRAM
+ static void sdramc_hw_init(void)
+ {
+-	dbg_very_loud("INFO: sdramc_hw_init\r\n");
++	dbg_info("INFO: sdramc_hw_init\r\n");
+ 
+ 	/* Configure sdramc pins */
+ 	const struct pio_desc sdramc_pins[] = {
+@@ -103,7 +104,7 @@ static void sdramc_init(void)
+ {
+ 	struct sdramc_register sdramc_config;
+ 
+-	dbg_very_loud("INFO: sdramc_init\r\n");
++	dbg_info("INFO: sdramc_init\r\n");
+ 
+ 	sdramc_config.cr = AT91C_SDRAMC_NC_9 | AT91C_SDRAMC_NR_13 | AT91C_SDRAMC_CAS_3
+ 				| AT91C_SDRAMC_NB_4_BANKS | AT91C_SDRAMC_DBW_32_BITS
+@@ -184,7 +185,7 @@ void hw_init(void)
+ 	recovery_buttons_hw_init();
+ #endif
+ 
+-	dbg_very_loud("INFO: end of hw_init\r\n");
++	dbg_info("INFO: end of hw_init\r\n");
+ }
+ #endif /* #ifdef CONFIG_HW_INIT */
+ 
+@@ -200,7 +201,7 @@ void at91_spi0_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_very_loud("INFO: at91_spi0_hw_init\r\n");
++	dbg_info("INFO: at91_spi0_hw_init\r\n");
+ 
+ 	/* Configure the spi0 pins */
+ 	pio_configure(spi0_pins);
+@@ -222,7 +223,7 @@ void at91_spi0_hw_init(void)
+ #ifdef CONFIG_OF_LIBFDT
+ void at91_board_set_dtb_name(char *of_name)
+ {
+-	dbg_very_loud("INFO: at91_board_set_dtb_name\r\n");
++	dbg_info("INFO: at91_board_set_dtb_name\r\n");
+ 	strcpy(of_name, "at91sam9g20kubos.dtb");
+ }
+ #endif
+@@ -240,7 +241,7 @@ void at91_mci0_hw_init(void)
+ 
+ 	};
+ 
+-	dbg_very_loud("INFO: at91_mci0_hw_init\r\n");
++	dbg_info("INFO: at91_mci0_hw_init\r\n");
+ 
+ 	/* Configure the PIO controller */
+ 	pmc_enable_periph_clock(AT91C_ID_PIOA);
+@@ -285,7 +286,7 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_very_loud("INFO: config_flash\r\n");
++	dbg_info("INFO: config_flash\r\n");
+ 
+ /*
+   	writel(AT91C_FLASH_NWE_SETUP
+@@ -348,7 +349,7 @@ void nandflash_hw_init(void)
+ 		{(char *)0, 	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_very_loud("INFO: nandflash_hw_init\r\n");
++	dbg_info("INFO: nandflash_hw_init\r\n");
+ 
+ 	/* Setup Smart Media, first enable the address range of CS3 in HMATRIX user interface  */
+ 	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
+diff --git a/main.c b/main.c
+index 939f189..8c8e583 100644
+--- a/main.c
++++ b/main.c
+@@ -50,8 +50,13 @@ int main(void)
+ 
+ #ifdef CONFIG_HW_INIT
+ 	hw_init();
++	dbg_info("INFO: hw_init complete\r\n");
++#else
++	dbg_info("INFO: hw_init skipped\r\n");
+ #endif
+ 
++
++
+ #if defined(CONFIG_SCLK)
+ #if !defined(CONFIG_SCLK_BYPASS)
+ 	slowclk_enable_osc32();
+@@ -80,6 +85,7 @@ int main(void)
+ 	act8945a_suspend_charger();
+ #endif
+ 
++	dbg_info("INFO: init_load_image\r\n");
+ 	init_load_image(&image);
+ 
+ #if defined(CONFIG_SECURE)
+@@ -94,6 +100,7 @@ int main(void)
+ 	image.dest += sizeof(at91_secure_header_t);
+ #endif
+ 
++	dbg_info("INFO: load_image_done\r\n");
+ 	load_image_done(ret);
+ 
+ #ifdef CONFIG_SCLK
+-- 
+2.7.4
+
+
+From ba8b2edca55825896277a4a656b327a11a0766f0 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 09:56:12 -0500
+Subject: [PATCH 10/20] Adding missing include
+
+---
+ main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/main.c b/main.c
+index 8c8e583..bbab45f 100644
+--- a/main.c
++++ b/main.c
+@@ -35,6 +35,7 @@
+ #include "act8865.h"
+ #include "secure.h"
+ #include "sfr_aicredir.h"
++#include "debug.h"
+ 
+ #ifdef CONFIG_HW_DISPLAY_BANNER
+ static void display_banner (void)
+-- 
+2.7.4
+
+
+From fa66bd2ded2bba5940e228ac213a10afb2ed6c2a Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 10:29:17 -0500
+Subject: [PATCH 11/20] Using printf instead of dbg_info
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c | 18 +++++++++---------
+ main.c                                    |  8 ++++----
+ 2 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index ca49d16..7db22ad 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -66,13 +66,13 @@ static void initialize_dbgu(void)
+ 	/*usart_init(BAUDRATE(MASTER_CLOCK, 115200));*/
+ 	usart_init(BAUDRATE(MASTER_CLOCK, 2000000));
+ 
+-	dbg_info("INFO: AT91Booststrap Debug Uart Initialized\r\n");
++	printf("INFO: AT91Booststrap Debug Uart Initialized\r\n");
+ }
+ 
+ #ifdef CONFIG_SDRAM
+ static void sdramc_hw_init(void)
+ {
+-	dbg_info("INFO: sdramc_hw_init\r\n");
++	printf("INFO: sdramc_hw_init\r\n");
+ 
+ 	/* Configure sdramc pins */
+ 	const struct pio_desc sdramc_pins[] = {
+@@ -104,7 +104,7 @@ static void sdramc_init(void)
+ {
+ 	struct sdramc_register sdramc_config;
+ 
+-	dbg_info("INFO: sdramc_init\r\n");
++	printf("INFO: sdramc_init\r\n");
+ 
+ 	sdramc_config.cr = AT91C_SDRAMC_NC_9 | AT91C_SDRAMC_NR_13 | AT91C_SDRAMC_CAS_3
+ 				| AT91C_SDRAMC_NB_4_BANKS | AT91C_SDRAMC_DBW_32_BITS
+@@ -185,7 +185,7 @@ void hw_init(void)
+ 	recovery_buttons_hw_init();
+ #endif
+ 
+-	dbg_info("INFO: end of hw_init\r\n");
++	printf("INFO: end of hw_init\r\n");
+ }
+ #endif /* #ifdef CONFIG_HW_INIT */
+ 
+@@ -201,7 +201,7 @@ void at91_spi0_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_info("INFO: at91_spi0_hw_init\r\n");
++	printf("INFO: at91_spi0_hw_init\r\n");
+ 
+ 	/* Configure the spi0 pins */
+ 	pio_configure(spi0_pins);
+@@ -223,7 +223,7 @@ void at91_spi0_hw_init(void)
+ #ifdef CONFIG_OF_LIBFDT
+ void at91_board_set_dtb_name(char *of_name)
+ {
+-	dbg_info("INFO: at91_board_set_dtb_name\r\n");
++	printf("INFO: at91_board_set_dtb_name\r\n");
+ 	strcpy(of_name, "at91sam9g20kubos.dtb");
+ }
+ #endif
+@@ -241,7 +241,7 @@ void at91_mci0_hw_init(void)
+ 
+ 	};
+ 
+-	dbg_info("INFO: at91_mci0_hw_init\r\n");
++	printf("INFO: at91_mci0_hw_init\r\n");
+ 
+ 	/* Configure the PIO controller */
+ 	pmc_enable_periph_clock(AT91C_ID_PIOA);
+@@ -286,7 +286,7 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_info("INFO: config_flash\r\n");
++	printf("INFO: config_flash\r\n");
+ 
+ /*
+   	writel(AT91C_FLASH_NWE_SETUP
+@@ -349,7 +349,7 @@ void nandflash_hw_init(void)
+ 		{(char *)0, 	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	dbg_info("INFO: nandflash_hw_init\r\n");
++	printf("INFO: nandflash_hw_init\r\n");
+ 
+ 	/* Setup Smart Media, first enable the address range of CS3 in HMATRIX user interface  */
+ 	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
+diff --git a/main.c b/main.c
+index bbab45f..f8b12e6 100644
+--- a/main.c
++++ b/main.c
+@@ -51,9 +51,9 @@ int main(void)
+ 
+ #ifdef CONFIG_HW_INIT
+ 	hw_init();
+-	dbg_info("INFO: hw_init complete\r\n");
++	printf("INFO: hw_init complete\r\n");
+ #else
+-	dbg_info("INFO: hw_init skipped\r\n");
++	printf("INFO: hw_init skipped\r\n");
+ #endif
+ 
+ 
+@@ -86,7 +86,7 @@ int main(void)
+ 	act8945a_suspend_charger();
+ #endif
+ 
+-	dbg_info("INFO: init_load_image\r\n");
++	printf("INFO: init_load_image\r\n");
+ 	init_load_image(&image);
+ 
+ #if defined(CONFIG_SECURE)
+@@ -101,7 +101,7 @@ int main(void)
+ 	image.dest += sizeof(at91_secure_header_t);
+ #endif
+ 
+-	dbg_info("INFO: load_image_done\r\n");
++	printf("INFO: load_image_done\r\n");
+ 	load_image_done(ret);
+ 
+ #ifdef CONFIG_SCLK
+-- 
+2.7.4
+
+
+From b35259da75f7c75f3a846ea608cc8c09511fa0b6 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 10:39:58 -0500
+Subject: [PATCH 12/20] Fixing include
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index 7db22ad..a852f0c 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -25,6 +25,7 @@
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
++#include <stdio.h>
+ #include "common.h"
+ #include "hardware.h"
+ #include "arch/at91_ccfg.h"
+-- 
+2.7.4
+
+
+From 2501b5d058347f9b37cb83e6474f96619737f98a Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 11:57:10 -0500
+Subject: [PATCH 13/20] debugging
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubos.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubos.c b/board/at91sam9g20kubos/at91sam9g20kubos.c
+index a852f0c..ca49d16 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubos.c
++++ b/board/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -25,7 +25,6 @@
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+-#include <stdio.h>
+ #include "common.h"
+ #include "hardware.h"
+ #include "arch/at91_ccfg.h"
+@@ -67,13 +66,13 @@ static void initialize_dbgu(void)
+ 	/*usart_init(BAUDRATE(MASTER_CLOCK, 115200));*/
+ 	usart_init(BAUDRATE(MASTER_CLOCK, 2000000));
+ 
+-	printf("INFO: AT91Booststrap Debug Uart Initialized\r\n");
++	dbg_info("INFO: AT91Booststrap Debug Uart Initialized\r\n");
+ }
+ 
+ #ifdef CONFIG_SDRAM
+ static void sdramc_hw_init(void)
+ {
+-	printf("INFO: sdramc_hw_init\r\n");
++	dbg_info("INFO: sdramc_hw_init\r\n");
+ 
+ 	/* Configure sdramc pins */
+ 	const struct pio_desc sdramc_pins[] = {
+@@ -105,7 +104,7 @@ static void sdramc_init(void)
+ {
+ 	struct sdramc_register sdramc_config;
+ 
+-	printf("INFO: sdramc_init\r\n");
++	dbg_info("INFO: sdramc_init\r\n");
+ 
+ 	sdramc_config.cr = AT91C_SDRAMC_NC_9 | AT91C_SDRAMC_NR_13 | AT91C_SDRAMC_CAS_3
+ 				| AT91C_SDRAMC_NB_4_BANKS | AT91C_SDRAMC_DBW_32_BITS
+@@ -186,7 +185,7 @@ void hw_init(void)
+ 	recovery_buttons_hw_init();
+ #endif
+ 
+-	printf("INFO: end of hw_init\r\n");
++	dbg_info("INFO: end of hw_init\r\n");
+ }
+ #endif /* #ifdef CONFIG_HW_INIT */
+ 
+@@ -202,7 +201,7 @@ void at91_spi0_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	printf("INFO: at91_spi0_hw_init\r\n");
++	dbg_info("INFO: at91_spi0_hw_init\r\n");
+ 
+ 	/* Configure the spi0 pins */
+ 	pio_configure(spi0_pins);
+@@ -224,7 +223,7 @@ void at91_spi0_hw_init(void)
+ #ifdef CONFIG_OF_LIBFDT
+ void at91_board_set_dtb_name(char *of_name)
+ {
+-	printf("INFO: at91_board_set_dtb_name\r\n");
++	dbg_info("INFO: at91_board_set_dtb_name\r\n");
+ 	strcpy(of_name, "at91sam9g20kubos.dtb");
+ }
+ #endif
+@@ -242,7 +241,7 @@ void at91_mci0_hw_init(void)
+ 
+ 	};
+ 
+-	printf("INFO: at91_mci0_hw_init\r\n");
++	dbg_info("INFO: at91_mci0_hw_init\r\n");
+ 
+ 	/* Configure the PIO controller */
+ 	pmc_enable_periph_clock(AT91C_ID_PIOA);
+@@ -287,7 +286,7 @@ void norflash_hw_init(void)
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	printf("INFO: config_flash\r\n");
++	dbg_info("INFO: config_flash\r\n");
+ 
+ /*
+   	writel(AT91C_FLASH_NWE_SETUP
+@@ -350,7 +349,7 @@ void nandflash_hw_init(void)
+ 		{(char *)0, 	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 	};
+ 
+-	printf("INFO: nandflash_hw_init\r\n");
++	dbg_info("INFO: nandflash_hw_init\r\n");
+ 
+ 	/* Setup Smart Media, first enable the address range of CS3 in HMATRIX user interface  */
+ 	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
+-- 
+2.7.4
+
+
+From c6d5d6487a2a4eb387f3ac6f31a596476837b037 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 12:08:01 -0500
+Subject: [PATCH 14/20] Trying to fix printf
+
+---
+ main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/main.c b/main.c
+index f8b12e6..0e340a6 100644
+--- a/main.c
++++ b/main.c
+@@ -49,6 +49,8 @@ int main(void)
+ 	struct image_info image;
+ 	int ret;
+ 
++#undef printf
++
+ #ifdef CONFIG_HW_INIT
+ 	hw_init();
+ 	printf("INFO: hw_init complete\r\n");
+-- 
+2.7.4
+
+
+From 8426878520f67dfe6a357e453323d12dca030cc0 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 13:17:21 -0500
+Subject: [PATCH 15/20] More debugging
+
+---
+ main.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/main.c b/main.c
+index 0e340a6..5dc3b5a 100644
+--- a/main.c
++++ b/main.c
+@@ -49,13 +49,17 @@ int main(void)
+ 	struct image_info image;
+ 	int ret;
+ 
+-#undef printf
++#ifndef CONFIG_DEBUG
++#error "CONFIG_DEBUG not set!"
++#endif
++
++	dbg_info("INFO: at91bootstrap main()\r\n");
+ 
+ #ifdef CONFIG_HW_INIT
+ 	hw_init();
+-	printf("INFO: hw_init complete\r\n");
++	dbg_info("INFO: hw_init complete\r\n");
+ #else
+-	printf("INFO: hw_init skipped\r\n");
++	dbg_info("INFO: hw_init skipped\r\n");
+ #endif
+ 
+ 
+@@ -88,7 +92,7 @@ int main(void)
+ 	act8945a_suspend_charger();
+ #endif
+ 
+-	printf("INFO: init_load_image\r\n");
++	dbg_info("INFO: init_load_image\r\n");
+ 	init_load_image(&image);
+ 
+ #if defined(CONFIG_SECURE)
+@@ -103,7 +107,7 @@ int main(void)
+ 	image.dest += sizeof(at91_secure_header_t);
+ #endif
+ 
+-	printf("INFO: load_image_done\r\n");
++	dbg_info("INFO: load_image_done\r\n");
+ 	load_image_done(ret);
+ 
+ #ifdef CONFIG_SCLK
+-- 
+2.7.4
+
+
+From 9db229060f5ad3fcd80a5c262fe89e4c3e8169ef Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 13:56:02 -0500
+Subject: [PATCH 16/20] Adding early uart init
+
+---
+ main.c | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/main.c b/main.c
+index 5dc3b5a..4fd8543 100644
+--- a/main.c
++++ b/main.c
+@@ -37,6 +37,15 @@
+ #include "sfr_aicredir.h"
+ #include "debug.h"
+ 
++/// List of all DBGU pin definitions.
++#define PINS_DBGU  {(1<<14) | (1<<15), AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_A, PIO_DEFAULT}
++
++#define TRACE_CONFIGURE_ISP(mode, baudrate, mck) { \
++    const Pin pinsDbgu[] = {PINS_DBGU}; \
++    pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu)); \
++    usart_init(baudrate); \
++    }
++
+ #ifdef CONFIG_HW_DISPLAY_BANNER
+ static void display_banner (void)
+ {
+@@ -44,6 +53,28 @@ static void display_banner (void)
+ }
+ #endif
+ 
++/*void DBGU_Configure(
++    unsigned int mode,
++    unsigned int baudrate,
++    unsigned int mck)
++{
++    // Reset & disable receiver and transmitter, disable interrupts
++    AT91C_BASE_DBGU->DBGU_CR = AT91C_US_RSTRX | AT91C_US_RSTTX;
++    AT91C_BASE_DBGU->DBGU_IDR = 0xFFFFFFFF;
++
++    // Configure baud rate
++    AT91C_BASE_DBGU->DBGU_BRGR = mck / (baudrate * 16);
++
++    // Configure mode register
++    AT91C_BASE_DBGU->DBGU_MR = mode;
++
++    // Disable DMA channel
++    AT91C_BASE_DBGU->DBGU_PTCR = AT91C_PDC_RXTDIS | AT91C_PDC_TXTDIS;
++
++    // Enable receiver and transmitter
++    AT91C_BASE_DBGU->DBGU_CR = AT91C_US_RXEN | AT91C_US_TXEN;
++}*/
++
+ int main(void)
+ {
+ 	struct image_info image;
+@@ -53,6 +84,10 @@ int main(void)
+ #error "CONFIG_DEBUG not set!"
+ #endif
+ 
++    const Pin pinsDbgu[] = {PINS_DBGU};
++    pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu));
++    usart_init(baudrate);
++
+ 	dbg_info("INFO: at91bootstrap main()\r\n");
+ 
+ #ifdef CONFIG_HW_INIT
+-- 
+2.7.4
+
+
+From b9255b921b54413208d6b9488b2a1258c7283b3b Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 13:59:22 -0500
+Subject: [PATCH 17/20] Fixing Things
+
+---
+ main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/main.c b/main.c
+index 4fd8543..4457bc1 100644
+--- a/main.c
++++ b/main.c
+@@ -84,9 +84,13 @@ int main(void)
+ #error "CONFIG_DEBUG not set!"
+ #endif
+ 
+-    const Pin pinsDbgu[] = {PINS_DBGU};
++	const struct pio_desc pingsDbgu[] = {
++		{"RXD", AT91C_PIN_PB(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"TXD", AT91C_PIN_PB(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
+     pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu));
+-    usart_init(baudrate);
++    usart_init(200000);
+ 
+ 	dbg_info("INFO: at91bootstrap main()\r\n");
+ 
+-- 
+2.7.4
+
+
+From 464d4db2aa0bdd42b6c2f99ba29bc989e845cb9c Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 17 Oct 2016 14:01:57 -0500
+Subject: [PATCH 18/20] Missing include
+
+---
+ main.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/main.c b/main.c
+index 4457bc1..bd157ab 100644
+--- a/main.c
++++ b/main.c
+@@ -36,6 +36,7 @@
+ #include "secure.h"
+ #include "sfr_aicredir.h"
+ #include "debug.h"
++#include "gpio.h"
+ 
+ /// List of all DBGU pin definitions.
+ #define PINS_DBGU  {(1<<14) | (1<<15), AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_A, PIO_DEFAULT}
+@@ -84,13 +85,9 @@ int main(void)
+ #error "CONFIG_DEBUG not set!"
+ #endif
+ 
+-	const struct pio_desc pingsDbgu[] = {
+-		{"RXD", AT91C_PIN_PB(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
+-		{"TXD", AT91C_PIN_PB(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
+-		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+-	};
++    const Pin pinsDbgu[] = {PINS_DBGU};
+     pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu));
+-    usart_init(200000);
++    usart_init(2000000);
+ 
+ 	dbg_info("INFO: at91bootstrap main()\r\n");
+ 
+-- 
+2.7.4
+
+
+From a6ba2635f2e190bbde601b46c30c5629e7288dd3 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Tue, 18 Oct 2016 10:24:28 -0500
+Subject: [PATCH 19/20] Resetting dbgu pin configure
+
+---
+ main.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/main.c b/main.c
+index bd157ab..bda415d 100644
+--- a/main.c
++++ b/main.c
+@@ -43,7 +43,7 @@
+ 
+ #define TRACE_CONFIGURE_ISP(mode, baudrate, mck) { \
+     const Pin pinsDbgu[] = {PINS_DBGU}; \
+-    pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu)); \
++    pio_configure(pinsDbgu); \
+     usart_init(baudrate); \
+     }
+ 
+@@ -85,8 +85,12 @@ int main(void)
+ #error "CONFIG_DEBUG not set!"
+ #endif
+ 
+-    const Pin pinsDbgu[] = {PINS_DBGU};
+-    pio_configure(pinsDbgu, PIO_LISTSIZE(pinsDbgu));
++	const struct pio_desc pinsDbgu[] = {
++		{"RXD", AT91C_PIN_PB(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{"TXD", AT91C_PIN_PB(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
++		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
++	};
++    pio_configure(pinsDbgu);
+     usart_init(2000000);
+ 
+ 	dbg_info("INFO: at91bootstrap main()\r\n");
+-- 
+2.7.4
+
+
+From d8593c5bd5246e111f9efa1d7650a5cb95c64bec Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Tue, 18 Oct 2016 12:56:58 -0500
+Subject: [PATCH 20/20] Removing CONFIG_FLASH and dbg_info before hw_init()
+
+---
+ board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig |  1 -
+ main.c                                                    | 11 +++++------
+ 2 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+index 4b021e0..239daa2 100644
+--- a/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
++++ b/board/at91sam9g20kubos/at91sam9g20kubosnf_uboot_defconfig
+@@ -1,5 +1,4 @@
+ CONFIG_AT91SAM9G20KUBOS=y
+-CONFIG_FLASH=y
+ CONFIG_RAM_32MB=y
+ CONFIG_IMG_ADDRESS="0x0000C000"
+ CONFIG_IMG_SIZE="0x00044000"
+diff --git a/main.c b/main.c
+index bda415d..1adff71 100644
+--- a/main.c
++++ b/main.c
+@@ -37,8 +37,10 @@
+ #include "sfr_aicredir.h"
+ #include "debug.h"
+ #include "gpio.h"
++#include "arch/at91_pio.h"
+ 
+ /// List of all DBGU pin definitions.
++/*
+ #define PINS_DBGU  {(1<<14) | (1<<15), AT91C_BASE_PIOB, AT91C_ID_PIOB, PIO_PERIPH_A, PIO_DEFAULT}
+ 
+ #define TRACE_CONFIGURE_ISP(mode, baudrate, mck) { \
+@@ -46,6 +48,7 @@
+     pio_configure(pinsDbgu); \
+     usart_init(baudrate); \
+     }
++*/
+ 
+ #ifdef CONFIG_HW_DISPLAY_BANNER
+ static void display_banner (void)
+@@ -81,11 +84,7 @@ int main(void)
+ 	struct image_info image;
+ 	int ret;
+ 
+-#ifndef CONFIG_DEBUG
+-#error "CONFIG_DEBUG not set!"
+-#endif
+-
+-	const struct pio_desc pinsDbgu[] = {
++/*	const struct pio_desc pinsDbgu[] = {
+ 		{"RXD", AT91C_PIN_PB(14), 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 		{"TXD", AT91C_PIN_PB(15), 0, PIO_DEFAULT, PIO_PERIPH_A},
+ 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+@@ -93,7 +92,7 @@ int main(void)
+     pio_configure(pinsDbgu);
+     usart_init(2000000);
+ 
+-	dbg_info("INFO: at91bootstrap main()\r\n");
++	dbg_info("INFO: at91bootstrap main()\r\n");*/
+ 
+ #ifdef CONFIG_HW_INIT
+ 	hw_init();
+-- 
+2.7.4
+
