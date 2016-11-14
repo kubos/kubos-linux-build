@@ -34,10 +34,15 @@
 			label = "ds4";
 			gpios = <&pioC 15 GPIO_ACTIVE_HIGH>;
 		};
+		mmc-power {
+			label = "mmc-power";
+			gpios = <&pioB 6 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
 	};
 
 	chosen {
-		bootargs = "mem=32M root=/dev/mtdblock0 rw rootfstype=ext4";
+		bootargs = "mem=32M console=ttys0,115200 root=/dev/mtdblk0p3";
 		stdout-path = "serial0:115200n8";
 	};
 
@@ -71,10 +76,6 @@
 						atmel,pins =
 							<AT91_PIOC 2 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;	/* PC2 gpio CD pin pull up and deglitch */
 					};
-					pinctrl_mmc0_slot0_power: mmc0_slot0-power {
-						atmel,pins = 
-							<AT91_PIOB 6 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP>;	/* SD slot0 select */
-					};
 				};
 			};
 
@@ -102,13 +103,11 @@
 				pinctrl-0 = <
 					&pinctrl_board_mmc0_slot0
 					&pinctrl_mmc0_slot0_cmd_dat0
-					&pinctrl_mmc0_slot0_dat1_3
-					&pinctrl_mmc0_slot0_power>;
+					&pinctrl_mmc0_slot0_dat1_3>;
 				status = "okay";
 				slot@0 {
 					reg = <0>;
 					bus-width = <4>;
-					power-gpios = <&pioB 6 GPIO_ACTIVE_LOW>;
 				};
 			};
 
