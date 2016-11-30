@@ -9,8 +9,8 @@
 #include "at91sam9g20.dtsi"
 
 / {
-	model = "Kubos at91sam9g20kubos";
-	compatible = "kubos,at91sam9g20kubos", "atmel,at91sam9g20", "atmel,at91sam9";
+	model = "Kubos at91sam9g20isis";
+	compatible = "kubos,at91sam9g20isis", "atmel,at91sam9g20", "atmel,at91sam9";
 
 	leds {
 		compatible = "gpio-leds";
@@ -136,6 +136,12 @@
 			};
 
 			watchdog@fffffd40 {
+				compatible = "kubos,at91isis-wdt";
+				timeout-sec = <1>;
+				kubos,max-heartbeat = <50>;
+				kubos,min-heartbeat = <10>;
+    				kubos,watchdog-type = "hardware";
+    				kubos,reset-type = "all";
 				status = "okay";
 			};
 
@@ -157,9 +163,9 @@
 				reg = <0x00000 0xa000>;
 			};
 
-			dtb@80000 {
+			dtb@60000 {
 				label = "dtb";
-				reg = <0x80000 0x5000>;
+				reg = <0x60000 0x5000>;
 			};
 		};
 
