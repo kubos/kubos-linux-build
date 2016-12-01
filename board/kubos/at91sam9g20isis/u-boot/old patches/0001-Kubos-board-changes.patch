@@ -1,0 +1,756 @@
+From 1367abe542921d4649fd4a1ef7eb15b7d994aee9 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Fri, 30 Sep 2016 15:43:25 -0500
+Subject: [PATCH 1/4] Creating configuration for KubOS at91sam9g20-based board
+
+---
+ board/kubos/at91sam9g20kubos/Kconfig            |  12 ++
+ board/kubos/at91sam9g20kubos/MAINTAINERS        |  17 ++
+ board/kubos/at91sam9g20kubos/Makefile           |  14 ++
+ board/kubos/at91sam9g20kubos/at91sam9g20kubos.c | 170 ++++++++++++++++
+ board/kubos/at91sam9g20kubos/led.c              |  22 +++
+ board/kubos/at91sam9g20kubos/partition.c        |  26 +++
+ include/configs/at91sam9g20kubos.h              | 252 ++++++++++++++++++++++++
+ 7 files changed, 513 insertions(+)
+ create mode 100644 board/kubos/at91sam9g20kubos/Kconfig
+ create mode 100644 board/kubos/at91sam9g20kubos/MAINTAINERS
+ create mode 100644 board/kubos/at91sam9g20kubos/Makefile
+ create mode 100644 board/kubos/at91sam9g20kubos/at91sam9g20kubos.c
+ create mode 100644 board/kubos/at91sam9g20kubos/led.c
+ create mode 100644 board/kubos/at91sam9g20kubos/partition.c
+ create mode 100644 include/configs/at91sam9g20kubos.h
+
+diff --git a/board/kubos/at91sam9g20kubos/Kconfig b/board/kubos/at91sam9g20kubos/Kconfig
+new file mode 100644
+index 0000000..cd5bdd2
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/Kconfig
+@@ -0,0 +1,12 @@
++if TARGET_AT91SAM9G20KUBOS
++
++config SYS_BOARD
++	default "at91sam9g20kubos"
++
++config SYS_VENDOR
++	default "kubos"
++
++config SYS_CONFIG_NAME
++	default "at91sam9g20kubos"
++
++endif
+diff --git a/board/kubos/at91sam9g20kubos/MAINTAINERS b/board/kubos/at91sam9g20kubos/MAINTAINERS
+new file mode 100644
+index 0000000..aa7898e
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/MAINTAINERS
+@@ -0,0 +1,17 @@
++AT91SAM9260EK BOARD
++M:	Stelian Pop <stelian@popies.net>
++S:	Maintained
++F:	board/atmel/at91sam9260ek/
++F:	include/configs/at91sam9260ek.h
++F:	configs/at91sam9260ek_dataflash_cs0_defconfig
++F:	configs/at91sam9260ek_dataflash_cs1_defconfig
++F:	configs/at91sam9260ek_nandflash_defconfig
++F:	configs/at91sam9g20ek_2mmc_nandflash_defconfig
++F:	configs/at91sam9g20ek_dataflash_cs0_defconfig
++F:	configs/at91sam9g20ek_dataflash_cs1_defconfig
++F:	configs/at91sam9g20ek_mmc_defconfig
++F:	configs/at91sam9g20ek_2mmc_defconfig
++F:	configs/at91sam9g20ek_nandflash_defconfig
++F:	configs/at91sam9xeek_dataflash_cs0_defconfig
++F:	configs/at91sam9xeek_dataflash_cs1_defconfig
++F:	configs/at91sam9xeek_nandflash_defconfig
+diff --git a/board/kubos/at91sam9g20kubos/Makefile b/board/kubos/at91sam9g20kubos/Makefile
+new file mode 100644
+index 0000000..e9b7e9a
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/Makefile
+@@ -0,0 +1,14 @@
++#
++# (C) Copyright 2003-2008
++# Wolfgang Denk, DENX Software Engineering, wd@denx.de.
++#
++# (C) Copyright 2008
++# Stelian Pop <stelian@popies.net>
++# Lead Tech Design <www.leadtechdesign.com>
++#
++# SPDX-License-Identifier:	GPL-2.0+
++#
++
++obj-y	+= at91sam9g20kubos.o
++obj-y	+= led.o
++obj-$(CONFIG_HAS_DATAFLASH) += partition.o
+diff --git a/board/kubos/at91sam9g20kubos/at91sam9g20kubos.c b/board/kubos/at91sam9g20kubos/at91sam9g20kubos.c
+new file mode 100644
+index 0000000..22396b0
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/at91sam9g20kubos.c
+@@ -0,0 +1,170 @@
++/*
++ * (C) Copyright 2007-2008
++ * Stelian Pop <stelian@popies.net>
++ * Lead Tech Design <www.leadtechdesign.com>
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++
++#include <common.h>
++#include <asm/io.h>
++#include <asm/arch/at91sam9_matrix.h>
++#include <asm/arch/at91sam9_smc.h>
++#include <asm/arch/at91_common.h>
++#include <asm/arch/clk.h>
++#include <asm/arch/gpio.h>
++#include <atmel_mci.h>
++
++#if defined(CONFIG_RESET_PHY_R) && defined(CONFIG_MACB)
++# include <net.h>
++#endif
++#include <netdev.h>
++
++DECLARE_GLOBAL_DATA_PTR;
++
++/* ------------------------------------------------------------------------- */
++/*
++ * Miscelaneous platform dependent initialisations
++ */
++
++#ifdef CONFIG_CMD_NAND
++static void at91sam9g20kubos_nand_hw_init(void)
++{
++	struct at91_smc *smc = (struct at91_smc *)ATMEL_BASE_SMC;
++	struct at91_matrix *matrix = (struct at91_matrix *)ATMEL_BASE_MATRIX;
++	unsigned long csa;
++
++	/* Assign CS3 to NAND/SmartMedia Interface */
++	csa = readl(&matrix->ebicsa);
++	csa |= AT91_MATRIX_CS3A_SMC_SMARTMEDIA;
++	writel(csa, &matrix->ebicsa);
++
++	/* Configure SMC CS3 for NAND/SmartMedia */
++	writel(AT91_SMC_SETUP_NWE(1) | AT91_SMC_SETUP_NCS_WR(0) |
++		AT91_SMC_SETUP_NRD(1) | AT91_SMC_SETUP_NCS_RD(0),
++		&smc->cs[3].setup);
++	writel(AT91_SMC_PULSE_NWE(3) | AT91_SMC_PULSE_NCS_WR(3) |
++		AT91_SMC_PULSE_NRD(3) | AT91_SMC_PULSE_NCS_RD(3),
++		&smc->cs[3].pulse);
++	writel(AT91_SMC_CYCLE_NWE(5) | AT91_SMC_CYCLE_NRD(5),
++		&smc->cs[3].cycle);
++	writel(AT91_SMC_MODE_RM_NRD | AT91_SMC_MODE_WM_NWE |
++		AT91_SMC_MODE_EXNW_DISABLE |
++#ifdef CONFIG_SYS_NAND_DBW_16
++		AT91_SMC_MODE_DBW_16 |
++#else /* CONFIG_SYS_NAND_DBW_8 */
++		AT91_SMC_MODE_DBW_8 |
++#endif
++		AT91_SMC_MODE_TDF_CYCLE(2),
++		&smc->cs[3].mode);
++
++	/* Configure RDY/BSY */
++	at91_set_gpio_input(CONFIG_SYS_NAND_READY_PIN, 1);
++
++	/* Enable NandFlash */
++	at91_set_gpio_output(CONFIG_SYS_NAND_ENABLE_PIN, 1);
++
++}
++#endif
++
++#ifdef CONFIG_MACB
++static void at91sam9g20kubos_macb_hw_init(void)
++{
++	struct at91_port *pioa = (struct at91_port *)ATMEL_BASE_PIOA;
++
++	at91_periph_clk_enable(ATMEL_ID_EMAC0);
++
++	/*
++	 * Disable pull-up on:
++	 *	RXDV (PA17) => PHY normal mode (not Test mode)
++	 *	ERX0 (PA14) => PHY ADDR0
++	 *	ERX1 (PA15) => PHY ADDR1
++	 *	ERX2 (PA25) => PHY ADDR2
++	 *	ERX3 (PA26) => PHY ADDR3
++	 *	ECRS (PA28) => PHY ADDR4  => PHYADDR = 0x0
++	 *
++	 * PHY has internal pull-down
++	 */
++	writel(pin_to_mask(AT91_PIN_PA14) |
++		pin_to_mask(AT91_PIN_PA15) |
++		pin_to_mask(AT91_PIN_PA17) |
++		pin_to_mask(AT91_PIN_PA25) |
++		pin_to_mask(AT91_PIN_PA26) |
++		pin_to_mask(AT91_PIN_PA28),
++		&pioa->pudr);
++
++	at91_phy_reset();
++
++	/* Re-enable pull-up */
++	writel(pin_to_mask(AT91_PIN_PA14) |
++		pin_to_mask(AT91_PIN_PA15) |
++		pin_to_mask(AT91_PIN_PA17) |
++		pin_to_mask(AT91_PIN_PA25) |
++		pin_to_mask(AT91_PIN_PA26) |
++		pin_to_mask(AT91_PIN_PA28),
++		&pioa->puer);
++
++	/* Initialize EMAC=MACB hardware */
++	at91_macb_hw_init();
++}
++#endif
++
++#ifdef CONFIG_GENERIC_ATMEL_MCI
++int board_mmc_init(bd_t *bd)
++{
++	at91_mci_hw_init();
++
++	return atmel_mci_init((void *)ATMEL_BASE_MCI);
++}
++#endif
++
++int board_early_init_f(void)
++{
++	at91_periph_clk_enable(ATMEL_ID_PIOA);
++	at91_periph_clk_enable(ATMEL_ID_PIOB);
++	at91_periph_clk_enable(ATMEL_ID_PIOC);
++
++	return 0;
++}
++
++int board_init(void)
++{
++	/* adress of boot parameters */
++	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
++
++	at91_seriald_hw_init();
++#ifdef CONFIG_CMD_NAND
++	at91sam9g20kubos_nand_hw_init();
++#endif
++#ifdef CONFIG_HAS_DATAFLASH
++	at91_spi0_hw_init((1 << 0) | (1 << 1));
++#endif
++#ifdef CONFIG_MACB
++	at91sam9g20kubos_macb_hw_init();
++#endif
++
++	return 0;
++}
++
++int dram_init(void)
++{
++	gd->ram_size = get_ram_size(
++		(void *)CONFIG_SYS_SDRAM_BASE,
++		CONFIG_SYS_SDRAM_SIZE);
++	return 0;
++}
++
++#ifdef CONFIG_RESET_PHY_R
++void reset_phy(void)
++{
++}
++#endif
++
++int board_eth_init(bd_t *bis)
++{
++	int rc = 0;
++#ifdef CONFIG_MACB
++	rc = macb_eth_initialize(0, (void *)ATMEL_BASE_EMAC0, 0x00);
++#endif
++	return rc;
++}
+diff --git a/board/kubos/at91sam9g20kubos/led.c b/board/kubos/at91sam9g20kubos/led.c
+new file mode 100644
+index 0000000..fbe15af
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/led.c
+@@ -0,0 +1,22 @@
++/*
++ * (C) Copyright 2007-2008
++ * Stelian Pop <stelian@popies.net>
++ * Lead Tech Design <www.leadtechdesign.com>
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++
++#include <common.h>
++#include <asm/io.h>
++#include <asm/arch/gpio.h>
++#include <status_led.h>
++
++void coloured_LED_init(void)
++{
++	/* Clock is enabled in board_early_init_f() */
++	at91_set_gpio_output(CONFIG_RED_LED, 1);
++	at91_set_gpio_output(CONFIG_GREEN_LED, 1);
++
++	at91_set_gpio_value(CONFIG_RED_LED, 0);
++	at91_set_gpio_value(CONFIG_GREEN_LED, 1);
++}
+diff --git a/board/kubos/at91sam9g20kubos/partition.c b/board/kubos/at91sam9g20kubos/partition.c
+new file mode 100644
+index 0000000..e41eefe
+--- /dev/null
++++ b/board/kubos/at91sam9g20kubos/partition.c
+@@ -0,0 +1,26 @@
++/*
++ * (C) Copyright 2008
++ * Ulf Samuelsson <ulf@atmel.com>
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++#include <common.h>
++#include <config.h>
++#include <asm/hardware.h>
++#include <dataflash.h>
++
++AT91S_DATAFLASH_INFO dataflash_info[CONFIG_SYS_MAX_DATAFLASH_BANKS];
++
++struct dataflash_addr cs[CONFIG_SYS_MAX_DATAFLASH_BANKS] = {
++	{CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS0, 0},	/* Logical adress, CS */
++	{CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS1, 1}
++};
++
++/*define the area offsets*/
++dataflash_protect_t area_list[NB_DATAFLASH_AREA] = {
++	{0x00000000, 0x000041FF, FLAG_PROTECT_SET,   0, "Bootstrap"},
++	{0x00004200, 0x000083FF, FLAG_PROTECT_CLEAR, 0, "Environment"},
++	{0x00008400, 0x00083FFF, FLAG_PROTECT_SET,   0, "U-Boot"},
++	{0x00084000, 0x00293FFF, FLAG_PROTECT_CLEAR, 0,	"Kernel"},
++	{0x00294000, 0xFFFFFFFF, FLAG_PROTECT_CLEAR, 0,	"FS"},
++};
+diff --git a/include/configs/at91sam9g20kubos.h b/include/configs/at91sam9g20kubos.h
+new file mode 100644
+index 0000000..1c244c3
+--- /dev/null
++++ b/include/configs/at91sam9g20kubos.h
+@@ -0,0 +1,252 @@
++/*
++ * (C) Copyright 2007-2008
++ * Stelian Pop <stelian@popies.net>
++ * Lead Tech Design <www.leadtechdesign.com>
++ *
++ * Configuation settings for the AT91SAM9260EK & AT91SAM9G20EK boards.
++ *
++ * SPDX-License-Identifier:	GPL-2.0+
++ */
++
++#ifndef __CONFIG_H
++#define __CONFIG_H
++
++/*
++ * SoC must be defined first, before hardware.h is included.
++ * In this case SoC is defined in boards.cfg.
++ */
++#include <asm/hardware.h>
++
++/*
++ * Warning: changing CONFIG_SYS_TEXT_BASE requires
++ * adapting the initial boot program.
++ * Since the linker has to swallow that define, we must use a pure
++ * hex number here!
++ */
++#define CONFIG_SYS_TEXT_BASE		0x21f00000
++
++/* ARM asynchronous clock */
++#define CONFIG_SYS_AT91_SLOW_CLOCK	32768		/* slow clock xtal */
++#define CONFIG_SYS_AT91_MAIN_CLOCK	18432000	/* main clock xtal */
++
++/* Define actual evaluation board type from used processor type */
++#ifdef CONFIG_AT91SAM9G20
++# define CONFIG_AT91SAM9G20KUBOS	/* It's an Atmel AT91SAM9G20 EK */
++#else
++#error Messed up board configuration!
++# define CONFIG_AT91SAM9260EK	/* It's an Atmel AT91SAM9260 EK */
++#endif
++
++/* Misc CPU related */
++#define CONFIG_ARCH_CPU_INIT
++#define CONFIG_CMDLINE_TAG		/* enable passing of ATAGs */
++#define CONFIG_SETUP_MEMORY_TAGS
++#define CONFIG_INITRD_TAG
++#define CONFIG_SKIP_LOWLEVEL_INIT
++#define CONFIG_BOARD_EARLY_INIT_F
++#define CONFIG_DISPLAY_CPUINFO
++
++/* general purpose I/O */
++#define CONFIG_ATMEL_LEGACY		/* required until (g)pio is fixed */
++#define CONFIG_AT91_GPIO
++#define CONFIG_AT91_GPIO_PULLUP	1	/* keep pullups on peripheral pins */
++
++/* serial console */
++#define CONFIG_ATMEL_USART
++#define CONFIG_USART_BASE		ATMEL_BASE_DBGU
++#define	CONFIG_USART_ID			ATMEL_ID_SYS
++#define CONFIG_BAUDRATE			115200
++
++/* LED */
++#define CONFIG_AT91_LED
++#define	CONFIG_RED_LED		AT91_PIN_PA9	/* this is the power led */
++#define	CONFIG_GREEN_LED	AT91_PIN_PA6	/* this is the user led */
++
++
++/*
++ * BOOTP options
++ */
++#define CONFIG_BOOTP_BOOTFILESIZE	1
++#define CONFIG_BOOTP_BOOTPATH		1
++#define CONFIG_BOOTP_GATEWAY		1
++#define CONFIG_BOOTP_HOSTNAME		1
++
++/*
++ * Command line configuration.
++ */
++#define CONFIG_CMD_NOR		1
++
++/*
++ * SDRAM: 1 bank, min 32, max 128 MB
++ * Initialized before u-boot gets started.
++ */
++#define CONFIG_NR_DRAM_BANKS		1
++#define CONFIG_SYS_SDRAM_BASE		ATMEL_BASE_CS1
++#define CONFIG_SYS_SDRAM_SIZE		0x02000000         //32MB
++
++/*
++ * Initial stack pointer: 4k - GENERATED_GBL_DATA_SIZE in internal SRAM,
++ * leaving the correct space for initial global data structure above
++ * that address while providing maximum stack area below.
++ */
++#ifdef CONFIG_AT91SAM9XE
++# define CONFIG_SYS_INIT_SP_ADDR \
++	(ATMEL_BASE_SRAM + 0x1000 - GENERATED_GBL_DATA_SIZE)
++#else
++# define CONFIG_SYS_INIT_SP_ADDR \
++	(ATMEL_BASE_SRAM1 + 0x1000 - GENERATED_GBL_DATA_SIZE)
++#endif
++
++/*
++ * The (arm)linux board id set by generic code depending on configured board
++ * (see boards.cfg for different boards)
++ */
++#ifdef CONFIG_AT91SAM9G20
++	/* the sam9g20 variants have two different board ids */
++# ifdef CONFIG_AT91SAM9G20KUBOS
++	/* we may be setup for the 2MMC variant of at91sam9g20ek */
++#  define CONFIG_MACH_TYPE MACH_TYPE_AT91SAM9G20KUBOS
++# else
++	/* or the normal at91sam9g20ek */
++#  define CONFIG_MACH_TYPE MACH_TYPE_AT91SAM9G20EK
++# endif
++#else
++	/* otherwise default to good old at91sam9260ek */
++# define CONFIG_MACH_TYPE MACH_TYPE_AT91SAM9260EK
++#endif
++
++#ifndef CONFIG_AT91SAM9G20KUBOS
++/* DataFlash */
++#define CONFIG_ATMEL_DATAFLASH_SPI
++#define CONFIG_HAS_DATAFLASH		1
++#define CONFIG_SYS_MAX_DATAFLASH_BANKS		2
++#define CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS0	0xC0000000	/* CS0 */
++#define CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS1	0xD0000000	/* CS1 */
++#define AT91_SPI_CLK			15000000
++#else
++/* Enable MMC. The MCCK is conflicted with DataFlash */
++#endif
++
++#ifdef CONFIG_AT91SAM9G20KUBOS
++#define DATAFLASH_TCSS			(0x22 << 16)
++#else
++#define DATAFLASH_TCSS			(0x1a << 16)
++#endif
++#define DATAFLASH_TCHS			(0x1 << 24)
++
++/* NOR flash - Just changed 'NAND' to 'NOR'
++ * TODO: Check ALL of these values... */
++#ifdef CONFIG_CMD_NOR
++#define CONFIG_NOR_ATMEL
++#define CONFIG_SYS_MAX_NOR_DEVICE	1
++#define CONFIG_SYS_NOR_BASE		ATMEL_BASE_CS3
++#define CONFIG_SYS__DBW_8
++#define CONFIG_SYS__MASK_ALE	(1 << 21)
++#define CONFIG_SYS__MASK_CLE	(1 << 22)
++#define CONFIG_SYS__ENABLE_PIN	AT91_PIN_PC14
++#define CONFIG_SYS__READY_PIN	AT91_PIN_PC13
++#endif
++
++/* MMC */
++//TODO: Turn this on?  I think it's SD card support
++#ifdef CONFIG_CMD_MMC
++#define CONFIG_MMC
++#define CONFIG_GENERIC_MMC
++#define CONFIG_GENERIC_ATMEL_MCI
++#endif
++
++/* FAT */
++#ifdef CONFIG_CMD_FAT
++#define CONFIG_DOS_PARTITION
++#endif
++
++/* NOR flash - no real flash on this board */
++#define CONFIG_SYS_NO_FLASH			1
++
++/* USB */
++#define CONFIG_USB_ATMEL
++#define CONFIG_USB_ATMEL_CLK_SEL_PLLB
++#define CONFIG_USB_OHCI_NEW		1
++#define CONFIG_SYS_USB_OHCI_CPU_INIT		1
++#define CONFIG_SYS_USB_OHCI_REGS_BASE		0x00500000	/* AT91SAM9G20_UHP_BASE */
++#define CONFIG_SYS_USB_OHCI_SLOT_NAME		"at91sam9g20"
++#define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS	2
++
++#define CONFIG_SYS_LOAD_ADDR			0x22000000	/* load address */
++
++#define CONFIG_SYS_MEMTEST_START		CONFIG_SYS_SDRAM_BASE
++#define CONFIG_SYS_MEMTEST_END			0x23e00000
++
++#ifdef CONFIG_SYS_USE_DATAFLASH_CS0
++
++/* bootstrap + u-boot + env + linux in dataflash on CS0 */
++#define CONFIG_ENV_IS_IN_DATAFLASH	1
++#define CONFIG_SYS_MONITOR_BASE	(CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS0 + 0x8400)
++#define CONFIG_ENV_OFFSET		0x4200
++#define CONFIG_ENV_ADDR		(CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS0 + CONFIG_ENV_OFFSET)
++#define CONFIG_ENV_SIZE		0x4200
++#define CONFIG_BOOTCOMMAND	"cp.b 0xC0084000 0x22000000 0x210000; bootm"
++#define CONFIG_BOOTARGS		"console=ttyS0,115200 "			\
++				"root=/dev/mtdblock0 "			\
++				"mtdparts=atmel_:-(root) "		\
++				"rw rootfstype=jffs2"
++
++#elif CONFIG_SYS_USE_DATAFLASH_CS1
++
++/* bootstrap + u-boot + env + linux in dataflash on CS1 */
++#define CONFIG_ENV_IS_IN_DATAFLASH	1
++#define CONFIG_SYS_MONITOR_BASE	(CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS1 + 0x8400)
++#define CONFIG_ENV_OFFSET		0x4200
++#define CONFIG_ENV_ADDR		(CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS1 + CONFIG_ENV_OFFSET)
++#define CONFIG_ENV_SIZE		0x4200
++#define CONFIG_BOOTCOMMAND	"cp.b 0xD0084000 0x22000000 0x210000; bootm"
++#define CONFIG_BOOTARGS		"console=ttyS0,115200 "			\
++				"root=/dev/mtdblock0 "			\
++				"mtdparts=atmel_:-(root) "		\
++				"rw rootfstype=jffs2"
++
++#elif defined(CONFIG_SYS_USE_FLASH)
++
++/* bootstrap + u-boot + env + linux in flash */
++#define CONFIG_ENV_IS_IN_	1
++#define CONFIG_ENV_OFFSET		0xc0000
++#define CONFIG_ENV_OFFSET_REDUND	0x100000
++#define CONFIG_ENV_SIZE		0x20000		/* 1 sector = 128 kB */
++#define CONFIG_BOOTCOMMAND	"NOR read 0x22000000 0x200000 0x300000; bootm"
++#define CONFIG_BOOTARGS							\
++	"console=ttyS0,115200 earlyprintk "				\
++	"mtdparts=atmel_:256k(bootstrap)ro,512k(uboot)ro,"		\
++	"256k(env),256k(env_redundant),256k(spare),"			\
++	"512k(dtb),6M(kernel)ro,-(rootfs) "				\
++	"root=/dev/mtdblock7 rw rootfstype=jffs2"
++
++#else	/* CONFIG_SYS_USE_MMC */
++/* bootstrap + u-boot + env + linux in mmc */
++#define CONFIG_ENV_IS_IN_MMC
++/* For FAT system, most cases it should be in the reserved sector */
++#define CONFIG_ENV_OFFSET		0x2000
++#define CONFIG_ENV_SIZE			0x1000
++#define CONFIG_SYS_MMC_ENV_DEV		0
++
++#define CONFIG_BOOTCOMMAND						\
++	"fatload mmc 0:1 0x22000000 uImage; bootm"
++#define CONFIG_BOOTARGS							\
++	"console=ttyS0,115200 earlyprintk "				\
++	"mtdparts=atmel_:256k(bootstrap)ro,512k(uboot)ro,"		\
++	"256k(env),256k(env_redundant),256k(spare),"			\
++	"512k(dtb),6M(kernel)ro,-(rootfs) "				\
++	"root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait"
++#endif
++
++#define CONFIG_SYS_CBSIZE		256
++#define CONFIG_SYS_MAXARGS		16
++#define CONFIG_SYS_LONGHELP		1
++#define CONFIG_CMDLINE_EDITING	1
++#define CONFIG_AUTO_COMPLETE
++
++/*
++ * Size of malloc() pool
++ */
++#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)
++
++#endif
+-- 
+2.7.4
+
+
+From 2b6078850551d96c68120f779cbc6fc8c9e634ee Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Fri, 30 Sep 2016 15:52:20 -0500
+Subject: [PATCH 2/4] Minor fix to conform to standards
+
+---
+ include/configs/at91sam9g20kubos.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/configs/at91sam9g20kubos.h b/include/configs/at91sam9g20kubos.h
+index 1c244c3..b780720 100644
+--- a/include/configs/at91sam9g20kubos.h
++++ b/include/configs/at91sam9g20kubos.h
+@@ -77,12 +77,12 @@
+ #define CONFIG_CMD_NOR		1
+ 
+ /*
+- * SDRAM: 1 bank, min 32, max 128 MB
++ * SDRAM: 1 bank, 32MB
+  * Initialized before u-boot gets started.
+  */
+ #define CONFIG_NR_DRAM_BANKS		1
+ #define CONFIG_SYS_SDRAM_BASE		ATMEL_BASE_CS1
+-#define CONFIG_SYS_SDRAM_SIZE		0x02000000         //32MB
++#define CONFIG_SYS_SDRAM_SIZE		0x02000000
+ 
+ /*
+  * Initial stack pointer: 4k - GENERATED_GBL_DATA_SIZE in internal SRAM,
+@@ -148,7 +148,7 @@
+ #endif
+ 
+ /* MMC */
+-//TODO: Turn this on?  I think it's SD card support
++/* TODO: Turn this on?  I think it's SD card support */
+ #ifdef CONFIG_CMD_MMC
+ #define CONFIG_MMC
+ #define CONFIG_GENERIC_MMC
+-- 
+2.7.4
+
+
+From e8e211d9b1b1a0930c8e76a218f7b53a8f6c290c Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 3 Oct 2016 13:23:05 -0500
+Subject: [PATCH 3/4] More changes
+
+---
+ arch/arm/include/asm/mach-types.h  | 13 +++++++++++++
+ include/configs/at91sam9g20kubos.h | 32 +++++++++++++++++++++++++++-----
+ 2 files changed, 40 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/include/asm/mach-types.h b/arch/arm/include/asm/mach-types.h
+index d51be0b..3fde852 100644
+--- a/arch/arm/include/asm/mach-types.h
++++ b/arch/arm/include/asm/mach-types.h
+@@ -265,6 +265,7 @@ extern unsigned int __machine_arch_type;
+ #define MACH_TYPE_TS409                1601
+ #define MACH_TYPE_CM_X300              1616
+ #define MACH_TYPE_AT91SAM9G20EK        1624
++#define MACH_TYPE_AT91SAM9G20KUBOS     1625
+ #define MACH_TYPE_SMDK6410             1626
+ #define MACH_TYPE_U300                 1627
+ #define MACH_TYPE_WRT350N_V2           1633
+@@ -4144,6 +4145,18 @@ extern unsigned int __machine_arch_type;
+ # define machine_is_at91sam9g20ek()	(0)
+ #endif
+ 
++#ifdef CONFIG_MACH_AT91SAM9G20KUBOS
++# ifdef machine_arch_type
++#  undef machine_arch_type
++#  define machine_arch_type	__machine_arch_type
++# else
++#  define machine_arch_type	MACH_TYPE_AT91SAM9G20KUBOS
++# endif
++# define machine_is_at91sam9g20kubos()	(machine_arch_type == MACH_TYPE_AT91SAM9G20KUBOS)
++#else
++# define machine_is_at91sam9g20kubos()	(0)
++#endif
++
+ #ifdef CONFIG_MACH_SMDK6410
+ # ifdef machine_arch_type
+ #  undef machine_arch_type
+diff --git a/include/configs/at91sam9g20kubos.h b/include/configs/at91sam9g20kubos.h
+index b780720..63a91bf 100644
+--- a/include/configs/at91sam9g20kubos.h
++++ b/include/configs/at91sam9g20kubos.h
+@@ -205,21 +205,43 @@
+ 				"mtdparts=atmel_:-(root) "		\
+ 				"rw rootfstype=jffs2"
+ 
+-#elif defined(CONFIG_SYS_USE_FLASH)
++#elif defined(CONFIG_SYS_USE_NORFLASH)
+ 
+ /* bootstrap + u-boot + env + linux in flash */
+-#define CONFIG_ENV_IS_IN_	1
++/* TODO: This configuration could use some work...*/
++#define CONFIG_ENV_IS_IN_FLASH	1
+ #define CONFIG_ENV_OFFSET		0xc0000
+-#define CONFIG_ENV_OFFSET_REDUND	0x100000
+ #define CONFIG_ENV_SIZE		0x20000		/* 1 sector = 128 kB */
+-#define CONFIG_BOOTCOMMAND	"NOR read 0x22000000 0x200000 0x300000; bootm"
++#define CONFIG_BOOTCOMMAND	"cp.b 0x22000000 0x200000 0x300000; bootm"
+ #define CONFIG_BOOTARGS							\
+ 	"console=ttyS0,115200 earlyprintk "				\
+ 	"mtdparts=atmel_:256k(bootstrap)ro,512k(uboot)ro,"		\
+-	"256k(env),256k(env_redundant),256k(spare),"			\
++	"256k(env),256k(spare),"			\
+ 	"512k(dtb),6M(kernel)ro,-(rootfs) "				\
+ 	"root=/dev/mtdblock7 rw rootfstype=jffs2"
+ 
++#define CONFIG_SYS_FLASH_CFI			1
++#define CONFIG_FLASH_CFI_DRIVER			1
++#define PHYS_FLASH_1				0x10000000
++#define CONFIG_SYS_FLASH_BASE			PHYS_FLASH_1
++#define CONFIG_SYS_MAX_FLASH_SECT		256
++#define CONFIG_SYS_MAX_FLASH_BANKS		1
++
++#define CONFIG_SYS_MONITOR_SEC	1:0-3
++#define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_FLASH_BASE
++#define CONFIG_SYS_MONITOR_LEN	(256 << 10)
++#define CONFIG_ENV_IS_IN_FLASH	1
++#define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x007E0000)
++/*#define CONFIG_ENV_ADDR_REDUND	(CONFIG_ENV_ADDR - CONFIG_ENV_SIZE)*/
++
++#define CONFIG_EXTRA_ENV_SETTINGS	\
++	"monitor_base=" __stringify(CONFIG_SYS_MONITOR_BASE) "\0" \
++	"update=" \
++		"protect off ${monitor_base} +${filesize};" \
++		"erase ${monitor_base} +${filesize};" \
++		"cp.b ${fileaddr} ${monitor_base} ${filesize};" \
++		"protect on ${monitor_base} +${filesize}\0"
++
+ #else	/* CONFIG_SYS_USE_MMC */
+ /* bootstrap + u-boot + env + linux in mmc */
+ #define CONFIG_ENV_IS_IN_MMC
+-- 
+2.7.4
+
+
+From 014e3420ecbd62e89aaa2e779df9cd39d6729ec0 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 3 Oct 2016 14:31:22 -0500
+Subject: [PATCH 4/4] Updating Kconfig to add kubos board
+
+---
+ arch/arm/mach-at91/Kconfig   | 5 +++++
+ scripts/config_whitelist.txt | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/arch/arm/mach-at91/Kconfig b/arch/arm/mach-at91/Kconfig
+index 13e19ba..e3f5f74 100644
+--- a/arch/arm/mach-at91/Kconfig
++++ b/arch/arm/mach-at91/Kconfig
+@@ -30,6 +30,10 @@ config TARGET_GURNARD
+ 	select DM_SERIAL
+ 	select DM_GPIO
+ 	select DM_ETH
++	
++config TARGET_AT91SAM9G20KUBOS
++	bool "Kubos at91sam9g20 reference board"
++	select CPU_ARM926EJS
+ 
+ config TARGET_AT91SAM9261EK
+ 	bool "Atmel at91sam9261 reference board"
+@@ -175,6 +179,7 @@ source "board/calao/usb_a9263/Kconfig"
+ source "board/denx/ma5d4evk/Kconfig"
+ source "board/egnite/ethernut5/Kconfig"
+ source "board/esd/meesc/Kconfig"
++source "board/kubos/at91sam9g20kubos/Kconfig"
+ source "board/l+g/vinco/Kconfig"
+ source "board/mini-box/picosam9g45/Kconfig"
+ source "board/ronetix/pm9261/Kconfig"
+-- 
+2.7.4
+
