@@ -1,7 +1,7 @@
-From f894db327511b691279507381e9ef1a099253840 Mon Sep 17 00:00:00 2001
+From 9d26ac808fcfe7bb192d60c707316989f5b8fec3 Mon Sep 17 00:00:00 2001
 From: catfreed <catherine@kubos.co>
-Date: Wed, 30 Nov 2016 15:41:33 -0600
-Subject: [PATCH] Adding configuration files for Kubos AT91SAM9G20ISIS board
+Date: Fri, 2 Dec 2016 15:29:32 -0600
+Subject: [PATCH] Adding configuration files for AT91SAM9G20ISIS board.
 
 ---
  arch/arm/include/asm/mach-types.h                |  13 ++
@@ -9,25 +9,23 @@ Subject: [PATCH] Adding configuration files for Kubos AT91SAM9G20ISIS board
  arch/arm/mach-at91/arm926ejs/reset.c             |  14 +-
  board/kubos/at91sam9g20isis/Kconfig              |  12 ++
  board/kubos/at91sam9g20isis/MAINTAINERS          |  17 ++
- board/kubos/at91sam9g20isis/Makefile             |  14 ++
- board/kubos/at91sam9g20isis/at91sam9g20isis.c    | 107 ++++++++++++
+ board/kubos/at91sam9g20isis/Makefile             |  20 +++
+ board/kubos/at91sam9g20isis/at91sam9g20isis.c    | 110 ++++++++++++
  board/kubos/at91sam9g20isis/led.c                |  22 +++
- board/kubos/at91sam9g20isis/partition.c          |  26 +++
  cmd/gpio.c                                       |   2 +-
  common/image.c                                   |  16 +-
  configs/at91sam9g20kubos_2mmc_norflash_defconfig |  21 +++
  drivers/mmc/gen_atmel_mci.c                      | 204 +++++++++++++++++++++++
  drivers/mmc/mmc.c                                |  38 +++++
  include/common.h                                 |   2 +
- include/configs/at91sam9g20isis.h                | 173 +++++++++++++++++++
+ include/configs/at91sam9g20isis.h                | 179 ++++++++++++++++++++
  include/mmc.h                                    |   3 +
- 17 files changed, 683 insertions(+), 6 deletions(-)
+ 16 files changed, 672 insertions(+), 6 deletions(-)
  create mode 100644 board/kubos/at91sam9g20isis/Kconfig
  create mode 100644 board/kubos/at91sam9g20isis/MAINTAINERS
  create mode 100644 board/kubos/at91sam9g20isis/Makefile
  create mode 100644 board/kubos/at91sam9g20isis/at91sam9g20isis.c
  create mode 100644 board/kubos/at91sam9g20isis/led.c
- create mode 100644 board/kubos/at91sam9g20isis/partition.c
  create mode 100644 configs/at91sam9g20kubos_2mmc_norflash_defconfig
  create mode 100644 include/configs/at91sam9g20isis.h
 
@@ -161,36 +159,49 @@ index 0000000..aa7898e
 +F:	configs/at91sam9xeek_nandflash_defconfig
 diff --git a/board/kubos/at91sam9g20isis/Makefile b/board/kubos/at91sam9g20isis/Makefile
 new file mode 100644
-index 0000000..38056f1
+index 0000000..17be767
 --- /dev/null
 +++ b/board/kubos/at91sam9g20isis/Makefile
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,20 @@
 +#
-+# (C) Copyright 2003-2008
-+# Wolfgang Denk, DENX Software Engineering, wd@denx.de.
++# KubOS Linux
++# Copyright (C) 2016 Kubos Corporation
 +#
-+# (C) Copyright 2008
-+# Stelian Pop <stelian@popies.net>
-+# Lead Tech Design <www.leadtechdesign.com>
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
 +#
-+# SPDX-License-Identifier:	GPL-2.0+
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
 +#
 +
 +obj-y	+= at91sam9g20isis.o
 +obj-y	+= led.o
-+obj-$(CONFIG_HAS_DATAFLASH) += partition.o
++
 diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
 new file mode 100644
-index 0000000..a4fe416
+index 0000000..0d9b302
 --- /dev/null
 +++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,110 @@
 +/*
 + * (C) Copyright 2007-2008
 + * Stelian Pop <stelian@popies.net>
 + * Lead Tech Design <www.leadtechdesign.com>
 + *
 + * SPDX-License-Identifier:	GPL-2.0+
++ *
++ * Modified for Kubos Linux:
++ *   This file was originally based on at91sam920ek.c and
++ *   has been modified for the at91sam9g20isis board.
++ *   Extraneous options have been removed and some code
++ *   to initialize the SD card port has been added.
++ * Author: Catherine Freed <catherine@kubos.co>
 + */
 +
 +#include <common.h>
@@ -209,7 +220,7 @@ index 0000000..a4fe416
 +
 +/* ------------------------------------------------------------------------- */
 +/*
-+ * Miscelaneous platform dependent initialisations
++ * Miscellaneous platform dependent initializations
 + */
 +
 +#ifdef CONFIG_GENERIC_ATMEL_MCI
@@ -222,10 +233,6 @@ index 0000000..a4fe416
 +
 +	/* Turn on the SD0 power pin - value must be LOW */
 +	at91_set_pio_output(AT91_PIO_PORTB, 6, 0);
-+
-+	/* Turn on SD1 */
-+	//at91_set_pio_output(AT91_PIO_PORTB, 16, 0);
-+	//at91_set_pio_output(AT91_PIO_PORTB, 7, 0);
 +
 +	return atmel_mci_init((void *)ATMEL_BASE_MCI);
 +}
@@ -320,38 +327,6 @@ index 0000000..fbe15af
 +	at91_set_gpio_value(CONFIG_RED_LED, 0);
 +	at91_set_gpio_value(CONFIG_GREEN_LED, 1);
 +}
-diff --git a/board/kubos/at91sam9g20isis/partition.c b/board/kubos/at91sam9g20isis/partition.c
-new file mode 100644
-index 0000000..e41eefe
---- /dev/null
-+++ b/board/kubos/at91sam9g20isis/partition.c
-@@ -0,0 +1,26 @@
-+/*
-+ * (C) Copyright 2008
-+ * Ulf Samuelsson <ulf@atmel.com>
-+ *
-+ * SPDX-License-Identifier:	GPL-2.0+
-+ */
-+#include <common.h>
-+#include <config.h>
-+#include <asm/hardware.h>
-+#include <dataflash.h>
-+
-+AT91S_DATAFLASH_INFO dataflash_info[CONFIG_SYS_MAX_DATAFLASH_BANKS];
-+
-+struct dataflash_addr cs[CONFIG_SYS_MAX_DATAFLASH_BANKS] = {
-+	{CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS0, 0},	/* Logical adress, CS */
-+	{CONFIG_SYS_DATAFLASH_LOGIC_ADDR_CS1, 1}
-+};
-+
-+/*define the area offsets*/
-+dataflash_protect_t area_list[NB_DATAFLASH_AREA] = {
-+	{0x00000000, 0x000041FF, FLAG_PROTECT_SET,   0, "Bootstrap"},
-+	{0x00004200, 0x000083FF, FLAG_PROTECT_CLEAR, 0, "Environment"},
-+	{0x00008400, 0x00083FFF, FLAG_PROTECT_SET,   0, "U-Boot"},
-+	{0x00084000, 0x00293FFF, FLAG_PROTECT_CLEAR, 0,	"Kernel"},
-+	{0x00294000, 0xFFFFFFFF, FLAG_PROTECT_CLEAR, 0,	"FS"},
-+};
 diff --git a/cmd/gpio.c b/cmd/gpio.c
 index ecdc453..9497d2c 100644
 --- a/cmd/gpio.c
@@ -784,18 +759,27 @@ index a8d833b..39739ce 100644
  #else
 diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
 new file mode 100644
-index 0000000..c9077e6
+index 0000000..d3f3464
 --- /dev/null
 +++ b/include/configs/at91sam9g20isis.h
-@@ -0,0 +1,173 @@
+@@ -0,0 +1,179 @@
 +/*
 + * (C) Copyright 2007-2008
 + * Stelian Pop <stelian@popies.net>
 + * Lead Tech Design <www.leadtechdesign.com>
 + *
-+ * Configuation settings for the AT91SAM9260EK & AT91SAM9G20EK boards.
++ * Configuration settings for the AT91SAM9G20ISIS board.
 + *
 + * SPDX-License-Identifier:	GPL-2.0+
++ *
++ * Modified for Kubos Linux:
++ *   This file was originally based on at91sam9260ek.h and
++ *   has been modified for the at91sam9g20isis board.
++ *   Changes:
++ *   	Configuration for NOR flash added
++ *   	Un-needed configurations removed
++ *   	Bootargs to load kernel from SD card added
++ * Author: Catherine Freed <catherine@kubos.co>
 + */
 +
 +#ifndef __CONFIG_H
@@ -888,9 +872,6 @@ index 0000000..c9077e6
 +#else
 +# error Unknown board
 +#endif
-+
-+#define DATAFLASH_TCSS			(0x22 << 16)
-+#define DATAFLASH_TCHS			(0x1 << 24)
 +
 +/* NOR flash */
 +#ifdef CONFIG_CMD_NOR
