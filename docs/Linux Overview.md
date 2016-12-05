@@ -10,44 +10,14 @@ The high level components of every system will be:
 - Linux
 
 Ideally, all the files will be delivered to the customer as a pre-baked OBC.  They'll just need to upload their user app files onto the board.
-        
-                              +-----------------+    +------------------+    +-----------------+    +------------------+    +----------------+
-                              |                 |    |                  |    |                 |    |                  |    |                |
-                              |   Bootloader0   |    |   Bootloader1    |    |     U-Boot      |    |      zImage      |    |     Linux      |
-                              |                 |    |                  |    |                 |    |                  |    |                |
-                              +-------+---------+    +---------+--------+    +--------+--------+    +---------+--------+    +--------+-------+
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |    load (SDRAM)        |                      |                       |                      |
-                                      +----------------------> |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |     execute            |                      |                       |                      |
-                                      +----------------------> |    load (SDRAM)      |                       |                      |
-                                      |                        +--------------------> |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |     execute          |                       |                      |
-                                      |                        +--------------------> |    load (SDRAM)       |                      |
-                                      |                        |                      +---------------------> |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |     execute           |                      |
-                                      |                        |                      +---------------------> |                      |
-        +---------------------+       |                        |                      |                       |    unzip/load        |
-        |  Bootloader0 lives  |       |                        |                      |                       +--------------------> |
-        |  in ROM.            |       |                        |                      |                       |                      |
-        |  Bootloader1, Linux |       |                        |                      |                       |                      |
-        |  U+Boot, zImage     |       |                        |                      |                       |     execute          |
-        |  are all loaded     |       |                        |                      |                       +--------------------> |
-        |  from persistent    |       |                        |                      |                       |                      |
-        |  memory.            |       |                        |                      |                       |                      |
-        +---------------------+       |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      |                        |                      |                       |                      |
-                                      +                        +                      +                       +                      +
-        
 
+Boot-up UML diagram:
+
+![Boot UML Diagram](images/Linux-UML.png)
+
+Boot-up with storage flow:
+
+![Storage Bootup Flow Diagram](images/Linux_Boot_Diagram.png)
 
 ## OS Installation
 
@@ -132,28 +102,4 @@ Final Distribution: \*.dtb file.
 
 Note:  There is also an option to bake the data from the \*.dtb file directly into the zImage file.  However, this capability
 is largely implemented as a support option for older boards and isn't something that we should need to use. 
-
-## Memory Mapping
-
-At the end of the day, we'll need to decide where each component lives within the memories available on each board.
-
-If we want to automate flashing, we'll need a file/format to specifiy what should be flashed where.
-
-For example, with the SAM-BA tool, you have to select NOR Flash, and then specify the starting address and file to flash.
-
-## KubOS Middleware
-
-The end goal is that our middleware will be included with the kernel and rootfs (which can be done with BuildRoot) and certain features can/will be
- started at boot time (probably from init.d).
- 
-## User Applications
-
-User applications will live...somewhere... This still needs to be fleshed out.
-
-We need:
-- A way for the user to load their application into the rootfs (like 'kubos flash')
-- A way for the user to add programs to init.d
-- A way for the user to debug their programs (like 'kubos debug')
-- A way for the user to see their application output.  They can create a direct serial connection, or we can provide a utility to pipe the board output
-through to the host computer for them. (new command 'kubos log')
 
