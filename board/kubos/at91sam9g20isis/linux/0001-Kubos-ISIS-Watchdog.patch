@@ -3,7 +3,7 @@ diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x 
 +++ modified-linux-4.4.23/drivers/watchdog/at91isis_wdt.c	2016-12-02 16:41:11.706212000 -0600
 @@ -0,0 +1,404 @@
 +/*
-+ * Watchdog driver for ISISpace AT91SAM9G20-based iOBC.
++ * Watchdog driver for ISIS AT91SAM9G20-based iOBC.
 + *
 + * Copyright (C) 2008 Renaud CERRATO r.cerrato@til-technologies.fr
 + *
@@ -23,7 +23,7 @@ diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x 
 + */
 +
 +/*
-+ * The hardware watchdog in the ISISpace OBC is controlled by an external supervisor
++ * The hardware watchdog in the ISIS OBC is controlled by an external supervisor
 + * chip.  The supervisor expects the watchdog line to be bounced every tenth of a
 + * second, with an absolute maximum interval of once every second.  This allows
 + * several 1/10th sec check-ins to be missed without triggering a full reboot.
@@ -404,7 +404,7 @@ diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x 
 +module_platform_driver_probe(at91isiswdt_driver, at91isiswdt_probe);
 +
 +MODULE_AUTHOR("Catherine Freed <catherine@kubos.co>");
-+MODULE_DESCRIPTION("Watchdog driver for ISISpace AT91SAM9G20-based OBC");
++MODULE_DESCRIPTION("Watchdog driver for ISIS AT91SAM9G20-based OBC");
 +MODULE_LICENSE("GPL");
 diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x defconfig -x '.*' -x '*.ko*' -x '*/arm/boot/*' -x '*builtin*' -x '*.conf' -x '*generated*' -x '*.s*' -x '*.gz*' -x '*.map*' -x '*vmlinux*' -x '*.lzma' -x Image -x zImage -x '*.a*' -x mconf -x config_data.h linux-4.4.23/drivers/watchdog/Kconfig modified-linux-4.4.23/drivers/watchdog/Kconfig
 --- linux-4.4.23/drivers/watchdog/Kconfig	2016-09-30 03:20:43.000000000 -0500
@@ -419,7 +419,7 @@ diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x 
 +	depends on ARCH_AT91
 +	select WATCHDOG_CORE
 +	help
-+	  Watchdog timer embedded into ISISpace iOBC. This will
++	  Watchdog timer embedded into ISIS iOBC. This will
 +	  reboot your system when the timeout is reached.
  
  config SAMA5D4_WATCHDOG
