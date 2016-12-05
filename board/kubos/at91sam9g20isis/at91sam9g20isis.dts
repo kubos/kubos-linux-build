@@ -11,7 +11,8 @@
  *   Changes - 
  *     Added NOR flash configuration
  *     Updated SDRAM size
- *     Added watchdog pin definition
+ *     Updated watchdog pin definition
+ *     Added SD card power pin definition
  * Author: Catherine Freed <catherine@kubos.co>
  */
 /dts-v1/;
