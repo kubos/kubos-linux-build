@@ -1,7 +1,7 @@
 From 9d26ac808fcfe7bb192d60c707316989f5b8fec3 Mon Sep 17 00:00:00 2001
 From: catfreed <catherine@kubos.co>
 Date: Fri, 2 Dec 2016 15:29:32 -0600
-Subject: [PATCH] Adding configuration files for AT91SAM9G20ISIS board.
+Subject: [PATCH 1/2] Adding configuration files for AT91SAM9G20ISIS board.
 
 ---
  arch/arm/include/asm/mach-types.h                |  13 ++
@@ -963,6 +963,153 @@ index e815eb3..d02e9f7 100644
  int board_mmc_init(bd_t *bis);
  int cpu_mmc_init(bd_t *bis);
  int mmc_get_env_addr(struct mmc *mmc, int copy, u32 *env_addr);
+-- 
+2.7.4
+
+
+From e019a1ba3d9b1c2aa09fee42f780482c3b3615d6 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Mon, 5 Dec 2016 17:11:14 -0600
+Subject: [PATCH 2/2] Cleaning up unused code
+
+---
+ board/kubos/at91sam9g20isis/at91sam9g20isis.c |  2 -
+ drivers/mmc/gen_atmel_mci.c                   | 56 ---------------------------
+ drivers/mmc/mmc.c                             | 13 -------
+ include/mmc.h                                 |  2 -
+ 4 files changed, 73 deletions(-)
+
+diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+index 0d9b302..efaabbb 100644
+--- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
++++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+@@ -101,8 +101,6 @@ void board_isis_mmc_power_init(struct mmc *mmc)
+ 	cmd.resp_type = MMC_RSP_NONE;
+ 	cmd.cmdarg = 0;
+ 
+-	err = mmc_send_spcmd(mmc, &cmd, NULL);
+-
+ 	if (err)
+ 		debug("board_isis_mmc_power_init err=%d\r\n", err);
+ 
+diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
+index ebface6..20d4bdc 100644
+--- a/drivers/mmc/gen_atmel_mci.c
++++ b/drivers/mmc/gen_atmel_mci.c
+@@ -57,59 +57,6 @@ static void dump_cmd(u32 cmdr, u32 arg, u32 status, const char* msg)
+ 	      cmdr, cmdr & 0x3F, arg, status, msg);
+ }
+ 
+-static void mci_set_data_timeout(struct mmc *mmc)
+-{
+-	atmel_mci_t *mci = (atmel_mci_t *)mmc->priv;
+-
+-	static const unsigned int dtomul_to_shift[] = {
+-		0, 4, 7, 8, 10, 12, 16, 20,
+-	};
+-
+-	unsigned int timeout_ns, timeout_clks;
+-	unsigned int dtocyc, dtomul;
+-	unsigned int shift;
+-	u32 dtor;
+-
+-	/* we assume 1.5 ms data-read-access-time-1 (taac -> see CSD spec)
+-	 * and 0 clock data-read-access-time-2 (nsac -> see CSD spec)
+-	 */
+-	//timeout_ns = 1500000;
+-	timeout_ns = 5000000;
+-	timeout_clks = 0;
+-
+-	debug("gen_atmel_mci: timeout_ns = %u\n", timeout_ns);
+-
+-	timeout_clks += (((timeout_ns + 9) / 10)
+-			 * ((mmc->clock + 99999) / 100000) + 9999) / 10000;
+-	if (!IS_SD(mmc))
+-		timeout_clks *= 10;
+-	else
+-		timeout_clks *= 100;
+-	debug("gen_atmel_mci: timeout_clks = %u\n", timeout_clks);
+-
+-	dtocyc = timeout_clks;
+-	dtomul = 0;
+-	shift = 0;
+-	while (dtocyc > 15 && dtomul < 8) {
+-		dtomul++;
+-		shift = dtomul_to_shift[dtomul];
+-		dtocyc = (timeout_clks + (1 << shift) - 1) >> shift;
+-	}
+-
+-	if (dtomul >= 8) {
+-		dtomul = 7;
+-		dtocyc = 15;
+-		puts("Warning: Using maximum data timeout\n");
+-	}
+-
+-	dtor = (MMCI_BF(DTOMUL, dtomul)
+-		| MMCI_BF(DTOCYC, dtocyc));
+-	writel(dtor, &mci->dtor);
+-
+-	debug("mci: Using %u cycles data timeout (DTOR=0x%x)\n",
+-	       dtocyc << shift, dtor);
+-}
+-
+ /* Setup for MCI Clock and Block Size */
+ static void mci_set_mode(struct mmc *mmc, u32 hz, u32 blklen)
+ {
+@@ -124,8 +71,6 @@ static void mci_set_mode(struct mmc *mmc, u32 hz, u32 blklen)
+ 	debug("mci: bus_hz is %u, setting clock %u Hz, block size %u\n",
+ 		bus_hz, hz, blklen);
+ 
+-	//mci_set_data_timeout(mmc);
+-
+ 	if (hz > 0) {
+ 		if (version >= 0x500) {
+ 			clkdiv = DIV_ROUND_UP(bus_hz, hz) - 2;
+@@ -602,7 +547,6 @@ static const struct mmc_ops atmel_mci_ops = {
+ 	.send_cmd	= mci_send_cmd,
+ 	.set_ios	= mci_set_ios,
+ 	.init		= mci_init,
+-	.send_spcmd = mci_send_sp_cmd,
+ };
+ 
+ /*
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+index 26b7b62..c78cd74 100644
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -136,19 +136,6 @@ int mmc_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
+ 
+ 	return ret;
+ }
+-
+-int mmc_send_spcmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
+-{
+-	int ret;
+-
+-	debug("mmc_send_spcmd\r\n");
+-
+-	mmmc_trace_before_send(mmc, cmd);
+-	ret = mmc->cfg->ops->send_spcmd(mmc, cmd, data);
+-	mmmc_trace_after_send(mmc, cmd, ret);
+-
+-	return ret;
+-}
+ #endif
+ 
+ int mmc_send_status(struct mmc *mmc, int timeout)
+diff --git a/include/mmc.h b/include/mmc.h
+index d02e9f7..420477b 100644
+--- a/include/mmc.h
++++ b/include/mmc.h
+@@ -378,8 +378,6 @@ struct mmc_ops {
+ 	int (*init)(struct mmc *mmc);
+ 	int (*getcd)(struct mmc *mmc);
+ 	int (*getwp)(struct mmc *mmc);
+-	int (*send_spcmd)(struct mmc *mmc,
+-			struct mmc_cmd *cmd, struct mmc_data *data);
+ };
+ #endif
+ 
 -- 
 2.7.4
 

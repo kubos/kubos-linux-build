@@ -1,5 +1,5 @@
 /*
- * at91sam9g20isis.dts - Device Tree file for Kubos at91sam9g20isis board
+ * at91sam9g20isis.dts - Device Tree file for Kubos Linux on ISIS iOBC board (at91sam9g20isis)
  *
  * Copyright (C) 2012 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
  *
