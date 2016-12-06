@@ -86,6 +86,7 @@ added, they will likely be added through the busybox configuration.
 ### Device Tree Binary
 
 [Site Page](https://www.devicetree.org/)
+
 [Free Electrons Tutorial](https://events.linuxfoundation.org/sites/events/files/slides/petazzoni-device-tree-dummies.pdf)
 
 This is the memory and capability mapping file that tells Linux what features/peripherals are available on the board and what memory location they're 
