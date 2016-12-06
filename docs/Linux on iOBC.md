@@ -119,19 +119,19 @@ In this example '/dev/sdb' is the name of the SD card.  You might also see '/dev
 
 ####Partition the SD Card
 
-First, you'll need to set up the partitions on the SD card.
+First, you'll need to set up the partitions on the SD card:
 
-1. Create a partition table
+Create a partition table
 
     $ sudo parted {name} mklabel msdos y
     
-2. Create the partitions 
+Create the partitions 
 
     $ sudo parted {name} mkpart primary linux-swap 1M 513M
     $ sudo parted {name} mkpart primary fat16 513M 534M
     $ sudo parted {name} mkpart primary ext4 534M 4000M
     
-3. Configure the partitions (ex. /dev/sdb1) 
+Configure the partitions (ex. /dev/sdb1) 
 
     $ sudo mkswap {name}{partition1}
     $ sudo mkfs.fat {name}{partition2}
