@@ -40,6 +40,8 @@ Final Distribution:  Custom bootloader.bin to be loaded into whatever persistent
 
 [Site Page](http://www.denx.de/wiki/U-Boot)
 
+v2016.09.01
+
 U-Boot, at the most basic level, is responsible for loading the kernel (zImage) from persistent storage into the SDRAM.  However, it also provides a 
 basic OS and CLI which can be used to configure and debug the kernel before it's loaded.
 
