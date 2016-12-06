@@ -73,14 +73,34 @@ We're using Linux 4.4.  This is the current long-term support version (LTS) and 
 
 [Overview](https://uclibc.org/about.html)
 
+We're currently using v1.0.19.
+
 uClibc is the smaller version of the GNU C library that has been built with embedded Linux systems in mind.
 
 ####BusyBox
 
 [Overview](https://busybox.net/about.html)
 
+We're currently using v1.25.0.
+
 BusyBox provides many of the common Linux console and shell commands, but in a smaller package.  If there are any commands or tools that need to be
 added, they will likely be added through the busybox configuration.
+
+Currently enabled BusyBox commands:
+
+    [, [[, addgroup, adduser, cat, catv, chgrp, chmod, chown, chpasswd,
+    chroot, cksum, clear, cp, cut, date, deallocvt, delgroup, deluser, df,
+    dirname, du, dumpkmap, echo, egrep, env, expr, false, fgrep, find,
+    fold, fsync, getty, grep, gzip, halt, hush, id, init, inotifyd, ionice,
+    iostat, kill, killall, killall5, linuxrc, ln, loadkmap, login, logname,
+    ls, lzcat, lzma, man, mkdir, mknod, mkpasswd, modinfo, more, mount, mv,
+    nice, passwd, pkill, poweroff, printenv, printf, ps, pwd, readlink,
+    realpath, reboot, renice, reset, resize, rm, rmdir, sed, seq,
+    setserial, sh, sha256sum, sha512sum, sleep, sort, split,
+    start-stop-daemon, stat, stty, sync, tail, tar, tee, test, time,
+    timeout, top, touch, tr, true, truncate, umount, uname, uncompress,
+    unlink, unlzma, unshare, unzip, uptime, usleep, vi, watch, watchdog,
+    wc, which, whoami, yes
 
 
 ### Device Tree Binary

@@ -9,7 +9,7 @@
 ##Overview
 
 The goal of this document is to create a Linux installation for the iOBC that can then run the satellite services (telemetry, payload communication, etc) 
-needed for the ISIS mission/s.
+needed for the ISIS customers' missions.
 
 ##Software Components
 
