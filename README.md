@@ -1,4 +1,4 @@
-# Kubos Linux
+# KubOS Linux
 
 ## Overview
 
