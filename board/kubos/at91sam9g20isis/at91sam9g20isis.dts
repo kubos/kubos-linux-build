@@ -39,7 +39,6 @@
 		
 		ds3 {
 			label = "ds3";
-			linux,default-trigger = "timer";
 			gpios = <&pioC 14 GPIO_ACTIVE_HIGH>;
 		};
 		
