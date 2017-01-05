@@ -32,10 +32,10 @@ index d3f3464..eb70303 100644
  #define CONFIG_AT91_LED
 -#define	CONFIG_RED_LED		AT91_PIN_PA9	/* this is the power led */
 -#define	CONFIG_GREEN_LED	AT91_PIN_PA6	/* this is the user led */
-+#define	CONFIG_RED_LED		AT91_PIN_PC12	/* this is the power led */
-+#define	CONFIG_GREEN_LED	AT91_PIN_PC13	/* this is the user led */
-+#define CONFIG_YELLOW_LED   AT91_PIN_PC14
-+#define CONFIG_BLUE_LED     AT91_PIN_PC15   /* Unused */
++#define CONFIG_RED_LED	 AT91_PIN_PC12	/* this is the power led */
++#define CONFIG_GREEN_LED AT91_PIN_PC13	/* this is the user led */
++#define CONFIG_YELLOW_LED AT91_PIN_PC14
++#define CONFIG_BLUE_LED AT91_PIN_PC15   /* Unused */
  
  /*
   * Command line configuration.
