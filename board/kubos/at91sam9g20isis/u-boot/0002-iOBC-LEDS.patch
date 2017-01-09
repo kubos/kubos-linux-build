@@ -1,0 +1,44 @@
+From aa70040a6a9728f8ad1793a42884b9129bd66285 Mon Sep 17 00:00:00 2001
+From: catfreed <catherine@kubos.co>
+Date: Thu, 5 Jan 2017 13:26:04 -0600
+Subject: [PATCH] Adding iOBC LED pins
+
+---
+ board/kubos/at91sam9g20isis/led.c | 2 ++
+ include/configs/at91sam9g20isis.h | 6 ++++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/board/kubos/at91sam9g20isis/led.c b/board/kubos/at91sam9g20isis/led.c
+index fbe15af..8f755d5 100644
+--- a/board/kubos/at91sam9g20isis/led.c
++++ b/board/kubos/at91sam9g20isis/led.c
+@@ -16,7 +16,9 @@ void coloured_LED_init(void)
+ 	/* Clock is enabled in board_early_init_f() */
+ 	at91_set_gpio_output(CONFIG_RED_LED, 1);
+ 	at91_set_gpio_output(CONFIG_GREEN_LED, 1);
++	at91_set_gpio_output(CONFIG_YELLOW_LED, 1);
+ 
+ 	at91_set_gpio_value(CONFIG_RED_LED, 0);
+ 	at91_set_gpio_value(CONFIG_GREEN_LED, 1);
++	at91_set_gpio_value(CONFIG_YELLOW_LED, 0);
+ }
+diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
+index d3f3464..eb70303 100644
+--- a/include/configs/at91sam9g20isis.h
++++ b/include/configs/at91sam9g20isis.h
+@@ -68,8 +68,10 @@
+ 
+ /* LED */
+ #define CONFIG_AT91_LED
+-#define	CONFIG_RED_LED		AT91_PIN_PA9	/* this is the power led */
+-#define	CONFIG_GREEN_LED	AT91_PIN_PA6	/* this is the user led */
++#define CONFIG_RED_LED	 AT91_PIN_PC12	/* this is the power led */
++#define CONFIG_GREEN_LED AT91_PIN_PC13	/* this is the user led */
++#define CONFIG_YELLOW_LED AT91_PIN_PC14
++#define CONFIG_BLUE_LED AT91_PIN_PC15   /* Unused */
+ 
+ /*
+  * Command line configuration.
+-- 
+2.7.4
+

@@ -27,11 +27,13 @@
 
 		ds1 {
 			label = "ds1";
+			linux,default-trigger = "heartbeat";
 			gpios = <&pioC 12 GPIO_ACTIVE_HIGH>;
 		};
 		
 		ds2 {
 			label = "ds2";
+			linux,default-trigger = "disk-activity";
 			gpios = <&pioC 13 GPIO_ACTIVE_HIGH>;
 		};
 		
