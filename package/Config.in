@@ -1,0 +1,9 @@
+menuconfig BR2_PACKAGE_KUBOS
+	bool "KubOS Services"
+	default y
+	help
+		Enable KubOS Linux Services
+
+if BR2_PACKAGE_KUBOS
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos-telemetry/Config.in"
+endif
