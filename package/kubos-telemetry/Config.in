@@ -1,0 +1,7 @@
+config BR2_PACKAGE_KUBOS_TELEMETRY
+	bool "Telemetry"
+	default y
+	help
+		Include KubOS Linux telemetry service.
+		This service is vital for inter-system communication
+		and should not be turned off!
