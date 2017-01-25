@@ -10,7 +10,7 @@ KUBOS_TELEMETRY_SITE = git://github.com/kubostech/kubos-linux-telemetry
 
 #Use the Kubos SDK to build the telemetry application
 define KUBOS_TELEMETRY_BUILD_CMDS
-	export PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin; cd $(@D); kubos target kubos-linux-isis-gcc; kubos build
+	cd $(@D); PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin kubos -t kubos-linux-isis-gcc build
 endef
 
 #Install the application into the rootfs file system
