@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/Config.in"
