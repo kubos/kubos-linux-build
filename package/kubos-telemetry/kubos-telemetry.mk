@@ -19,10 +19,16 @@ define KUBOS_TELEMETRY_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/build/kubos-linux-isis-gcc/source/kubos-telemetry $(TARGET_DIR)/usr/sbin
 endef
 
-kubos-telemetry-fullclean: kubos-telemetry-clean-for-reconfigure
+#Install the init script
+define KUBOS_TELEMETRY_INSTALL_INIT_SYSV
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos-telemetry/S70kubos-telemetry \
+	    $(TARGET_DIR)/etc/init.d/S70kubos-telemetry
+endef
+
+kubos-telemetry-fullclean: kubos-telemetry-clean-for-reconfigure kubos-telemetry-dirclean
 	rm -f $(BUILD_DIR)/kubos-telemetry-master/.stamp_downloaded
 	rm -f $(DL_DIR)/kubos-telemetry-master.tar.gz
-	kubos-telemetry-dirclean
+
 
 kubos-telemetry-clean: kubos-telemetry-clean-for-rebuild
 	cd $(BUILD_DIR)/kubos-telemetry-master; kubos clean
