@@ -21,8 +21,8 @@ endef
 
 #Install the init script
 define KUBOS_TELEMETRY_INSTALL_INIT_SYSV
-	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos-telemetry/S70kubos-telemetry \
-	    $(TARGET_DIR)/etc/init.d/S70kubos-telemetry
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos-telemetry/kubos-telemetry \
+	    $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_TELEMETRY_INIT_LVL)kubos-telemetry
 endef
 
 kubos-telemetry-fullclean: kubos-telemetry-clean-for-reconfigure kubos-telemetry-dirclean
@@ -32,5 +32,6 @@ kubos-telemetry-fullclean: kubos-telemetry-clean-for-reconfigure kubos-telemetry
 
 kubos-telemetry-clean: kubos-telemetry-clean-for-rebuild
 	cd $(BUILD_DIR)/kubos-telemetry-master; kubos clean
+	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-telemetry
 
 $(eval $(generic-package))

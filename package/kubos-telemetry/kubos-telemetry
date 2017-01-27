@@ -4,24 +4,36 @@ NAME=kubos-telemetry
 PROG=/usr/sbin/${NAME}
 PID=/var/run/${NAME}.pid
 
-
 case "$1" in
     start)
 	echo "Starting ${NAME}: "
 	start-stop-daemon -S -q -m -b -p ${PID} --exec ${PROG}
-	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	rc=$?
+	if [ $rc -eq 0 ]
+	then
+	    echo "OK"
+	else
+	    echo "FAIL" >&2
+	fi
 	;;
     stop)
 	echo "Stopping ${NAME}: "
 	start-stop-daemon -K -q -p ${PID}
-	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	rc=$?
+	if [ $rc -eq 0 ]
+	then
+	    echo "OK"
+	else
+	    echo "FAIL" >&2
+	fi
 	;;
     restart)
 	"$0" stop
-	sleep 1
 	"$0" start
 	;;
     *)
 	echo "Usage: $0 {start|stop|restart}"
 	;;
 esac
+
+exit $rc
