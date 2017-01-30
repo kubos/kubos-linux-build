@@ -5,3 +5,13 @@ config BR2_PACKAGE_KUBOS_TELEMETRY
 		Include KubOS Linux telemetry service.
 		This service is vital for inter-system communication
 		and should not be turned off!
+
+config BR2_KUBOS_TELEMETRY_INIT_LVL
+	int "Telemetry Run Level"
+	default 70
+	range 10 99
+	depends on BR2_PACKAGE_KUBOS_TELEMETRY
+	help
+		The initialization priority level of the KubOS Linux
+		telemetry service.  The lower the number, the earlier
+		the service is initialized.
