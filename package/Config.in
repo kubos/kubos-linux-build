@@ -5,5 +5,6 @@ menuconfig BR2_PACKAGE_KUBOS
 		Enable KubOS Linux Services
 
 if BR2_PACKAGE_KUBOS
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos-command/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos-telemetry/Config.in"
 endif
