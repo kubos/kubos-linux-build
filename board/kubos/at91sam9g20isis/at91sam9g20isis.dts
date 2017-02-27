@@ -142,7 +142,6 @@
 				status = "okay";
 			};
 
-
 			watchdog@fffffd40 {
 				compatible = "kubos,at91isis-wdt";
 				timeout-sec = <1>;
