@@ -1,6 +1,5 @@
  #!/bin/bash
  #
- # KubOS Core Flight Services
  # Copyright (C) 2016 Kubos Corporation
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
