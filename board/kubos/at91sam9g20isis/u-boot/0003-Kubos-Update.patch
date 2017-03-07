@@ -1,7 +1,7 @@
 From 8edb977848e4d3a2d78c500bc0560d5cebfe498b Mon Sep 17 00:00:00 2001
 From: Catherine <catherine@kubos.co>
 Date: Wed, 15 Feb 2017 16:52:01 -0600
-Subject: [PATCH 01/10] Initial file upgrade process - zImage only
+Subject: [PATCH 1/2] Initial file upgrade process - zImage only
 
 ---
  board/kubos/at91sam9g20isis/at91sam9g20isis.c |  19 ---
@@ -718,21 +718,167 @@ index 06320c6..e8eee22 100644
 2.7.4
 
 
-From 6ed211f24608c4f343478d1a80f5014b92820ae0 Mon Sep 17 00:00:00 2001
+From 91222a54bb6f51df00523cc18c6b10c363a9662f Mon Sep 17 00:00:00 2001
 From: Catherine <catherine@kubos.co>
 Date: Wed, 22 Feb 2017 14:49:26 -0600
-Subject: [PATCH 02/10] Minor cleanup
+Subject: [PATCH 2/2] Adding watchdog support + upgrade improvements
 
 ---
- common/update_kubos.c             | 132 ++++++++++++++++----------------------
- include/configs/at91sam9g20isis.h |   6 +-
- 2 files changed, 57 insertions(+), 81 deletions(-)
+ board/kubos/at91sam9g20isis/at91sam9g20isis.c |  53 +++++++++
+ cmd/dfu.c                                     |   6 -
+ common/main.c                                 |  11 +-
+ common/update_kubos.c                         | 153 ++++++++++++--------------
+ drivers/dfu/dfu_tftp.c                        |   4 +-
+ drivers/mmc/gen_atmel_mci.c                   |   8 ++
+ drivers/mmc/mmc.c                             |  46 +++-----
+ drivers/mtd/cfi_flash.c                       |   7 ++
+ fs/ext4/ext4fs.c                              |   8 ++
+ include/common.h                              |   2 +
+ include/configs/at91sam9g20isis.h             |  13 ++-
+ include/kubos.h                               |  38 +++++++
+ include/net.h                                 |   2 -
+ include/watchdog.h                            |   7 ++
+ lib/crc32.c                                   |   4 +
+ lib/sha1.c                                    |   4 +
+ tools/env/fw_env_main.c                       |   2 +-
+ 17 files changed, 242 insertions(+), 126 deletions(-)
+ create mode 100644 include/kubos.h
 
+diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+index 9b7dfb8..300b6b1 100644
+--- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
++++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+@@ -10,6 +10,7 @@
+  *   has been modified for the at91sam9g20isis board.
+  *   Extraneous options have been removed and some code
+  *   to initialize the SD card port has been added.
++ *   Added logic to control external watchdog.
+  * Author: Catherine Freed <catherine@kubos.co>
+  */
+ 
+@@ -62,6 +63,10 @@ int board_init(void)
+ 
+ 	at91_seriald_hw_init();
+ 
++#ifdef CONFIG_HW_WATCHDOG
++	hw_watchdog_init();
++#endif
++
+ 	return 0;
+ }
+ 
+@@ -87,3 +92,51 @@ int board_eth_init(bd_t *bis)
+ #endif
+ 	return rc;
+ }
++
++#ifdef CONFIG_HW_WATCHDOG
++
++static int wdc;
++
++void hw_watchdog_init(void)
++{
++	/* Mark watchdog pin as output */
++	wdc = 0;
++	at91_set_pio_output(AT91_PIO_PORTA, 30, 1);
++}
++
++void hw_watchdog_reset_count(int val)
++{
++	int i = 0;
++
++	if (wdc > val)
++	{
++
++		for (i = 0; i < 10; i++)
++		{
++			at91_set_pio_value(AT91_PIO_PORTA, 30, 0);
++			at91_set_pio_value(AT91_PIO_PORTA, 30, 1);
++		}
++
++		wdc = 0;
++	}
++
++	wdc++;
++
++	return;
++}
++
++void hw_watchdog_reset()
++{
++	hw_watchdog_reset_count(100000);
++}
++
++
++void hw_watchdog_force(void)
++{
++	wdc = 0;
++
++	hw_watchdog_reset();
++
++	return;
++}
++#endif /* CONFIG_HW_WATCHDOG */
+diff --git a/cmd/dfu.c b/cmd/dfu.c
+index 64297cd..d8aae26 100644
+--- a/cmd/dfu.c
++++ b/cmd/dfu.c
+@@ -40,10 +40,6 @@ static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 		return update_tftp(addr, interface, devstring);
+ 	}
+ #endif
+-#ifdef CONFIG_UPDATE_KUBOS
+-
+-	return 0;
+-#else
+ 
+ 	ret = dfu_init_env_entities(interface, devstring);
+ 	if (ret)
+@@ -118,10 +114,8 @@ done:
+ 	g_dnl_clear_detach();
+ 
+ 	return ret;
+-#endif
+ }
+ 
+-
+ U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
+ 	"Device Firmware Upgrade",
+ 	"<USB_controller> <interface> <dev> [list]\n"
+diff --git a/common/main.c b/common/main.c
+index a45c2e7..2ee25c8 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -12,6 +12,7 @@
+ #include <cli.h>
+ #include <console.h>
+ #include <version.h>
++#include <kubos.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+@@ -60,7 +61,15 @@ void main_loop(void)
+ #endif /* CONFIG_UPDATE_TFTP */
+ 
+ #if defined(CONFIG_UPDATE_KUBOS)
+-	update_kubos();
++	if (update_kubos() == 0)
++	{
++		/* 
++		 * If everything goes well, we want to reboot into the new
++		 * files.  The watchdog gets tripped if we try to boot the
++		 * new kernel from here, so we reboot instead.
++		 */
++		do_reset(NULL, 0, 0, NULL);
++	}
+ #endif /* CONFIG_UPDATE_KUBOS */
+ 
+ 	s = bootdelay_process();
 diff --git a/common/update_kubos.c b/common/update_kubos.c
-index 83e6d7f..3df9ea0 100644
+index 83e6d7f..bce9648 100644
 --- a/common/update_kubos.c
 +++ b/common/update_kubos.c
-@@ -15,10 +15,6 @@
+@@ -15,58 +15,30 @@
   */
  
  #include <common.h>
@@ -743,8 +889,9 @@ index 83e6d7f..3df9ea0 100644
  #include <net.h>
  #include <ext4fs.h>
  #include <fat.h>
-@@ -26,47 +22,18 @@
+ #include <fs.h>
  #include <mmc.h>
++#include <kubos.h>
  
  
 -#define KERNEL "kernel.itb"
@@ -797,11 +944,15 @@ index 83e6d7f..3df9ea0 100644
 + *
 + * We want to leverage the second half of this utility and distribute a new firmware package that's
 + * been copied into the upgrade partition, rather than via a USB/TFTP connection.
++ *
++ * Returns:
++ *    0 - An upgrade package was successfully installed
++ *   -1 - No upgrade package could be installed (either because of system error or because no package exists)
 + */
  
  int update_kubos(void)
  {
-@@ -75,9 +42,9 @@ int update_kubos(void)
+@@ -75,40 +47,42 @@ int update_kubos(void)
  	char * file;
  	char * env_addr;
  	loff_t actlen;
@@ -809,23 +960,28 @@ index 83e6d7f..3df9ea0 100644
 +	ulong addr, part = 0;
  
 -	int i, err, ret = 0;
-+	int i, ret = 0;
++	int ret = 0;
  
  	/*
  	 * Load the SD card
-@@ -85,30 +52,29 @@ int update_kubos(void)
+ 	 */
  	mmc = find_mmc_device(0);
- 	if(!mmc)
+-	if(!mmc)
++	if (!mmc)
  	{
 -		printf("ERROR: Could not access SD card - %d\n", ret);
-+		error("Could not access SD card - %d\n", ret);
++		error("Could not access SD card\n");
++		return -1;
++
  	}
  
  	ret = mmc_init(mmc);
- 	if(ret)
+-	if(ret)
++	if (ret)
  	{
 -		printf("ERROR: Could not init SD card - %d\n", ret);
 +		error("Could not init SD card - %d\n", ret);
++		return -1;
  	}
  
  	/*
@@ -839,7 +995,7 @@ index 83e6d7f..3df9ea0 100644
  	if (file == NULL)
  	{
 -		printf("INFO: updatefile envar not found. Using default\n");
-+		debug("INFO: Kubos_updatefile envar not found. Using default\n");
++		debug("INFO: Kubos_updatefile envar not found. Searching for default '%s'\n", KERNEL);
  		file = KERNEL;
  	}
  
@@ -852,7 +1008,7 @@ index 83e6d7f..3df9ea0 100644
  	{
  		addr = simple_strtoul(env_addr, NULL, 16);
  	}
-@@ -117,51 +83,61 @@ int update_kubos(void)
+@@ -117,52 +91,71 @@ int update_kubos(void)
  		addr = CONFIG_SYS_SDRAM_BASE + 0x200;
  	}
  
@@ -869,13 +1025,13 @@ index 83e6d7f..3df9ea0 100644
 +	else
 +	{
 +		part = UPGRADE_PART;
-+	}
-+
-+	if(part_get_info(&mmc->block_dev, part, &part_info))
-+	{
-+		error("Could not mount upgrade partition.  No partition table\n");
  	}
  
++	if (part_get_info(&mmc->block_dev, part, &part_info))
++	{
++		error("Could not mount upgrade partition.  No partition table\n");
++		return -1;
++	}
  
 -	printf("Info: Checking for new firmware files\n");
 +	debug("INFO: Checking for new firmware files\n");
@@ -885,8 +1041,8 @@ index 83e6d7f..3df9ea0 100644
  	ret = ext4fs_mount(0);
  	if (!ret) {
 -		printf("ERROR: Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
-+		error("Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
  
++		error("Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
  		return -1;
  	}
  
@@ -894,19 +1050,19 @@ index 83e6d7f..3df9ea0 100644
 -	//for(i = 0; i < #_files; i++)
 -	for(i = 0; i < 1; i++)
 -	{
-+	ret = ext4fs_exists(file);
- 
+-
 -		ret = ext4fs_exists(file);
 -		if(!ret)
 -		{
 -			continue;
 -		}
--
++	ret = ext4fs_exists(file);
+ 
 -		printf("INFO: Found file to upgrade - %s\n", file);
 +	/*
 +	 * Upgrade file found, call the existing DFU utility
 +	 */
-+	if(ret)
++	if (ret)
 +	{
 +		debug("INFO: Found file to upgrade - %s\n", file);
  
@@ -929,317 +1085,12 @@ index 83e6d7f..3df9ea0 100644
 -		}
 +			ret = update_tftp(addr, "mmc", "0");
  
-+			if(ret)
++			if (ret)
 +			{
 +				error("System update failed - %d\n", ret);
 +				return -1;
 +			}
 +		}
- 	}
- 
- 	return 0;
-diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
-index 71a0aed..eb5fc40 100644
---- a/include/configs/at91sam9g20isis.h
-+++ b/include/configs/at91sam9g20isis.h
-@@ -76,6 +76,7 @@
- #define CONFIG_BLUE_LED     AT91_PIN_PC15   /* Unused */
- 
- /* File updates */
-+#define CONFIG_USB_FUNCTION_DFU
- #define CONFIG_SYS_DFU_DATA_BUF_SIZE 500 * SZ_1K /* File transfer chunk size */
- #define CONFIG_SYS_DFU_MAX_FILE_SIZE 2 * SZ_1M   /* Maximum size for a single file.  Currently zImage (~1M) */
- #define CONFIG_UPDATE_KUBOS
-@@ -136,10 +137,10 @@
- #endif
- 
- /* EXT4 */
--/* #ifdef CONFIG_CMD_EXT4 */
-+#ifdef CONFIG_CMD_EXT4
- #define CONFIG_EXT4
- #define CONFIG_EXT4_WRITE
--/* #endif */
-+#endif
- 
- /* USB */
- #define CONFIG_USB_ATMEL
-@@ -199,6 +200,5 @@
- /*
-  * Size of malloc() pool
-  */
--/*#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)*/
- #define CONFIG_SYS_MALLOC_LEN 	 	10 * SZ_1M
- #endif
--- 
-2.7.4
-
-
-From 1a4334730eb7beaad74214bb395944800b2516a5 Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Fri, 24 Feb 2017 10:58:19 -0600
-Subject: [PATCH 03/10] Adding watchdog_force and extra calls to within i/o
-
----
- board/kubos/at91sam9g20isis/at91sam9g20isis.c | 48 +++++++++++++++++++++++++++
- drivers/mtd/cfi_flash.c                       |  7 ++++
- include/configs/at91sam9g20isis.h             |  4 +++
- include/watchdog.h                            |  1 +
- 4 files changed, 60 insertions(+)
-
-diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-index 9b7dfb8..f2683be 100644
---- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-+++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-@@ -62,6 +62,10 @@ int board_init(void)
- 
- 	at91_seriald_hw_init();
- 
-+#if defined(CONFIG_HW_WATCHDOG)
-+	hw_watchdog_init();
-+#endif
-+
- 	return 0;
- }
- 
-@@ -87,3 +91,47 @@ int board_eth_init(bd_t *bis)
- #endif
- 	return rc;
- }
-+
-+void hw_watchdog_init(void)
-+{
-+	/* Mark watchdog pin as output */
-+	wdc = 0;
-+	at91_set_pio_output(AT91_PIO_PORTA, 30, 1);
-+
-+	hw_watchdog_force();
-+}
-+
-+static int wdc;
-+
-+void hw_watchdog_reset(void)
-+{
-+	int i = 0;
-+
-+	if((wdc % 100000) == 0)
-+	{
-+
-+		for(i = 0; i < 10; i++)
-+		{
-+			at91_set_pio_value(AT91_PIO_PORTA, 30, 0);
-+			at91_set_pio_value(AT91_PIO_PORTA, 30, 1);
-+		}
-+
-+		wdc = 0;
-+	}
-+
-+	wdc++;
-+	return;
-+}
-+
-+
-+void hw_watchdog_force(void)
-+{
-+	wdc = 0;
-+
-+	printf("FWD\n");
-+	hw_watchdog_reset();
-+
-+	return;
-+}
-+
-+}
-diff --git a/drivers/mtd/cfi_flash.c b/drivers/mtd/cfi_flash.c
-index 33c4a93..63fdb74 100644
---- a/drivers/mtd/cfi_flash.c
-+++ b/drivers/mtd/cfi_flash.c
-@@ -1392,6 +1392,13 @@ int write_buff (flash_info_t * info, uchar * src, ulong addr, ulong cnt)
- #else
- 	while (cnt >= info->portwidth) {
- 		cword.w32 = 0;
-+
-+		/* Kubos: Need to make sure to keep the watchdog alive during the write process */
-+		if( cnt % 1000 == 0)
-+		{
-+			hw_watchdog_force();
-+		}
-+
- 		for (i = 0; i < info->portwidth; i++) {
- 			flash_add_byte (info, &cword, *src++);
- 		}
-diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
-index eb5fc40..8c6a171 100644
---- a/include/configs/at91sam9g20isis.h
-+++ b/include/configs/at91sam9g20isis.h
-@@ -62,6 +62,9 @@
- #define CONFIG_AT91_GPIO
- #define CONFIG_AT91_GPIO_PULLUP	1	/* keep pullups on peripheral pins */
- 
-+/* external watchdog */
-+#define CONFIG_HW_WATCHDOG
-+
- /* serial console */
- #define CONFIG_ATMEL_USART
- #define CONFIG_USART_BASE		ATMEL_BASE_DBGU
-@@ -77,6 +80,7 @@
- 
- /* File updates */
- #define CONFIG_USB_FUNCTION_DFU
-+#define CONFIG_DFU_MMC
- #define CONFIG_SYS_DFU_DATA_BUF_SIZE 500 * SZ_1K /* File transfer chunk size */
- #define CONFIG_SYS_DFU_MAX_FILE_SIZE 2 * SZ_1M   /* Maximum size for a single file.  Currently zImage (~1M) */
- #define CONFIG_UPDATE_KUBOS
-diff --git a/include/watchdog.h b/include/watchdog.h
-index 174c894..2f2102b 100644
---- a/include/watchdog.h
-+++ b/include/watchdog.h
-@@ -41,6 +41,7 @@ int init_func_watchdog_reset(void);
- 		#define WATCHDOG_RESET bl hw_watchdog_reset
- 	#else
- 		extern void hw_watchdog_reset(void);
-+		extern void hw_watchdog_force(void);
- 
- 		#define WATCHDOG_RESET hw_watchdog_reset
- 	#endif /* __ASSEMBLY__ */
--- 
-2.7.4
-
-
-From c188a2b14de3bceb8de173b561a809d2bec23636 Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Fri, 24 Feb 2017 11:08:37 -0600
-Subject: [PATCH 04/10] minor fix
-
----
- board/kubos/at91sam9g20isis/at91sam9g20isis.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-index f2683be..6d3c731 100644
---- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-+++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-@@ -92,6 +92,8 @@ int board_eth_init(bd_t *bis)
- 	return rc;
- }
- 
-+static int wdc;
-+
- void hw_watchdog_init(void)
- {
- 	/* Mark watchdog pin as output */
-@@ -101,8 +103,6 @@ void hw_watchdog_init(void)
- 	hw_watchdog_force();
- }
- 
--static int wdc;
--
- void hw_watchdog_reset(void)
- {
- 	int i = 0;
-@@ -128,10 +128,7 @@ void hw_watchdog_force(void)
- {
- 	wdc = 0;
- 
--	printf("FWD\n");
- 	hw_watchdog_reset();
- 
- 	return;
- }
--
--}
--- 
-2.7.4
-
-
-From 10b59da627fc51351b8c603794c96492f5ef354b Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Fri, 24 Feb 2017 14:37:15 -0600
-Subject: [PATCH 05/10] Adding more wd kicks
-
----
- drivers/mmc/gen_atmel_mci.c | 6 ++++++
- fs/ext4/ext4fs.c            | 6 ++++++
- 2 files changed, 12 insertions(+)
-
-diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
-index 20d4bdc..da08881 100644
---- a/drivers/mmc/gen_atmel_mci.c
-+++ b/drivers/mmc/gen_atmel_mci.c
-@@ -280,6 +280,12 @@ mci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
- 				block_count < data->blocks && !status;
- 				block_count++) {
- 			word_count = 0;
-+
-+			if (block_count % 1000 == 0)
-+			{
-+				hw_watchdog_force();
-+			}
-+
- 			do {
- 				status = mci_data_op(mci, ioptr, error_flags);
- 				word_count++;
-diff --git a/fs/ext4/ext4fs.c b/fs/ext4/ext4fs.c
-index 3078737..d7772b4 100644
---- a/fs/ext4/ext4fs.c
-+++ b/fs/ext4/ext4fs.c
-@@ -75,6 +75,12 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
- 		int blockoff = pos - (blocksize * i);
- 		int blockend = blocksize;
- 		int skipfirst = 0;
-+
-+		if (i % 1000 == 0)
-+		{
-+			hw_watchdog_force();
-+		}
-+
- 		blknr = read_allocated_block(&(node->inode), i);
- 		if (blknr < 0)
- 			return -1;
--- 
-2.7.4
-
-
-From 3f40db4d3c00c30449dbf0ecba1cb6b5e3d5375b Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Fri, 24 Feb 2017 16:08:51 -0600
-Subject: [PATCH 06/10] Adding more kicking and adding reboot after successful
- upgrade
-
----
- common/main.c         | 10 +++++++++-
- common/update_kubos.c |  9 +++++++++
- lib/crc32.c           |  7 +++++++
- lib/sha1.c            |  6 ++++++
- 4 files changed, 31 insertions(+), 1 deletion(-)
-
-diff --git a/common/main.c b/common/main.c
-index a45c2e7..adc1a79 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -60,7 +60,15 @@ void main_loop(void)
- #endif /* CONFIG_UPDATE_TFTP */
- 
- #if defined(CONFIG_UPDATE_KUBOS)
--	update_kubos();
-+	if(update_kubos() == 0)
-+	{
-+		/* 
-+		 * If everything goes well, we want to reboot into the new
-+		 * files.  The watchdog gets tripped if we try to boot the
-+		 * new kernel from here, so we reboot instead.
-+		 */
-+		do_reset(NULL, 0, 0, NULL);
-+	}
- #endif /* CONFIG_UPDATE_KUBOS */
- 
- 	s = bootdelay_process();
-diff --git a/common/update_kubos.c b/common/update_kubos.c
-index 3df9ea0..aaad614 100644
---- a/common/update_kubos.c
-+++ b/common/update_kubos.c
-@@ -139,6 +139,15 @@ int update_kubos(void)
- 			}
- 		}
  	}
 +	else
 +	{
@@ -1253,174 +1104,6 @@ index 3df9ea0..aaad614 100644
  
  	return 0;
  }
-diff --git a/lib/crc32.c b/lib/crc32.c
-index 9759212..f3a835a 100644
---- a/lib/crc32.c
-+++ b/lib/crc32.c
-@@ -234,6 +234,9 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	const unsigned char *end, *curr;
- 	int chunk;
-+	int count = 0;
-+
-+	hw_watchdog_force();
- 
- 	curr = buf;
- 	end = buf + len;
-@@ -244,6 +247,10 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
- 		crc = crc32 (crc, curr, chunk);
- 		curr += chunk;
- 		WATCHDOG_RESET ();
-+		if(count++ % 10 == 0)
-+		{
-+			hw_watchdog_force();
-+		}
- 	}
- #else
- 	crc = crc32 (crc, buf, len);
-diff --git a/lib/sha1.c b/lib/sha1.c
-index 72c5dea..d6887cb 100644
---- a/lib/sha1.c
-+++ b/lib/sha1.c
-@@ -315,6 +315,7 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	const unsigned char *end, *curr;
- 	int chunk;
-+	int count = 0;
- #endif
- 
- 	sha1_starts (&ctx);
-@@ -322,6 +323,7 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	curr = input;
- 	end = input + ilen;
-+	hw_watchdog_force();
- 	while (curr < end) {
- 		chunk = end - curr;
- 		if (chunk > chunk_sz)
-@@ -329,6 +331,10 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- 		sha1_update (&ctx, curr, chunk);
- 		curr += chunk;
- 		WATCHDOG_RESET ();
-+		if(count++ % 5 == 0)
-+		{
-+			hw_watchdog_force();
-+		}
- 	}
- #else
- 	sha1_update (&ctx, input, ilen);
--- 
-2.7.4
-
-
-From b5b8682b61f0322c3c68bedfe88229878299ae7a Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Fri, 24 Feb 2017 16:52:43 -0600
-Subject: [PATCH 07/10] Cleanup
-
----
- board/kubos/at91sam9g20isis/at91sam9g20isis.c | 18 ++++++++---
- cmd/dfu.c                                     |  6 ++--
- drivers/dfu/dfu_tftp.c                        |  4 +--
- drivers/mmc/gen_atmel_mci.c                   |  5 +--
- drivers/mmc/mmc.c                             | 46 +++++++++------------------
- drivers/mtd/cfi_flash.c                       |  6 +---
- fs/ext4/ext4fs.c                              |  5 +--
- include/common.h                              |  2 ++
- include/watchdog.h                            |  1 +
- lib/crc32.c                                   | 11 +++----
- lib/sha1.c                                    | 11 +++----
- 11 files changed, 49 insertions(+), 66 deletions(-)
-
-diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-index 6d3c731..4e544c8 100644
---- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-+++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-@@ -10,6 +10,7 @@
-  *   has been modified for the at91sam9g20isis board.
-  *   Extraneous options have been removed and some code
-  *   to initialize the SD card port has been added.
-+ *   Added logic to control external watchdog.
-  * Author: Catherine Freed <catherine@kubos.co>
-  */
- 
-@@ -92,6 +93,8 @@ int board_eth_init(bd_t *bis)
- 	return rc;
- }
- 
-+#if defined(CONFIG_HW_WATCHDOG)
-+
- static int wdc;
- 
- void hw_watchdog_init(void)
-@@ -99,15 +102,13 @@ void hw_watchdog_init(void)
- 	/* Mark watchdog pin as output */
- 	wdc = 0;
- 	at91_set_pio_output(AT91_PIO_PORTA, 30, 1);
--
--	hw_watchdog_force();
- }
- 
--void hw_watchdog_reset(void)
-+void hw_watchdog_reset(int val)
- {
- 	int i = 0;
- 
--	if((wdc % 100000) == 0)
-+	if((wdc % val) == 0)
- 	{
- 
- 		for(i = 0; i < 10; i++)
-@@ -116,13 +117,19 @@ void hw_watchdog_reset(void)
- 			at91_set_pio_value(AT91_PIO_PORTA, 30, 1);
- 		}
- 
--		wdc = 0;
- 	}
- 
- 	wdc++;
-+	wdc %= 100000;
-+
- 	return;
- }
- 
-+void hw_watchdog_reset()
-+{
-+	hw_watchdog_reset(100000);
-+}
-+
- 
- void hw_watchdog_force(void)
- {
-@@ -132,3 +139,4 @@ void hw_watchdog_force(void)
- 
- 	return;
- }
-+#endif /* CONFIG_HW_WATCHDOG */
-diff --git a/cmd/dfu.c b/cmd/dfu.c
-index 64297cd..abf9917 100644
---- a/cmd/dfu.c
-+++ b/cmd/dfu.c
-@@ -41,7 +41,10 @@ static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
- 	}
- #endif
- #ifdef CONFIG_UPDATE_KUBOS
--
-+	/*
-+	 * The code below this requires that a bunch of options that Kubos boards don't need be turned on, so we're
-+	 * quitting early
-+	 */
- 	return 0;
- #else
- 
-@@ -121,7 +124,6 @@ done:
- #endif
- }
- 
--
- U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
- 	"Device Firmware Upgrade",
- 	"<USB_controller> <interface> <dev> [list]\n"
 diff --git a/drivers/dfu/dfu_tftp.c b/drivers/dfu/dfu_tftp.c
 index 4f0e06a..cd71708 100644
 --- a/drivers/dfu/dfu_tftp.c
@@ -1444,21 +1127,31 @@ index 4f0e06a..cd71708 100644
  	alt_setting_num = dfu_get_alt(sb);
  	free(sb);
 diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
-index da08881..f064da7 100644
+index 20d4bdc..9066880 100644
 --- a/drivers/mmc/gen_atmel_mci.c
 +++ b/drivers/mmc/gen_atmel_mci.c
-@@ -281,10 +281,7 @@ mci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
+@@ -13,6 +13,7 @@
+ #include <mmc.h>
+ #include <part.h>
+ #include <malloc.h>
++#include <watchdog.h>
+ #include <asm/io.h>
+ #include <linux/errno.h>
+ #include <asm/byteorder.h>
+@@ -280,6 +281,13 @@ mci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
+ 				block_count < data->blocks && !status;
  				block_count++) {
  			word_count = 0;
- 
--			if (block_count % 1000 == 0)
--			{
--				hw_watchdog_force();
--			}
-+			WATCHDOG_RESET(1000);
- 
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++			WATCHDOG_RESET_COUNT(1000);
++#else
++			WATCHDOG_RESET();
++#endif
++
  			do {
  				status = mci_data_op(mci, ioptr, error_flags);
+ 				word_count++;
 diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
 index 424e870..fba004e 100644
 --- a/drivers/mmc/mmc.c
@@ -1655,38 +1348,49 @@ index 424e870..fba004e 100644
  
  	return 0;
 diff --git a/drivers/mtd/cfi_flash.c b/drivers/mtd/cfi_flash.c
-index 63fdb74..ffdf93c 100644
+index 33c4a93..e6c4f01 100644
 --- a/drivers/mtd/cfi_flash.c
 +++ b/drivers/mtd/cfi_flash.c
-@@ -1393,11 +1393,7 @@ int write_buff (flash_info_t * info, uchar * src, ulong addr, ulong cnt)
+@@ -1392,6 +1392,13 @@ int write_buff (flash_info_t * info, uchar * src, ulong addr, ulong cnt)
+ #else
  	while (cnt >= info->portwidth) {
  		cword.w32 = 0;
- 
--		/* Kubos: Need to make sure to keep the watchdog alive during the write process */
--		if( cnt % 1000 == 0)
--		{
--			hw_watchdog_force();
--		}
-+		WATCHDOG_RESET(1000);
- 
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(1000);
++#else
++		WATCHDOG_RESET();
++#endif
++
  		for (i = 0; i < info->portwidth; i++) {
  			flash_add_byte (info, &cword, *src++);
+ 		}
 diff --git a/fs/ext4/ext4fs.c b/fs/ext4/ext4fs.c
-index d7772b4..40cfd12 100644
+index 3078737..a19bfb4 100644
 --- a/fs/ext4/ext4fs.c
 +++ b/fs/ext4/ext4fs.c
-@@ -76,10 +76,7 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
+@@ -26,6 +26,7 @@
+ #include <ext4fs.h>
+ #include "ext4_common.h"
+ #include <div64.h>
++#include <watchdog.h>
+ 
+ int ext4fs_symlinknest;
+ struct ext_filesystem ext_fs;
+@@ -75,6 +76,13 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
+ 		int blockoff = pos - (blocksize * i);
  		int blockend = blocksize;
  		int skipfirst = 0;
- 
--		if (i % 1000 == 0)
--		{
--			hw_watchdog_force();
--		}
-+		WATCHDOG_RESET(1000);
- 
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(1000);
++#else
++		WATCHDOG_RESET();
++#endif
++
  		blknr = read_allocated_block(&(node->inode), i);
  		if (blknr < 0)
+ 			return -1;
 diff --git a/include/common.h b/include/common.h
 index a8d833b..39739ce 100644
 --- a/include/common.h
@@ -1700,186 +1404,119 @@ index a8d833b..39739ce 100644
  #ifdef DEBUG
  #define _DEBUG	1
  #else
-diff --git a/include/watchdog.h b/include/watchdog.h
-index 2f2102b..3771e8e 100644
---- a/include/watchdog.h
-+++ b/include/watchdog.h
-@@ -41,6 +41,7 @@ int init_func_watchdog_reset(void);
- 		#define WATCHDOG_RESET bl hw_watchdog_reset
- 	#else
- 		extern void hw_watchdog_reset(void);
-+		extern void hw_watchdog_reset(int val);
- 		extern void hw_watchdog_force(void);
+diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
+index 71a0aed..4ba035c 100644
+--- a/include/configs/at91sam9g20isis.h
++++ b/include/configs/at91sam9g20isis.h
+@@ -62,6 +62,9 @@
+ #define CONFIG_AT91_GPIO
+ #define CONFIG_AT91_GPIO_PULLUP	1	/* keep pullups on peripheral pins */
  
- 		#define WATCHDOG_RESET hw_watchdog_reset
-diff --git a/lib/crc32.c b/lib/crc32.c
-index f3a835a..38e55b8 100644
---- a/lib/crc32.c
-+++ b/lib/crc32.c
-@@ -234,9 +234,6 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	const unsigned char *end, *curr;
- 	int chunk;
--	int count = 0;
--
--	hw_watchdog_force();
++/* external watchdog */
++#define CONFIG_HW_WATCHDOG
++
+ /* serial console */
+ #define CONFIG_ATMEL_USART
+ #define CONFIG_USART_BASE		ATMEL_BASE_DBGU
+@@ -76,6 +79,8 @@
+ #define CONFIG_BLUE_LED     AT91_PIN_PC15   /* Unused */
  
- 	curr = buf;
- 	end = buf + len;
-@@ -246,11 +243,11 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
- 			chunk = chunk_sz;
- 		crc = crc32 (crc, curr, chunk);
- 		curr += chunk;
-+#ifdef CONFIG_AT91SAM9G20ISIS
-+		WATCHDOG_RESET(10);
-+#else
- 		WATCHDOG_RESET ();
--		if(count++ % 10 == 0)
--		{
--			hw_watchdog_force();
--		}
-+#endif
- 	}
- #else
- 	crc = crc32 (crc, buf, len);
-diff --git a/lib/sha1.c b/lib/sha1.c
-index d6887cb..471046a 100644
---- a/lib/sha1.c
-+++ b/lib/sha1.c
-@@ -315,7 +315,6 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	const unsigned char *end, *curr;
- 	int chunk;
--	int count = 0;
+ /* File updates */
++#define CONFIG_USB_FUNCTION_DFU
++#define CONFIG_DFU_MMC
+ #define CONFIG_SYS_DFU_DATA_BUF_SIZE 500 * SZ_1K /* File transfer chunk size */
+ #define CONFIG_SYS_DFU_MAX_FILE_SIZE 2 * SZ_1M   /* Maximum size for a single file.  Currently zImage (~1M) */
+ #define CONFIG_UPDATE_KUBOS
+@@ -136,10 +141,10 @@
  #endif
  
- 	sha1_starts (&ctx);
-@@ -323,18 +322,18 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- #if defined(CONFIG_HW_WATCHDOG) || defined(CONFIG_WATCHDOG)
- 	curr = input;
- 	end = input + ilen;
--	hw_watchdog_force();
- 	while (curr < end) {
- 		chunk = end - curr;
- 		if (chunk > chunk_sz)
- 			chunk = chunk_sz;
- 		sha1_update (&ctx, curr, chunk);
- 		curr += chunk;
-+#ifdef CONFIG_AT91SAM9G20ISIS
-+		WATCHDOG_RESET(5);
-+#else
- 		WATCHDOG_RESET ();
--		if(count++ % 5 == 0)
--		{
--			hw_watchdog_force();
--		}
-+#endif
-+	}
- 	}
- #else
- 	sha1_update (&ctx, input, ilen);
--- 
-2.7.4
-
-
-From 68914a8794614b272ee933215dbf8345c72d8ba0 Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Mon, 27 Feb 2017 14:23:36 -0600
-Subject: [PATCH 08/10] C doesn't allow function overloading
-
----
- board/kubos/at91sam9g20isis/at91sam9g20isis.c | 4 ++--
- drivers/mmc/gen_atmel_mci.c                   | 6 +++++-
- drivers/mtd/cfi_flash.c                       | 6 +++++-
- fs/ext4/ext4fs.c                              | 6 +++++-
- include/watchdog.h                            | 7 ++++++-
- lib/crc32.c                                   | 2 +-
- lib/sha1.c                                    | 2 +-
- 7 files changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-index 4e544c8..b50768d 100644
---- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-+++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
-@@ -104,7 +104,7 @@ void hw_watchdog_init(void)
- 	at91_set_pio_output(AT91_PIO_PORTA, 30, 1);
- }
- 
--void hw_watchdog_reset(int val)
-+void hw_watchdog_reset_count(int val)
- {
- 	int i = 0;
- 
-@@ -127,7 +127,7 @@ void hw_watchdog_reset(int val)
- 
- void hw_watchdog_reset()
- {
--	hw_watchdog_reset(100000);
-+	hw_watchdog_reset_count(100000);
- }
- 
- 
-diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
-index f064da7..46abcc2 100644
---- a/drivers/mmc/gen_atmel_mci.c
-+++ b/drivers/mmc/gen_atmel_mci.c
-@@ -281,7 +281,11 @@ mci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
- 				block_count++) {
- 			word_count = 0;
- 
--			WATCHDOG_RESET(1000);
-+#ifdef CONFIG_AT91SAM9G20ISIS
-+			WATCHDOG_RESET_COUNT(1000);
-+#else
-+            WATCHDOG_RESET();
+ /* EXT4 */
+-/* #ifdef CONFIG_CMD_EXT4 */
++#ifdef CONFIG_CMD_EXT4
+ #define CONFIG_EXT4
+ #define CONFIG_EXT4_WRITE
+-/* #endif */
 +#endif
  
- 			do {
- 				status = mci_data_op(mci, ioptr, error_flags);
-diff --git a/drivers/mtd/cfi_flash.c b/drivers/mtd/cfi_flash.c
-index ffdf93c..e9e5671 100644
---- a/drivers/mtd/cfi_flash.c
-+++ b/drivers/mtd/cfi_flash.c
-@@ -1393,7 +1393,11 @@ int write_buff (flash_info_t * info, uchar * src, ulong addr, ulong cnt)
- 	while (cnt >= info->portwidth) {
- 		cword.w32 = 0;
+ /* USB */
+ #define CONFIG_USB_ATMEL
+@@ -198,7 +203,9 @@
  
--		WATCHDOG_RESET(1000);
-+#ifdef CONFIG_AT91SAM9G20ISIS
-+            WATCHDOG_RESET_COUNT(1000);
-+#else
-+            WATCHDOG_RESET();
+ /*
+  * Size of malloc() pool
++ * Update: This size was increased to accommodate the DFU buffers. I'm not sure of the exact
++ * equation that would determine the optimum size.  Through trial and error I found that it
++ * should be more than 5MB, but less than 20MB.
+  */
+-/*#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)*/
+ #define CONFIG_SYS_MALLOC_LEN 	 	10 * SZ_1M
+ #endif
+diff --git a/include/kubos.h b/include/kubos.h
+new file mode 100644
+index 0000000..6eeb552
+--- /dev/null
++++ b/include/kubos.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (C) 2017 Kubos Corporation
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++/*
++ * update_kubos
++ *
++ * U-Boot has a DFU utility which currently allows a board to download a new firmware package and
++ * distribute the package components to the appropriate end-point locations.
++ *
++ * We want to leverage the second half of this utility and distribute a new firmware package that's
++ * been copied into the upgrade partition, rather than via a USB/TFTP connection.
++ *
++ * Returns:
++ *    0 - An upgrade package was successfully installed
++ *   -1 - No upgrade package could be installed (either because of system error or because no package exists)
++ */
++
++#ifndef __KUBOS_H__
++#define __KUBOS_H__
++
++#ifdef CONFIG_UPDATE_KUBOS
++int update_kubos(void);
 +#endif
++
++#endif /* __KUBOS_H__ */
+diff --git a/include/net.h b/include/net.h
+index e8eee22..06320c6 100644
+--- a/include/net.h
++++ b/include/net.h
+@@ -844,8 +844,6 @@ unsigned int random_port(void);
+  */
+ int update_tftp(ulong addr, char *interface, char *devstring);
  
- 		for (i = 0; i < info->portwidth; i++) {
- 			flash_add_byte (info, &cword, *src++);
-diff --git a/fs/ext4/ext4fs.c b/fs/ext4/ext4fs.c
-index 40cfd12..98247b0 100644
---- a/fs/ext4/ext4fs.c
-+++ b/fs/ext4/ext4fs.c
-@@ -76,7 +76,11 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
- 		int blockend = blocksize;
- 		int skipfirst = 0;
+-int update_kubos(void);
+-
+ /**********************************************************************/
  
--		WATCHDOG_RESET(1000);
-+#ifdef CONFIG_AT91SAM9G20ISIS
-+            WATCHDOG_RESET_COUNT(1000);
-+#else
-+            WATCHDOG_RESET();
-+#endif
- 
- 		blknr = read_allocated_block(&(node->inode), i);
- 		if (blknr < 0)
+ #endif /* __NET_H__ */
 diff --git a/include/watchdog.h b/include/watchdog.h
-index 3771e8e..686ed4c 100644
+index 174c894..686ed4c 100644
 --- a/include/watchdog.h
 +++ b/include/watchdog.h
-@@ -41,10 +41,15 @@ int init_func_watchdog_reset(void);
+@@ -41,8 +41,15 @@ int init_func_watchdog_reset(void);
  		#define WATCHDOG_RESET bl hw_watchdog_reset
  	#else
  		extern void hw_watchdog_reset(void);
--		extern void hw_watchdog_reset(int val);
- 		extern void hw_watchdog_force(void);
++		extern void hw_watchdog_force(void);
  
  		#define WATCHDOG_RESET hw_watchdog_reset
 +
@@ -1892,94 +1529,50 @@ index 3771e8e..686ed4c 100644
  #else
  	/*
 diff --git a/lib/crc32.c b/lib/crc32.c
-index 38e55b8..8993c5c 100644
+index 9759212..8993c5c 100644
 --- a/lib/crc32.c
 +++ b/lib/crc32.c
-@@ -244,7 +244,7 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
+@@ -243,7 +243,11 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
+ 			chunk = chunk_sz;
  		crc = crc32 (crc, curr, chunk);
  		curr += chunk;
- #ifdef CONFIG_AT91SAM9G20ISIS
--		WATCHDOG_RESET(10);
++#ifdef CONFIG_AT91SAM9G20ISIS
 +		WATCHDOG_RESET_COUNT(10);
- #else
++#else
  		WATCHDOG_RESET ();
- #endif
++#endif
+ 	}
+ #else
+ 	crc = crc32 (crc, buf, len);
 diff --git a/lib/sha1.c b/lib/sha1.c
-index 471046a..9f1d9b4 100644
+index 72c5dea..9f79509 100644
 --- a/lib/sha1.c
 +++ b/lib/sha1.c
-@@ -329,7 +329,7 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
+@@ -328,7 +328,11 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
+ 			chunk = chunk_sz;
  		sha1_update (&ctx, curr, chunk);
  		curr += chunk;
- #ifdef CONFIG_AT91SAM9G20ISIS
--		WATCHDOG_RESET(5);
++#ifdef CONFIG_AT91SAM9G20ISIS
 +		WATCHDOG_RESET_COUNT(5);
- #else
++#else
  		WATCHDOG_RESET ();
- #endif
--- 
-2.7.4
-
-
-From 2f1863170f588287c08dfe8bc796c387584c68ad Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Mon, 27 Feb 2017 14:26:35 -0600
-Subject: [PATCH 09/10] Fixing typo
-
----
- lib/sha1.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/lib/sha1.c b/lib/sha1.c
-index 9f1d9b4..9f79509 100644
---- a/lib/sha1.c
-+++ b/lib/sha1.c
-@@ -334,7 +334,6 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
- 		WATCHDOG_RESET ();
- #endif
++#endif
  	}
--	}
  #else
  	sha1_update (&ctx, input, ilen);
- #endif
--- 
-2.7.4
-
-
-From cfc02354fad728927fa9d9e2214171a6292a1fb0 Mon Sep 17 00:00:00 2001
-From: Catherine <catherine@kubos.co>
-Date: Mon, 27 Feb 2017 14:33:35 -0600
-Subject: [PATCH 10/10] Adding missing includes
-
----
- drivers/mmc/gen_atmel_mci.c | 1 +
- fs/ext4/ext4fs.c            | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
-index 46abcc2..61b9b48 100644
---- a/drivers/mmc/gen_atmel_mci.c
-+++ b/drivers/mmc/gen_atmel_mci.c
-@@ -13,6 +13,7 @@
- #include <mmc.h>
- #include <part.h>
- #include <malloc.h>
-+#include <watchdog.h>
- #include <asm/io.h>
- #include <linux/errno.h>
- #include <asm/byteorder.h>
-diff --git a/fs/ext4/ext4fs.c b/fs/ext4/ext4fs.c
-index 98247b0..eb921a9 100644
---- a/fs/ext4/ext4fs.c
-+++ b/fs/ext4/ext4fs.c
-@@ -26,6 +26,7 @@
- #include <ext4fs.h>
- #include "ext4_common.h"
- #include <div64.h>
-+#include <watchdog.h>
+diff --git a/tools/env/fw_env_main.c b/tools/env/fw_env_main.c
+index 7a17b28..24b074e 100644
+--- a/tools/env/fw_env_main.c
++++ b/tools/env/fw_env_main.c
+@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
  
- int ext4fs_symlinknest;
- struct ext_filesystem ext_fs;
+ 	lockfd = open(lockname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ 	if (-1 == lockfd) {
+-		fprintf(stderr, "Error opening lock file %s\n", lockname);
++		fprintf(stderr, "Error opening lock file %s rc=%d\n", lockname, errno);
+ 		return EXIT_FAILURE;
+ 	}
+ 
 -- 
 2.7.4
 
