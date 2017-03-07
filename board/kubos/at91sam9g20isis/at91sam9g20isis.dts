@@ -54,7 +54,7 @@
 	};
 
 	chosen {
-		bootargs = "mem=32M console=ttys0,115200 root=/dev/mtdblk0p3";
+		bootargs = "mem=32M console=ttys0,115200 root=/dev/mtdblk0p6";
 		stdout-path = "serial0:115200n8";
 	};
 
@@ -130,11 +130,6 @@
 
 			spi0: spi@fffc8000 {
 				cs-gpios = <0>, <&pioC 11 0>, <0>, <0>;
-				mtd_dataflash@0 {
-					compatible = "atmel,at45", "atmel,dataflash";
-					spi-max-frequency = <50000000>;
-					reg = <1>;
-				};
 			};
 
 			shdwc@fffffd10 {
@@ -175,9 +170,9 @@
 				reg = <0x00000 0xa000>;
 			};
 
-			dtb@60000 {
+			dtb@80000 {
 				label = "dtb";
-				reg = <0x60000 0x5000>;
+				reg = <0x80000 0x5000>;
 			};
 		};
 

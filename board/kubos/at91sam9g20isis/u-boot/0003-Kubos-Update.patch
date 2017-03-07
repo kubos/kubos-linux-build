@@ -1,0 +1,1578 @@
+From 8edb977848e4d3a2d78c500bc0560d5cebfe498b Mon Sep 17 00:00:00 2001
+From: Catherine <catherine@kubos.co>
+Date: Wed, 15 Feb 2017 16:52:01 -0600
+Subject: [PATCH 1/2] Initial file upgrade process - zImage only
+
+---
+ board/kubos/at91sam9g20isis/at91sam9g20isis.c |  19 ---
+ cmd/dfu.c                                     |   6 +
+ common/Makefile                               |   1 +
+ common/main.c                                 |   4 +
+ common/update_kubos.c                         | 168 ++++++++++++++++++++++++++
+ drivers/dfu/dfu_tftp.c                        |   4 +-
+ drivers/mmc/mmc.c                             |  90 ++++++++------
+ include/common.h                              |   2 -
+ include/configs/at91sam9g20isis.h             |  37 ++++--
+ include/net.h                                 |   2 +
+ 10 files changed, 264 insertions(+), 69 deletions(-)
+ create mode 100644 common/update_kubos.c
+
+diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+index efaabbb..9b7dfb8 100644
+--- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
++++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+@@ -21,7 +21,6 @@
+ #include <asm/arch/clk.h>
+ #include <asm/arch/gpio.h>
+ #include <atmel_mci.h>
+-#include <mmc.h>
+ 
+ #include <netdev.h>
+ 
+@@ -88,21 +87,3 @@ int board_eth_init(bd_t *bis)
+ #endif
+ 	return rc;
+ }
+-
+-
+-void board_isis_mmc_power_init(struct mmc *mmc)
+-{
+-	struct mmc_cmd cmd;
+-	int err;
+-
+-	udelay(1000);
+-
+-	cmd.cmdidx = MMC_CMD_GO_IDLE_STATE;
+-	cmd.resp_type = MMC_RSP_NONE;
+-	cmd.cmdarg = 0;
+-
+-	if (err)
+-		debug("board_isis_mmc_power_init err=%d\r\n", err);
+-
+-	udelay(2000);
+-}
+diff --git a/cmd/dfu.c b/cmd/dfu.c
+index d8aae26..64297cd 100644
+--- a/cmd/dfu.c
++++ b/cmd/dfu.c
+@@ -40,6 +40,10 @@ static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 		return update_tftp(addr, interface, devstring);
+ 	}
+ #endif
++#ifdef CONFIG_UPDATE_KUBOS
++
++	return 0;
++#else
+ 
+ 	ret = dfu_init_env_entities(interface, devstring);
+ 	if (ret)
+@@ -114,8 +118,10 @@ done:
+ 	g_dnl_clear_detach();
+ 
+ 	return ret;
++#endif
+ }
+ 
++
+ U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
+ 	"Device Firmware Upgrade",
+ 	"<USB_controller> <interface> <dev> [list]\n"
+diff --git a/common/Makefile b/common/Makefile
+index 9a9a065..8a45db3 100644
+--- a/common/Makefile
++++ b/common/Makefile
+@@ -84,6 +84,7 @@ obj-$(CONFIG_CMD_SATA) += sata.o
+ obj-$(CONFIG_SCSI) += scsi.o
+ obj-$(CONFIG_UPDATE_TFTP) += update.o
+ obj-$(CONFIG_DFU_TFTP) += update.o
++obj-$(CONFIG_UPDATE_KUBOS) += update_kubos.o
+ obj-$(CONFIG_USB_KEYBOARD) += usb_kbd.o
+ 
+ endif # !CONFIG_SPL_BUILD
+diff --git a/common/main.c b/common/main.c
+index 2116a9e..a45c2e7 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -59,6 +59,10 @@ void main_loop(void)
+ 	update_tftp(0UL, NULL, NULL);
+ #endif /* CONFIG_UPDATE_TFTP */
+ 
++#if defined(CONFIG_UPDATE_KUBOS)
++	update_kubos();
++#endif /* CONFIG_UPDATE_KUBOS */
++
+ 	s = bootdelay_process();
+ 	if (cli_process_fdt(&s))
+ 		cli_secure_boot_cmd(s);
+diff --git a/common/update_kubos.c b/common/update_kubos.c
+new file mode 100644
+index 0000000..83e6d7f
+--- /dev/null
++++ b/common/update_kubos.c
+@@ -0,0 +1,168 @@
++/*
++ * Copyright (C) 2017 Kubos Corporation
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include <common.h>
++
++
++#define CONFIG_EXT4_WRITE
++
++#include <net.h>
++#include <ext4fs.h>
++#include <fat.h>
++#include <fs.h>
++#include <mmc.h>
++
++
++#define KERNEL "kernel.itb"
++#define ROOTFS "rootfs"
++#define KERNEL_PART  5
++#define UPGRADE_PART 7
++
++#define MAX_LOAD 10000000 //Max file size: 10MB
++
++//The boot partition is FAT format, not EXT4
++int update_kubos_kernel(struct blk_desc *block_dev, void *addr, loff_t len)
++{
++	disk_partition_t part_info = {};
++	char * file = "zImage";
++	loff_t actlen;
++	int ret = 0;
++
++	//Mount kernel partition
++	if(part_get_info(block_dev, KERNEL_PART, &part_info))
++	{
++		printf("ERROR: Could not mount kernel partition.  No partition table\n");
++	}
++
++	fat_set_blk_dev(block_dev, &part_info);
++
++	//Copy in new file
++	/*
++	 * Erase old file?  Rename old file?
++	 * For right now, probably just erase it...but definitely not in final version...
++	 */
++	printf("Info: Writing new kernel file\n");
++
++	ret = file_fat_write(file, addr, 0, len, &actlen);
++	if (ret < 0)
++	{
++		printf("ERROR: Couldn't write kernel file - %d\n", ret);
++
++		return -1;
++	}
++
++
++	return 0;
++}
++
++int update_kubos(void)
++{
++	struct mmc *mmc;
++	disk_partition_t part_info = {};
++	char * file;
++	char * env_addr;
++	loff_t actlen;
++	ulong addr;
++
++	int i, err, ret = 0;
++
++	/*
++	 * Load the SD card
++	 */
++	mmc = find_mmc_device(0);
++	if(!mmc)
++	{
++		printf("ERROR: Could not access SD card - %d\n", ret);
++	}
++
++	ret = mmc_init(mmc);
++	if(ret)
++	{
++		printf("ERROR: Could not init SD card - %d\n", ret);
++	}
++
++	/*
++	 * Get the name of the update file to load
++	 * Default will eventually be kpack.itb, probably
++	 * The thought is that non-default would be a version-specific file, like kpack-v2.0.1.itb
++	 * Allows us a) to track what version is being loaded and b) to rollback to a previous version
++	 */
++	file = getenv("updatefile");
++	if (file == NULL)
++	{
++		printf("INFO: updatefile envar not found. Using default\n");
++		file = KERNEL;
++	}
++
++	/* Temp address to load to */
++	if ((env_addr = getenv("loadaddr")) != NULL)
++	{
++		addr = simple_strtoul(env_addr, NULL, 16);
++	}
++	else
++	{
++		addr = CONFIG_SYS_SDRAM_BASE + 0x200;
++	}
++
++	//Mount the upgrade partition
++	if(part_get_info(&mmc->block_dev, UPGRADE_PART, &part_info))
++	{
++		printf("ERROR: Could not mount upgrade partition.  No partition table\n");
++	}
++
++
++	printf("Info: Checking for new firmware files\n");
++
++	ext4fs_set_blk_dev(&mmc->block_dev, &part_info);
++
++	ret = ext4fs_mount(0);
++	if (!ret) {
++		printf("ERROR: Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
++
++		return -1;
++	}
++
++	//This will be a loop eventually.  Right now just processing zImage
++	//for(i = 0; i < #_files; i++)
++	for(i = 0; i < 1; i++)
++	{
++
++		ret = ext4fs_exists(file);
++		if(!ret)
++		{
++			continue;
++		}
++
++		printf("INFO: Found file to upgrade - %s\n", file);
++
++		ret = ext4_read_file(file, (void *)addr, 0, 0, &actlen);
++		if (ret < 0)
++		{
++			printf("ERROR: Couldn't read %s file - %d\n", file, ret);
++
++			continue;
++		}
++
++		ret = update_tftp(addr, "mmc", "0");
++		if(ret)
++		{
++			printf("ERROR: System update failed - %d\n", ret);
++		}
++
++	}
++
++	return 0;
++}
+diff --git a/drivers/dfu/dfu_tftp.c b/drivers/dfu/dfu_tftp.c
+index cd71708..4f0e06a 100644
+--- a/drivers/dfu/dfu_tftp.c
++++ b/drivers/dfu/dfu_tftp.c
+@@ -17,7 +17,7 @@ int dfu_tftp_write(char *dfu_entity_name, unsigned int addr, unsigned int len,
+ 	int alt_setting_num, ret;
+ 	struct dfu_entity *dfu;
+ 
+-	debug("%s: name: %s addr: 0x%x len: %d device: %s:%s\n", __func__,
++	printf("%s: name: %s addr: 0x%x len: %d device: %s:%s\n", __func__,
+ 	      dfu_entity_name, addr, len, interface, devstring);
+ 
+ 	ret = dfu_init_env_entities(interface, devstring);
+@@ -38,7 +38,7 @@ int dfu_tftp_write(char *dfu_entity_name, unsigned int addr, unsigned int len,
+ 	}
+ 
+ 	strsep(&s, "@");
+-	debug("%s: image name: %s strlen: %d\n", __func__, sb, strlen(sb));
++	printf("%s: image name: %s strlen: %d\n", __func__, sb, strlen(sb));
+ 
+ 	alt_setting_num = dfu_get_alt(sb);
+ 	free(sb);
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+index c78cd74..424e870 100644
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -60,8 +60,8 @@ __weak int board_mmc_getcd(struct mmc *mmc)
+ #ifdef CONFIG_MMC_TRACE
+ void mmmc_trace_before_send(struct mmc *mmc, struct mmc_cmd *cmd)
+ {
+-	printf("CMD_SEND:%d\n", cmd->cmdidx);
+-	printf("\t\tARG\t\t\t 0x%08X\n", cmd->cmdarg);
++	debug("CMD_SEND:%d\n", cmd->cmdidx);
++	debug("\t\tARG\t\t\t 0x%08X\n", cmd->cmdarg);
+ }
+ 
+ void mmmc_trace_after_send(struct mmc *mmc, struct mmc_cmd *cmd, int ret)
+@@ -70,47 +70,47 @@ void mmmc_trace_after_send(struct mmc *mmc, struct mmc_cmd *cmd, int ret)
+ 	u8 *ptr;
+ 
+ 	if (ret) {
+-		printf("\t\tRET\t\t\t %d\n", ret);
++		debug("\t\tRET\t\t\t %d\n", ret);
+ 	} else {
+ 		switch (cmd->resp_type) {
+ 		case MMC_RSP_NONE:
+-			printf("\t\tMMC_RSP_NONE\n");
++			debug("\t\tMMC_RSP_NONE\n");
+ 			break;
+ 		case MMC_RSP_R1:
+-			printf("\t\tMMC_RSP_R1,5,6,7 \t 0x%08X \n",
++			debug("\t\tMMC_RSP_R1,5,6,7 \t 0x%08X \n",
+ 				cmd->response[0]);
+ 			break;
+ 		case MMC_RSP_R1b:
+-			printf("\t\tMMC_RSP_R1b\t\t 0x%08X \n",
++			debug("\t\tMMC_RSP_R1b\t\t 0x%08X \n",
+ 				cmd->response[0]);
+ 			break;
+ 		case MMC_RSP_R2:
+-			printf("\t\tMMC_RSP_R2\t\t 0x%08X \n",
++			debug("\t\tMMC_RSP_R2\t\t 0x%08X \n",
+ 				cmd->response[0]);
+-			printf("\t\t          \t\t 0x%08X \n",
++			debug("\t\t          \t\t 0x%08X \n",
+ 				cmd->response[1]);
+-			printf("\t\t          \t\t 0x%08X \n",
++			debug("\t\t          \t\t 0x%08X \n",
+ 				cmd->response[2]);
+-			printf("\t\t          \t\t 0x%08X \n",
++			debug("\t\t          \t\t 0x%08X \n",
+ 				cmd->response[3]);
+-			printf("\n");
+-			printf("\t\t\t\t\tDUMPING DATA\n");
++			debug("\n");
++			debug("\t\t\t\t\tDUMPING DATA\n");
+ 			for (i = 0; i < 4; i++) {
+ 				int j;
+-				printf("\t\t\t\t\t%03d - ", i*4);
++				debug("\t\t\t\t\t%03d - ", i*4);
+ 				ptr = (u8 *)&cmd->response[i];
+ 				ptr += 3;
+ 				for (j = 0; j < 4; j++)
+-					printf("%02X ", *ptr--);
+-				printf("\n");
++					debug("%02X ", *ptr--);
++				debug("\n");
+ 			}
+ 			break;
+ 		case MMC_RSP_R3:
+-			printf("\t\tMMC_RSP_R3,4\t\t 0x%08X \n",
++			debug("\t\tMMC_RSP_R3,4\t\t 0x%08X \n",
+ 				cmd->response[0]);
+ 			break;
+ 		default:
+-			printf("\t\tERROR MMC rsp not supported\n");
++			debug("\t\tERROR MMC rsp not supported\n");
+ 			break;
+ 		}
+ 	}
+@@ -121,7 +121,7 @@ void mmc_trace_state(struct mmc *mmc, struct mmc_cmd *cmd)
+ 	int status;
+ 
+ 	status = (cmd->response[0] & MMC_STATUS_CURR_STATE) >> 9;
+-	printf("CURR STATE:%d\n", status);
++	debug("CURR STATE:%d\n", status);
+ }
+ #endif
+ 
+@@ -157,7 +157,7 @@ int mmc_send_status(struct mmc *mmc, int timeout)
+ 				break;
+ 			else if (cmd.response[0] & MMC_STATUS_MASK) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-				printf("Status Error: 0x%08X\n",
++				debug("Status Error: 0x%08X\n",
+ 					cmd.response[0]);
+ #endif
+ 				return -ECOMM;
+@@ -174,7 +174,7 @@ int mmc_send_status(struct mmc *mmc, int timeout)
+ 	mmc_trace_state(mmc, &cmd);
+ 	if (timeout <= 0) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-		printf("Timeout waiting card ready\n");
++		debug("Timeout waiting card ready\n");
+ #endif
+ 		return -ETIMEDOUT;
+ 	}
+@@ -225,21 +225,28 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
+ 	data.blocksize = mmc->read_bl_len;
+ 	data.flags = MMC_DATA_READ;
+ 
++	debug("mmc_send_cmd1\n");
+ 	if (mmc_send_cmd(mmc, &cmd, &data))
++	{
++		debug("return1\n");
+ 		return 0;
++	}
+ 
+ 	if (blkcnt > 1) {
+ 		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+ 		cmd.cmdarg = 0;
+ 		cmd.resp_type = MMC_RSP_R1b;
++		debug("mmc_send_cmd2\n");
+ 		if (mmc_send_cmd(mmc, &cmd, NULL)) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-			printf("mmc fail to send stop cmd\n");
++			debug("mmc fail to send stop cmd\n");
+ #endif
++			debug("return2\n");
+ 			return 0;
+ 		}
+ 	}
+ 
++	debug("return3\n");
+ 	return blkcnt;
+ }
+ 
+@@ -257,25 +264,32 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 	int err;
+ 	lbaint_t cur, blocks_todo = blkcnt;
+ 
++	debug("mmc_bread\n");
++
+ 	if (blkcnt == 0)
+ 		return 0;
+ 
+ 	struct mmc *mmc = find_mmc_device(dev_num);
+ 	if (!mmc)
++	{
++		debug("no mmc\n");
+ 		return 0;
++	}
+ 
++	debug("blk_dselect_hwpart\n");
+ 	err = blk_dselect_hwpart(block_dev, block_dev->hwpart);
+ 	if (err < 0)
+ 		return 0;
+ 
+ 	if ((start + blkcnt) > block_dev->lba) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-		printf("MMC: block number 0x" LBAF " exceeds max(0x" LBAF ")\n",
++		debug("MMC: block number 0x" LBAF " exceeds max(0x" LBAF ")\n",
+ 			start + blkcnt, block_dev->lba);
+ #endif
+ 		return 0;
+ 	}
+ 
++	debug("mmc_set_blocklen\n");
+ 	if (mmc_set_blocklen(mmc, mmc->read_bl_len)) {
+ 		debug("%s: Failed to set blocklen\n", __func__);
+ 		return 0;
+@@ -284,6 +298,7 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 	do {
+ 		cur = (blocks_todo > mmc->cfg->b_max) ?
+ 			mmc->cfg->b_max : blocks_todo;
++		debug("mmc_read_blocks: start %lu cur %lu\n", start, cur);
+ 		if (mmc_read_blocks(mmc, dst, start, cur) != cur) {
+ 			debug("%s: Failed to read blocks\n", __func__);
+ 			return 0;
+@@ -293,6 +308,7 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 		dst += cur * mmc->read_bl_len;
+ 	} while (blocks_todo > 0);
+ 
++	debug("leaving mmc_bread\n");
+ 	return blkcnt;
+ }
+ 
+@@ -634,17 +650,17 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 		return -EINVAL;
+ 
+ 	if (IS_SD(mmc) || (mmc->version < MMC_VERSION_4_41)) {
+-		printf("eMMC >= 4.4 required for enhanced user data area\n");
++		debug("eMMC >= 4.4 required for enhanced user data area\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+ 	if (!(mmc->part_support & PART_SUPPORT)) {
+-		printf("Card does not support partitioning\n");
++		debug("Card does not support partitioning\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+ 	if (!mmc->hc_wp_grp_size) {
+-		printf("Card does not define HC WP group size\n");
++		debug("Card does not define HC WP group size\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+@@ -652,7 +668,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 	if (conf->user.enh_size) {
+ 		if (conf->user.enh_size % mmc->hc_wp_grp_size ||
+ 		    conf->user.enh_start % mmc->hc_wp_grp_size) {
+-			printf("User data enhanced area not HC WP group "
++			debug("User data enhanced area not HC WP group "
+ 			       "size aligned\n");
+ 			return -EINVAL;
+ 		}
+@@ -671,7 +687,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 
+ 	for (pidx = 0; pidx < 4; pidx++) {
+ 		if (conf->gp_part[pidx].size % mmc->hc_wp_grp_size) {
+-			printf("GP%i partition not HC WP group size "
++			debug("GP%i partition not HC WP group size "
+ 			       "aligned\n", pidx+1);
+ 			return -EINVAL;
+ 		}
+@@ -683,7 +699,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 	}
+ 
+ 	if (part_attrs && ! (mmc->part_support & ENHNCD_SUPPORT)) {
+-		printf("Card does not support enhanced attribute\n");
++		debug("Card does not support enhanced attribute\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+@@ -696,7 +712,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 		(ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT+1] << 8) +
+ 		ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT];
+ 	if (tot_enh_size_mult > max_enh_size_mult) {
+-		printf("Total enhanced size exceeds maximum (%u > %u)\n",
++		debug("Total enhanced size exceeds maximum (%u > %u)\n",
+ 		       tot_enh_size_mult, max_enh_size_mult);
+ 		return -EMEDIUMTYPE;
+ 	}
+@@ -730,7 +746,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 
+ 	if (ext_csd[EXT_CSD_PARTITION_SETTING] &
+ 	    EXT_CSD_PARTITION_SETTING_COMPLETED) {
+-		printf("Card already partitioned\n");
++		debug("Card already partitioned\n");
+ 		return -EPERM;
+ 	}
+ 
+@@ -1216,7 +1232,7 @@ static int mmc_startup(struct mmc *mmc)
+ 		cmd.cmdarg = (mmc->dsr & 0xffff) << 16;
+ 		cmd.resp_type = MMC_RSP_NONE;
+ 		if (mmc_send_cmd(mmc, &cmd, NULL))
+-			printf("MMC: SET_DSR failed\n");
++			debug("MMC: SET_DSR failed\n");
+ 	}
+ 
+ 	/* Select the card, and put it into Transfer Mode */
+@@ -1538,7 +1554,7 @@ static int mmc_startup(struct mmc *mmc)
+ 	bdesc->lba = lldiv(mmc->capacity, mmc->read_bl_len);
+ #if !defined(CONFIG_SPL_BUILD) || \
+ 		(defined(CONFIG_SPL_LIBCOMMON_SUPPORT) && \
+-		!defined(CONFIG_USE_TINY_PRINTF))
++		!defined(CONFIG_USE_TINY_debug))
+ 	sprintf(bdesc->vendor, "Man %06x Snr %04x%04x",
+ 		mmc->cid[0] >> 24, (mmc->cid[2] & 0xffff),
+ 		(mmc->cid[3] >> 16) & 0xffff);
+@@ -1615,7 +1631,7 @@ int mmc_start_init(struct mmc *mmc)
+ 	if (no_card) {
+ 		mmc->has_init = 0;
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-		printf("MMC: no card present\n");
++		debug("MMC: no card present\n");
+ #endif
+ 		return -ENOMEDIUM;
+ 	}
+@@ -1641,10 +1657,6 @@ int mmc_start_init(struct mmc *mmc)
+ 	mmc_set_bus_width(mmc, 1);
+ 	mmc_set_clock(mmc, 1);
+ 
+-#ifdef CONFIG_AT91SAM9G20ISIS
+-	board_isis_mmc_power_init(mmc);
+-#endif
+-
+ 	/* Reset the Card */
+ 	err = mmc_go_idle(mmc);
+ 
+@@ -1666,7 +1678,7 @@ int mmc_start_init(struct mmc *mmc)
+ 
+ 		if (err) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-			printf("Card did not respond to voltage select!\n");
++			debug("Card did not respond to voltage select!\n");
+ #endif
+ 			return -EOPNOTSUPP;
+ 		}
+@@ -1770,7 +1782,7 @@ static int mmc_probe(bd_t *bis)
+ 	uclass_foreach_dev(dev, uc) {
+ 		ret = device_probe(dev);
+ 		if (ret)
+-			printf("%s - probe failed: %d\n", dev->name, ret);
++			debug("%s - probe failed: %d\n", dev->name, ret);
+ 	}
+ 
+ 	return 0;
+diff --git a/include/common.h b/include/common.h
+index 39739ce..a8d833b 100644
+--- a/include/common.h
++++ b/include/common.h
+@@ -95,8 +95,6 @@ typedef volatile unsigned char	vu_char;
+ #define CONFIG_SYS_SUPPORT_64BIT_DATA
+ #endif
+ 
+-/*#define DEBUG 1*/
+-
+ #ifdef DEBUG
+ #define _DEBUG	1
+ #else
+diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
+index eb70303..71a0aed 100644
+--- a/include/configs/at91sam9g20isis.h
++++ b/include/configs/at91sam9g20isis.h
+@@ -26,6 +26,8 @@
+  */
+ #include <asm/hardware.h>
+ 
++#include <linux/sizes.h>
++
+ /*
+  * CONFIG_SYS_TEXT_BASE - The starting address of U-Boot.
+  * Warning: changing CONFIG_SYS_TEXT_BASE requires
+@@ -73,6 +75,11 @@
+ #define CONFIG_YELLOW_LED   AT91_PIN_PC14
+ #define CONFIG_BLUE_LED     AT91_PIN_PC15   /* Unused */
+ 
++/* File updates */
++#define CONFIG_SYS_DFU_DATA_BUF_SIZE 500 * SZ_1K /* File transfer chunk size */
++#define CONFIG_SYS_DFU_MAX_FILE_SIZE 2 * SZ_1M   /* Maximum size for a single file.  Currently zImage (~1M) */
++#define CONFIG_UPDATE_KUBOS
++
+ /*
+  * Command line configuration.
+  */
+@@ -125,8 +132,15 @@
+ /* FAT */
+ #ifdef CONFIG_CMD_FAT
+ #define CONFIG_DOS_PARTITION
++#define CONFIG_FAT_WRITE
+ #endif
+ 
++/* EXT4 */
++/* #ifdef CONFIG_CMD_EXT4 */
++#define CONFIG_EXT4
++#define CONFIG_EXT4_WRITE
++/* #endif */
++
+ /* USB */
+ #define CONFIG_USB_ATMEL
+ #define CONFIG_USB_ATMEL_CLK_SEL_PLLB
+@@ -144,16 +158,25 @@
+ #if defined(CONFIG_SYS_USE_NORFLASH)
+ /* (bootstrap + u-boot + env +dtb in flash) + (linux in mmc) */
+ #define CONFIG_ENV_IS_IN_FLASH	1
+-#define CONFIG_ENV_OFFSET		0x50000 /* Must start on a sector boundary */
++#define CONFIG_ENV_OFFSET		0x70000 /* Must start on a sector boundary */
+ #define CONFIG_ENV_SIZE		0x10000		/* 1 sector = 65 kB */
+-/* Copy .dtb file (NORFLASH @ 0x60000, size = 0x5000) and kernel (SD card, partition 2) into SDRAM, then boot them */
+-#define CONFIG_BOOTCOMMAND	"cp.b 0x10060000 0x21800000 0x5000; " \
+-				"fatload mmc 0:2 0x21880000 zImage; " \
++/* Copy .dtb file (NORFLASH @ 0x80000, size = 0x5000) and kernel (SD card, partition 5) into SDRAM, then boot them */
++#define CONFIG_BOOTCOMMAND	"cp.b 0x10080000 0x21800000 0x5000; " \
++				"fatload mmc 0:5 0x21880000 zImage; " \
+ 				"bootz 0x21880000 - 0x21800000"
+ /* Define the initial console connection and rootfs location */
+ #define CONFIG_BOOTARGS							\
+ 	"console=ttyS0,115200 "				\
+-	"root=/dev/mmcblk0p3 rootwait"
++	"root=/dev/mmcblk0p6 rootwait"
++
++/* DFU Configuration */
++#define CONFIG_DFU_ALT_INFO \
++	"dfu_alt_info=" 		\
++	"zImage fat 0 5;" 		\
++	"rootfs part 0 6\0"
++
++#define CONFIG_EXTRA_ENV_SETTINGS \
++	CONFIG_DFU_ALT_INFO
+ 
+ #define CONFIG_SYS_FLASH_CFI			1
+ #define CONFIG_FLASH_CFI_DRIVER			1
+@@ -176,6 +199,6 @@
+ /*
+  * Size of malloc() pool
+  */
+-#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)
+-
++/*#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)*/
++#define CONFIG_SYS_MALLOC_LEN 	 	10 * SZ_1M
+ #endif
+diff --git a/include/net.h b/include/net.h
+index 06320c6..e8eee22 100644
+--- a/include/net.h
++++ b/include/net.h
+@@ -844,6 +844,8 @@ unsigned int random_port(void);
+  */
+ int update_tftp(ulong addr, char *interface, char *devstring);
+ 
++int update_kubos(void);
++
+ /**********************************************************************/
+ 
+ #endif /* __NET_H__ */
+-- 
+2.7.4
+
+
+From 91222a54bb6f51df00523cc18c6b10c363a9662f Mon Sep 17 00:00:00 2001
+From: Catherine <catherine@kubos.co>
+Date: Wed, 22 Feb 2017 14:49:26 -0600
+Subject: [PATCH 2/2] Adding watchdog support + upgrade improvements
+
+---
+ board/kubos/at91sam9g20isis/at91sam9g20isis.c |  53 +++++++++
+ cmd/dfu.c                                     |   6 -
+ common/main.c                                 |  11 +-
+ common/update_kubos.c                         | 153 ++++++++++++--------------
+ drivers/dfu/dfu_tftp.c                        |   4 +-
+ drivers/mmc/gen_atmel_mci.c                   |   8 ++
+ drivers/mmc/mmc.c                             |  46 +++-----
+ drivers/mtd/cfi_flash.c                       |   7 ++
+ fs/ext4/ext4fs.c                              |   8 ++
+ include/common.h                              |   2 +
+ include/configs/at91sam9g20isis.h             |  13 ++-
+ include/kubos.h                               |  38 +++++++
+ include/net.h                                 |   2 -
+ include/watchdog.h                            |   7 ++
+ lib/crc32.c                                   |   4 +
+ lib/sha1.c                                    |   4 +
+ tools/env/fw_env_main.c                       |   2 +-
+ 17 files changed, 242 insertions(+), 126 deletions(-)
+ create mode 100644 include/kubos.h
+
+diff --git a/board/kubos/at91sam9g20isis/at91sam9g20isis.c b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+index 9b7dfb8..300b6b1 100644
+--- a/board/kubos/at91sam9g20isis/at91sam9g20isis.c
++++ b/board/kubos/at91sam9g20isis/at91sam9g20isis.c
+@@ -10,6 +10,7 @@
+  *   has been modified for the at91sam9g20isis board.
+  *   Extraneous options have been removed and some code
+  *   to initialize the SD card port has been added.
++ *   Added logic to control external watchdog.
+  * Author: Catherine Freed <catherine@kubos.co>
+  */
+ 
+@@ -62,6 +63,10 @@ int board_init(void)
+ 
+ 	at91_seriald_hw_init();
+ 
++#ifdef CONFIG_HW_WATCHDOG
++	hw_watchdog_init();
++#endif
++
+ 	return 0;
+ }
+ 
+@@ -87,3 +92,51 @@ int board_eth_init(bd_t *bis)
+ #endif
+ 	return rc;
+ }
++
++#ifdef CONFIG_HW_WATCHDOG
++
++static int wdc;
++
++void hw_watchdog_init(void)
++{
++	/* Mark watchdog pin as output */
++	wdc = 0;
++	at91_set_pio_output(AT91_PIO_PORTA, 30, 1);
++}
++
++void hw_watchdog_reset_count(int val)
++{
++	int i = 0;
++
++	if (wdc > val)
++	{
++
++		for (i = 0; i < 10; i++)
++		{
++			at91_set_pio_value(AT91_PIO_PORTA, 30, 0);
++			at91_set_pio_value(AT91_PIO_PORTA, 30, 1);
++		}
++
++		wdc = 0;
++	}
++
++	wdc++;
++
++	return;
++}
++
++void hw_watchdog_reset()
++{
++	hw_watchdog_reset_count(100000);
++}
++
++
++void hw_watchdog_force(void)
++{
++	wdc = 0;
++
++	hw_watchdog_reset();
++
++	return;
++}
++#endif /* CONFIG_HW_WATCHDOG */
+diff --git a/cmd/dfu.c b/cmd/dfu.c
+index 64297cd..d8aae26 100644
+--- a/cmd/dfu.c
++++ b/cmd/dfu.c
+@@ -40,10 +40,6 @@ static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ 		return update_tftp(addr, interface, devstring);
+ 	}
+ #endif
+-#ifdef CONFIG_UPDATE_KUBOS
+-
+-	return 0;
+-#else
+ 
+ 	ret = dfu_init_env_entities(interface, devstring);
+ 	if (ret)
+@@ -118,10 +114,8 @@ done:
+ 	g_dnl_clear_detach();
+ 
+ 	return ret;
+-#endif
+ }
+ 
+-
+ U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
+ 	"Device Firmware Upgrade",
+ 	"<USB_controller> <interface> <dev> [list]\n"
+diff --git a/common/main.c b/common/main.c
+index a45c2e7..2ee25c8 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -12,6 +12,7 @@
+ #include <cli.h>
+ #include <console.h>
+ #include <version.h>
++#include <kubos.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+@@ -60,7 +61,15 @@ void main_loop(void)
+ #endif /* CONFIG_UPDATE_TFTP */
+ 
+ #if defined(CONFIG_UPDATE_KUBOS)
+-	update_kubos();
++	if (update_kubos() == 0)
++	{
++		/* 
++		 * If everything goes well, we want to reboot into the new
++		 * files.  The watchdog gets tripped if we try to boot the
++		 * new kernel from here, so we reboot instead.
++		 */
++		do_reset(NULL, 0, 0, NULL);
++	}
+ #endif /* CONFIG_UPDATE_KUBOS */
+ 
+ 	s = bootdelay_process();
+diff --git a/common/update_kubos.c b/common/update_kubos.c
+index 83e6d7f..bce9648 100644
+--- a/common/update_kubos.c
++++ b/common/update_kubos.c
+@@ -15,58 +15,30 @@
+  */
+ 
+ #include <common.h>
+-
+-
+-#define CONFIG_EXT4_WRITE
+-
+ #include <net.h>
+ #include <ext4fs.h>
+ #include <fat.h>
+ #include <fs.h>
+ #include <mmc.h>
++#include <kubos.h>
+ 
+ 
+-#define KERNEL "kernel.itb"
+-#define ROOTFS "rootfs"
+-#define KERNEL_PART  5
++#define KERNEL "kpack.itb"
+ #define UPGRADE_PART 7
+ 
+-#define MAX_LOAD 10000000 //Max file size: 10MB
+-
+-//The boot partition is FAT format, not EXT4
+-int update_kubos_kernel(struct blk_desc *block_dev, void *addr, loff_t len)
+-{
+-	disk_partition_t part_info = {};
+-	char * file = "zImage";
+-	loff_t actlen;
+-	int ret = 0;
+-
+-	//Mount kernel partition
+-	if(part_get_info(block_dev, KERNEL_PART, &part_info))
+-	{
+-		printf("ERROR: Could not mount kernel partition.  No partition table\n");
+-	}
+-
+-	fat_set_blk_dev(block_dev, &part_info);
+-
+-	//Copy in new file
+-	/*
+-	 * Erase old file?  Rename old file?
+-	 * For right now, probably just erase it...but definitely not in final version...
+-	 */
+-	printf("Info: Writing new kernel file\n");
+-
+-	ret = file_fat_write(file, addr, 0, len, &actlen);
+-	if (ret < 0)
+-	{
+-		printf("ERROR: Couldn't write kernel file - %d\n", ret);
+-
+-		return -1;
+-	}
+-
+-
+-	return 0;
+-}
++/*
++ * update_kubos
++ *
++ * U-Boot has a DFU utility which currently allows a board to download a new firmware package and
++ * distribute the package components to the appropriate end-point locations.
++ *
++ * We want to leverage the second half of this utility and distribute a new firmware package that's
++ * been copied into the upgrade partition, rather than via a USB/TFTP connection.
++ *
++ * Returns:
++ *    0 - An upgrade package was successfully installed
++ *   -1 - No upgrade package could be installed (either because of system error or because no package exists)
++ */
+ 
+ int update_kubos(void)
+ {
+@@ -75,40 +47,42 @@ int update_kubos(void)
+ 	char * file;
+ 	char * env_addr;
+ 	loff_t actlen;
+-	ulong addr;
++	ulong addr, part = 0;
+ 
+-	int i, err, ret = 0;
++	int ret = 0;
+ 
+ 	/*
+ 	 * Load the SD card
+ 	 */
+ 	mmc = find_mmc_device(0);
+-	if(!mmc)
++	if (!mmc)
+ 	{
+-		printf("ERROR: Could not access SD card - %d\n", ret);
++		error("Could not access SD card\n");
++		return -1;
++
+ 	}
+ 
+ 	ret = mmc_init(mmc);
+-	if(ret)
++	if (ret)
+ 	{
+-		printf("ERROR: Could not init SD card - %d\n", ret);
++		error("Could not init SD card - %d\n", ret);
++		return -1;
+ 	}
+ 
+ 	/*
+ 	 * Get the name of the update file to load
+-	 * Default will eventually be kpack.itb, probably
+-	 * The thought is that non-default would be a version-specific file, like kpack-v2.0.1.itb
+-	 * Allows us a) to track what version is being loaded and b) to rollback to a previous version
+ 	 */
+-	file = getenv("updatefile");
++	file = getenv("kubos_updatefile");
+ 	if (file == NULL)
+ 	{
+-		printf("INFO: updatefile envar not found. Using default\n");
++		debug("INFO: Kubos_updatefile envar not found. Searching for default '%s'\n", KERNEL);
+ 		file = KERNEL;
+ 	}
+ 
+-	/* Temp address to load to */
+-	if ((env_addr = getenv("loadaddr")) != NULL)
++	/*
++	 * Temp SDRAM address to load to
++	 */
++	if ((env_addr = getenv("kubos_loadaddr")) != NULL)
+ 	{
+ 		addr = simple_strtoul(env_addr, NULL, 16);
+ 	}
+@@ -117,52 +91,71 @@ int update_kubos(void)
+ 		addr = CONFIG_SYS_SDRAM_BASE + 0x200;
+ 	}
+ 
+-	//Mount the upgrade partition
+-	if(part_get_info(&mmc->block_dev, UPGRADE_PART, &part_info))
++	/*
++	 * Get and mount the upgrade partition
++	 */
++	if ((env_addr = getenv("kubos_updatepart")) != NULL)
+ 	{
+-		printf("ERROR: Could not mount upgrade partition.  No partition table\n");
++		part = simple_strtoul(env_addr, NULL, 16);
++	}
++	else
++	{
++		part = UPGRADE_PART;
+ 	}
+ 
++	if (part_get_info(&mmc->block_dev, part, &part_info))
++	{
++		error("Could not mount upgrade partition.  No partition table\n");
++		return -1;
++	}
+ 
+-	printf("Info: Checking for new firmware files\n");
++	debug("INFO: Checking for new firmware files\n");
+ 
+ 	ext4fs_set_blk_dev(&mmc->block_dev, &part_info);
+ 
+ 	ret = ext4fs_mount(0);
+ 	if (!ret) {
+-		printf("ERROR: Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
+ 
++		error("Could not mount upgrade partition. ext4fs mount err - %d\n", ret);
+ 		return -1;
+ 	}
+ 
+-	//This will be a loop eventually.  Right now just processing zImage
+-	//for(i = 0; i < #_files; i++)
+-	for(i = 0; i < 1; i++)
+-	{
+-
+-		ret = ext4fs_exists(file);
+-		if(!ret)
+-		{
+-			continue;
+-		}
++	ret = ext4fs_exists(file);
+ 
+-		printf("INFO: Found file to upgrade - %s\n", file);
++	/*
++	 * Upgrade file found, call the existing DFU utility
++	 */
++	if (ret)
++	{
++		debug("INFO: Found file to upgrade - %s\n", file);
+ 
+ 		ret = ext4_read_file(file, (void *)addr, 0, 0, &actlen);
++
+ 		if (ret < 0)
+ 		{
+-			printf("ERROR: Couldn't read %s file - %d\n", file, ret);
+-
+-			continue;
++			error("Couldn't read %s file - %d\n", file, ret);
++			return -1;
+ 		}
+-
+-		ret = update_tftp(addr, "mmc", "0");
+-		if(ret)
++		else
+ 		{
+-			printf("ERROR: System update failed - %d\n", ret);
+-		}
++			ret = update_tftp(addr, "mmc", "0");
+ 
++			if (ret)
++			{
++				error("System update failed - %d\n", ret);
++				return -1;
++			}
++		}
+ 	}
++	else
++	{
++		debug("INFO: No upgrade file found\n");
++		return -1;
++	}
++
++	/* Reset the updatefile name so that we resume usual boot after rebooting */
++	setenv("kubos_updatefile", "none");
++	saveenv();
+ 
+ 	return 0;
+ }
+diff --git a/drivers/dfu/dfu_tftp.c b/drivers/dfu/dfu_tftp.c
+index 4f0e06a..cd71708 100644
+--- a/drivers/dfu/dfu_tftp.c
++++ b/drivers/dfu/dfu_tftp.c
+@@ -17,7 +17,7 @@ int dfu_tftp_write(char *dfu_entity_name, unsigned int addr, unsigned int len,
+ 	int alt_setting_num, ret;
+ 	struct dfu_entity *dfu;
+ 
+-	printf("%s: name: %s addr: 0x%x len: %d device: %s:%s\n", __func__,
++	debug("%s: name: %s addr: 0x%x len: %d device: %s:%s\n", __func__,
+ 	      dfu_entity_name, addr, len, interface, devstring);
+ 
+ 	ret = dfu_init_env_entities(interface, devstring);
+@@ -38,7 +38,7 @@ int dfu_tftp_write(char *dfu_entity_name, unsigned int addr, unsigned int len,
+ 	}
+ 
+ 	strsep(&s, "@");
+-	printf("%s: image name: %s strlen: %d\n", __func__, sb, strlen(sb));
++	debug("%s: image name: %s strlen: %d\n", __func__, sb, strlen(sb));
+ 
+ 	alt_setting_num = dfu_get_alt(sb);
+ 	free(sb);
+diff --git a/drivers/mmc/gen_atmel_mci.c b/drivers/mmc/gen_atmel_mci.c
+index 20d4bdc..9066880 100644
+--- a/drivers/mmc/gen_atmel_mci.c
++++ b/drivers/mmc/gen_atmel_mci.c
+@@ -13,6 +13,7 @@
+ #include <mmc.h>
+ #include <part.h>
+ #include <malloc.h>
++#include <watchdog.h>
+ #include <asm/io.h>
+ #include <linux/errno.h>
+ #include <asm/byteorder.h>
+@@ -280,6 +281,13 @@ mci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd, struct mmc_data *data)
+ 				block_count < data->blocks && !status;
+ 				block_count++) {
+ 			word_count = 0;
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++			WATCHDOG_RESET_COUNT(1000);
++#else
++			WATCHDOG_RESET();
++#endif
++
+ 			do {
+ 				status = mci_data_op(mci, ioptr, error_flags);
+ 				word_count++;
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+index 424e870..fba004e 100644
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -225,28 +225,21 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
+ 	data.blocksize = mmc->read_bl_len;
+ 	data.flags = MMC_DATA_READ;
+ 
+-	debug("mmc_send_cmd1\n");
+ 	if (mmc_send_cmd(mmc, &cmd, &data))
+-	{
+-		debug("return1\n");
+ 		return 0;
+-	}
+ 
+ 	if (blkcnt > 1) {
+ 		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
+ 		cmd.cmdarg = 0;
+ 		cmd.resp_type = MMC_RSP_R1b;
+-		debug("mmc_send_cmd2\n");
+ 		if (mmc_send_cmd(mmc, &cmd, NULL)) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-			debug("mmc fail to send stop cmd\n");
++			printf("mmc fail to send stop cmd\n");
+ #endif
+-			debug("return2\n");
+ 			return 0;
+ 		}
+ 	}
+ 
+-	debug("return3\n");
+ 	return blkcnt;
+ }
+ 
+@@ -264,32 +257,25 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 	int err;
+ 	lbaint_t cur, blocks_todo = blkcnt;
+ 
+-	debug("mmc_bread\n");
+-
+ 	if (blkcnt == 0)
+ 		return 0;
+ 
+ 	struct mmc *mmc = find_mmc_device(dev_num);
+ 	if (!mmc)
+-	{
+-		debug("no mmc\n");
+ 		return 0;
+-	}
+ 
+-	debug("blk_dselect_hwpart\n");
+ 	err = blk_dselect_hwpart(block_dev, block_dev->hwpart);
+ 	if (err < 0)
+ 		return 0;
+ 
+ 	if ((start + blkcnt) > block_dev->lba) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-		debug("MMC: block number 0x" LBAF " exceeds max(0x" LBAF ")\n",
++		printf("MMC: block number 0x" LBAF " exceeds max(0x" LBAF ")\n",
+ 			start + blkcnt, block_dev->lba);
+ #endif
+ 		return 0;
+ 	}
+ 
+-	debug("mmc_set_blocklen\n");
+ 	if (mmc_set_blocklen(mmc, mmc->read_bl_len)) {
+ 		debug("%s: Failed to set blocklen\n", __func__);
+ 		return 0;
+@@ -298,7 +284,6 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 	do {
+ 		cur = (blocks_todo > mmc->cfg->b_max) ?
+ 			mmc->cfg->b_max : blocks_todo;
+-		debug("mmc_read_blocks: start %lu cur %lu\n", start, cur);
+ 		if (mmc_read_blocks(mmc, dst, start, cur) != cur) {
+ 			debug("%s: Failed to read blocks\n", __func__);
+ 			return 0;
+@@ -308,7 +293,6 @@ ulong mmc_bread(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt,
+ 		dst += cur * mmc->read_bl_len;
+ 	} while (blocks_todo > 0);
+ 
+-	debug("leaving mmc_bread\n");
+ 	return blkcnt;
+ }
+ 
+@@ -650,17 +634,17 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 		return -EINVAL;
+ 
+ 	if (IS_SD(mmc) || (mmc->version < MMC_VERSION_4_41)) {
+-		debug("eMMC >= 4.4 required for enhanced user data area\n");
++		printf("eMMC >= 4.4 required for enhanced user data area\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+ 	if (!(mmc->part_support & PART_SUPPORT)) {
+-		debug("Card does not support partitioning\n");
++		printf("Card does not support partitioning\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+ 	if (!mmc->hc_wp_grp_size) {
+-		debug("Card does not define HC WP group size\n");
++		printf("Card does not define HC WP group size\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+@@ -668,7 +652,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 	if (conf->user.enh_size) {
+ 		if (conf->user.enh_size % mmc->hc_wp_grp_size ||
+ 		    conf->user.enh_start % mmc->hc_wp_grp_size) {
+-			debug("User data enhanced area not HC WP group "
++			printf("User data enhanced area not HC WP group "
+ 			       "size aligned\n");
+ 			return -EINVAL;
+ 		}
+@@ -687,7 +671,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 
+ 	for (pidx = 0; pidx < 4; pidx++) {
+ 		if (conf->gp_part[pidx].size % mmc->hc_wp_grp_size) {
+-			debug("GP%i partition not HC WP group size "
++			printf("GP%i partition not HC WP group size "
+ 			       "aligned\n", pidx+1);
+ 			return -EINVAL;
+ 		}
+@@ -699,7 +683,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 	}
+ 
+ 	if (part_attrs && ! (mmc->part_support & ENHNCD_SUPPORT)) {
+-		debug("Card does not support enhanced attribute\n");
++		printf("Card does not support enhanced attribute\n");
+ 		return -EMEDIUMTYPE;
+ 	}
+ 
+@@ -712,7 +696,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 		(ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT+1] << 8) +
+ 		ext_csd[EXT_CSD_MAX_ENH_SIZE_MULT];
+ 	if (tot_enh_size_mult > max_enh_size_mult) {
+-		debug("Total enhanced size exceeds maximum (%u > %u)\n",
++		printf("Total enhanced size exceeds maximum (%u > %u)\n",
+ 		       tot_enh_size_mult, max_enh_size_mult);
+ 		return -EMEDIUMTYPE;
+ 	}
+@@ -746,7 +730,7 @@ int mmc_hwpart_config(struct mmc *mmc,
+ 
+ 	if (ext_csd[EXT_CSD_PARTITION_SETTING] &
+ 	    EXT_CSD_PARTITION_SETTING_COMPLETED) {
+-		debug("Card already partitioned\n");
++		printf("Card already partitioned\n");
+ 		return -EPERM;
+ 	}
+ 
+@@ -1232,7 +1216,7 @@ static int mmc_startup(struct mmc *mmc)
+ 		cmd.cmdarg = (mmc->dsr & 0xffff) << 16;
+ 		cmd.resp_type = MMC_RSP_NONE;
+ 		if (mmc_send_cmd(mmc, &cmd, NULL))
+-			debug("MMC: SET_DSR failed\n");
++			printf("MMC: SET_DSR failed\n");
+ 	}
+ 
+ 	/* Select the card, and put it into Transfer Mode */
+@@ -1554,7 +1538,7 @@ static int mmc_startup(struct mmc *mmc)
+ 	bdesc->lba = lldiv(mmc->capacity, mmc->read_bl_len);
+ #if !defined(CONFIG_SPL_BUILD) || \
+ 		(defined(CONFIG_SPL_LIBCOMMON_SUPPORT) && \
+-		!defined(CONFIG_USE_TINY_debug))
++		!defined(CONFIG_USE_TINY_PRINTF))
+ 	sprintf(bdesc->vendor, "Man %06x Snr %04x%04x",
+ 		mmc->cid[0] >> 24, (mmc->cid[2] & 0xffff),
+ 		(mmc->cid[3] >> 16) & 0xffff);
+@@ -1631,7 +1615,7 @@ int mmc_start_init(struct mmc *mmc)
+ 	if (no_card) {
+ 		mmc->has_init = 0;
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-		debug("MMC: no card present\n");
++		printf("MMC: no card present\n");
+ #endif
+ 		return -ENOMEDIUM;
+ 	}
+@@ -1678,7 +1662,7 @@ int mmc_start_init(struct mmc *mmc)
+ 
+ 		if (err) {
+ #if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+-			debug("Card did not respond to voltage select!\n");
++			printf("Card did not respond to voltage select!\n");
+ #endif
+ 			return -EOPNOTSUPP;
+ 		}
+@@ -1782,7 +1766,7 @@ static int mmc_probe(bd_t *bis)
+ 	uclass_foreach_dev(dev, uc) {
+ 		ret = device_probe(dev);
+ 		if (ret)
+-			debug("%s - probe failed: %d\n", dev->name, ret);
++			printf("%s - probe failed: %d\n", dev->name, ret);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/mtd/cfi_flash.c b/drivers/mtd/cfi_flash.c
+index 33c4a93..e6c4f01 100644
+--- a/drivers/mtd/cfi_flash.c
++++ b/drivers/mtd/cfi_flash.c
+@@ -1392,6 +1392,13 @@ int write_buff (flash_info_t * info, uchar * src, ulong addr, ulong cnt)
+ #else
+ 	while (cnt >= info->portwidth) {
+ 		cword.w32 = 0;
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(1000);
++#else
++		WATCHDOG_RESET();
++#endif
++
+ 		for (i = 0; i < info->portwidth; i++) {
+ 			flash_add_byte (info, &cword, *src++);
+ 		}
+diff --git a/fs/ext4/ext4fs.c b/fs/ext4/ext4fs.c
+index 3078737..a19bfb4 100644
+--- a/fs/ext4/ext4fs.c
++++ b/fs/ext4/ext4fs.c
+@@ -26,6 +26,7 @@
+ #include <ext4fs.h>
+ #include "ext4_common.h"
+ #include <div64.h>
++#include <watchdog.h>
+ 
+ int ext4fs_symlinknest;
+ struct ext_filesystem ext_fs;
+@@ -75,6 +76,13 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
+ 		int blockoff = pos - (blocksize * i);
+ 		int blockend = blocksize;
+ 		int skipfirst = 0;
++
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(1000);
++#else
++		WATCHDOG_RESET();
++#endif
++
+ 		blknr = read_allocated_block(&(node->inode), i);
+ 		if (blknr < 0)
+ 			return -1;
+diff --git a/include/common.h b/include/common.h
+index a8d833b..39739ce 100644
+--- a/include/common.h
++++ b/include/common.h
+@@ -95,6 +95,8 @@ typedef volatile unsigned char	vu_char;
+ #define CONFIG_SYS_SUPPORT_64BIT_DATA
+ #endif
+ 
++/*#define DEBUG 1*/
++
+ #ifdef DEBUG
+ #define _DEBUG	1
+ #else
+diff --git a/include/configs/at91sam9g20isis.h b/include/configs/at91sam9g20isis.h
+index 71a0aed..4ba035c 100644
+--- a/include/configs/at91sam9g20isis.h
++++ b/include/configs/at91sam9g20isis.h
+@@ -62,6 +62,9 @@
+ #define CONFIG_AT91_GPIO
+ #define CONFIG_AT91_GPIO_PULLUP	1	/* keep pullups on peripheral pins */
+ 
++/* external watchdog */
++#define CONFIG_HW_WATCHDOG
++
+ /* serial console */
+ #define CONFIG_ATMEL_USART
+ #define CONFIG_USART_BASE		ATMEL_BASE_DBGU
+@@ -76,6 +79,8 @@
+ #define CONFIG_BLUE_LED     AT91_PIN_PC15   /* Unused */
+ 
+ /* File updates */
++#define CONFIG_USB_FUNCTION_DFU
++#define CONFIG_DFU_MMC
+ #define CONFIG_SYS_DFU_DATA_BUF_SIZE 500 * SZ_1K /* File transfer chunk size */
+ #define CONFIG_SYS_DFU_MAX_FILE_SIZE 2 * SZ_1M   /* Maximum size for a single file.  Currently zImage (~1M) */
+ #define CONFIG_UPDATE_KUBOS
+@@ -136,10 +141,10 @@
+ #endif
+ 
+ /* EXT4 */
+-/* #ifdef CONFIG_CMD_EXT4 */
++#ifdef CONFIG_CMD_EXT4
+ #define CONFIG_EXT4
+ #define CONFIG_EXT4_WRITE
+-/* #endif */
++#endif
+ 
+ /* USB */
+ #define CONFIG_USB_ATMEL
+@@ -198,7 +203,9 @@
+ 
+ /*
+  * Size of malloc() pool
++ * Update: This size was increased to accommodate the DFU buffers. I'm not sure of the exact
++ * equation that would determine the optimum size.  Through trial and error I found that it
++ * should be more than 5MB, but less than 20MB.
+  */
+-/*#define CONFIG_SYS_MALLOC_LEN		ROUND(3 * CONFIG_ENV_SIZE + 128*1024, 0x1000)*/
+ #define CONFIG_SYS_MALLOC_LEN 	 	10 * SZ_1M
+ #endif
+diff --git a/include/kubos.h b/include/kubos.h
+new file mode 100644
+index 0000000..6eeb552
+--- /dev/null
++++ b/include/kubos.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (C) 2017 Kubos Corporation
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++/*
++ * update_kubos
++ *
++ * U-Boot has a DFU utility which currently allows a board to download a new firmware package and
++ * distribute the package components to the appropriate end-point locations.
++ *
++ * We want to leverage the second half of this utility and distribute a new firmware package that's
++ * been copied into the upgrade partition, rather than via a USB/TFTP connection.
++ *
++ * Returns:
++ *    0 - An upgrade package was successfully installed
++ *   -1 - No upgrade package could be installed (either because of system error or because no package exists)
++ */
++
++#ifndef __KUBOS_H__
++#define __KUBOS_H__
++
++#ifdef CONFIG_UPDATE_KUBOS
++int update_kubos(void);
++#endif
++
++#endif /* __KUBOS_H__ */
+diff --git a/include/net.h b/include/net.h
+index e8eee22..06320c6 100644
+--- a/include/net.h
++++ b/include/net.h
+@@ -844,8 +844,6 @@ unsigned int random_port(void);
+  */
+ int update_tftp(ulong addr, char *interface, char *devstring);
+ 
+-int update_kubos(void);
+-
+ /**********************************************************************/
+ 
+ #endif /* __NET_H__ */
+diff --git a/include/watchdog.h b/include/watchdog.h
+index 174c894..686ed4c 100644
+--- a/include/watchdog.h
++++ b/include/watchdog.h
+@@ -41,8 +41,15 @@ int init_func_watchdog_reset(void);
+ 		#define WATCHDOG_RESET bl hw_watchdog_reset
+ 	#else
+ 		extern void hw_watchdog_reset(void);
++		extern void hw_watchdog_force(void);
+ 
+ 		#define WATCHDOG_RESET hw_watchdog_reset
++
++        #ifdef CONFIG_AT91SAM9G20ISIS
++            extern void hw_watchdog_reset_count(int val);
++
++            #define WATCHDOG_RESET_COUNT hw_watchdog_reset_count
++        #endif
+ 	#endif /* __ASSEMBLY__ */
+ #else
+ 	/*
+diff --git a/lib/crc32.c b/lib/crc32.c
+index 9759212..8993c5c 100644
+--- a/lib/crc32.c
++++ b/lib/crc32.c
+@@ -243,7 +243,11 @@ uint32_t ZEXPORT crc32_wd (uint32_t crc,
+ 			chunk = chunk_sz;
+ 		crc = crc32 (crc, curr, chunk);
+ 		curr += chunk;
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(10);
++#else
+ 		WATCHDOG_RESET ();
++#endif
+ 	}
+ #else
+ 	crc = crc32 (crc, buf, len);
+diff --git a/lib/sha1.c b/lib/sha1.c
+index 72c5dea..9f79509 100644
+--- a/lib/sha1.c
++++ b/lib/sha1.c
+@@ -328,7 +328,11 @@ void sha1_csum_wd(const unsigned char *input, unsigned int ilen,
+ 			chunk = chunk_sz;
+ 		sha1_update (&ctx, curr, chunk);
+ 		curr += chunk;
++#ifdef CONFIG_AT91SAM9G20ISIS
++		WATCHDOG_RESET_COUNT(5);
++#else
+ 		WATCHDOG_RESET ();
++#endif
+ 	}
+ #else
+ 	sha1_update (&ctx, input, ilen);
+diff --git a/tools/env/fw_env_main.c b/tools/env/fw_env_main.c
+index 7a17b28..24b074e 100644
+--- a/tools/env/fw_env_main.c
++++ b/tools/env/fw_env_main.c
+@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
+ 
+ 	lockfd = open(lockname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ 	if (-1 == lockfd) {
+-		fprintf(stderr, "Error opening lock file %s\n", lockname);
++		fprintf(stderr, "Error opening lock file %s rc=%d\n", lockname, errno);
+ 		return EXIT_FAILURE;
+ 	}
+ 
+-- 
+2.7.4
+
