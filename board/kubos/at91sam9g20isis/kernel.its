@@ -33,7 +33,7 @@
 			load = <0x21880000>;
 			entry = <0x21880000>;
 			hash@1 {
-				algo = "crc32";
+				algo = "sha256";
 			};
 		};
 	};

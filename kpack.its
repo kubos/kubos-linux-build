@@ -33,10 +33,7 @@
 			load = <00000000>;
 			entry = <00000000>;
 			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
-				algo = "sha1";
+				algo = "sha256";
 			};
 		};
 		rootfs@1 {
@@ -48,10 +45,7 @@
 			load = <00000000>;
 			entry = <00000000>;
 			hash@1 {
-				algo = "crc32";
-			};
-			hash@2 {
-				algo = "sha1";
+				algo = "sha256";
 			};
 		};
 	};
