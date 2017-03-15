@@ -6,17 +6,28 @@
 KUBOS_TELEMETRY_VERSION = master
 KUBOS_TELEMETRY_LICENSE = Apache-2.0
 KUBOS_TELEMETRY_LICENSE_FILES = LICENSE
-KUBOS_TELEMETRY_SITE = git://github.com/kubostech/kubos-linux-telemetry
+KUBOS_TELEMETRY_SITE = git://github.com/kubostech/kubos
+# The path to the telemetry module in the kubos repo
+KUBOS_REPO_TELEM_PATH = services/telemetry/telemetry
+# The path from the telemetry module to the build artifact directory
+KUBOS_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/ym/cmocka/existing
+
 
 #Use the Kubos SDK to build the telemetry application
 define KUBOS_TELEMETRY_BUILD_CMDS
-	cd $(@D); PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin kubos -t kubos-linux-isis-gcc build
+	cd $(@D)/$(KUBOS_REPO_TELEM_PATH) && \
+	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
+	rm -rf test && \
+	kubos link -a && \
+	kubos -t kubos-linux-isis-gcc build
 endef
 
 #Install the application into the rootfs file system
 define KUBOS_TELEMETRY_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
-	$(INSTALL) -D -m 0755 $(@D)/build/kubos-linux-isis-gcc/source/kubos-telemetry $(TARGET_DIR)/usr/sbin
+	# The cmocka.a build artifact is what the project is configured (Most likely not right) to build currently.
+	# Point this at the right build artifact when the telemetry service build configuration is fixed..
+	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_TELEM_PATH)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmocka.a $(TARGET_DIR)/usr/sbin
 endef
 
 #Install the init script
