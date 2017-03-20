@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * KubOS Linux Upgrade Package
- * Contains: New zImage and rootfs image
+ * Contains: New kernel and rootfs image
  */
 
 /dts-v1/;
@@ -24,8 +24,8 @@
 	#address-cells = <1>;
 
 	images {
-		zImage@1 {
-			data = /incbin/("./../buildroot-2016.11/output/images/zImage");
+		kernel@1 {
+			data = /incbin/("./kernel.itb");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";
@@ -54,7 +54,7 @@
 		default = "config@1";
 		config@1 {
 			description = "Boot Linux kernel";
-			zImage = "zImage@1";
+			kernel = "kernel@1";
 			rootfs = "rootfs@1";
 		};
 	};

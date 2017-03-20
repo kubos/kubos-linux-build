@@ -24,10 +24,12 @@ rootfs_dir=../buildroot-2016.11/output/images
 rootfs_img=$rootfs_dir/rootfs.img
 rootfs_tar=$rootfs_dir/rootfs.tar
 rootfs_sz=13000
+kernel=true
+rootfs=true
 
 # Process command arguments
 
-while getopts "s:v:i:b:" option
+while getopts "s:v:i:b:k:r:" option
 do
     case $option in
         s)
@@ -42,21 +44,32 @@ do
 	b)
 	    branch=$OPTARG
 	    ;;
+	k)
+	    rootfs=false
+	    ;;
+        r)
+	    kernel=false
+            ;;
 	\?)
 	    exit 1
 	    ;;
     esac
 done
 
+# Create kernel.itb
+if kernel; then
+	./kubos-kernel.sh -b ${branch}
+fi
 
 # Create rootfs.img
 # Currently the image needs ~13M of space. Increase if necessary.
-
-dd if=/dev/zero of=$rootfs_img bs=1K count=$rootfs_sz
-mkfs.ext4 $rootfs_img
-sudo mount -o loop $rootfs_img /mnt
-sudo tar -xf $rootfs_tar -C /mnt
-sudo umount /mnt
+if rootfs; then
+	dd if=/dev/zero of=$rootfs_img bs=1K count=$rootfs_sz
+	mkfs.ext4 $rootfs_img
+	sudo mount -o loop $rootfs_img /mnt
+	sudo tar -xf $rootfs_tar -C /mnt
+	sudo umount /mnt
+fi
 
 # Build the package
 ../buildroot-2016.11/output/build/uboot-${branch}/tools/mkimage -f ${input} kpack-${version}.itb
