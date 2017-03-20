@@ -35,12 +35,12 @@ define KUBOS_TELEMETRY_INSTALL_INIT_SYSV
 endef
 
 kubos-telemetry-fullclean: kubos-telemetry-clean-for-reconfigure kubos-telemetry-dirclean
-	rm -f $(BUILD_DIR)/kubos-telemetry-master/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-telemetry-master.tar.gz
+	rm -f $(BUILD_DIR)/kubos-telemetry-$(KUBOS_TELEMETRY_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-telemetry-$(KUBOS_TELEMETRY_VERSION).tar.gz
 
 
 kubos-telemetry-clean: kubos-telemetry-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-telemetry-master; kubos clean
+	cd $(BUILD_DIR)/kubos-telemetry-$(KUBOS_TELEMETRY_VERSION); kubos clean
 	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-telemetry
 
 $(eval $(generic-package))
