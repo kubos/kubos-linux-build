@@ -1,10 +1,10 @@
 config BR2_PACKAGE_KUBOS_COMMAND_AND_CONTROL
-	bool "command_and_control"
+	bool "Command and Control"
 	default y
 	help
 		Include KubOS Linux Command and Control service.
-		This service allows for running commands
-		through the command and control daemon.
+		This service allows commands to be run through 
+		the command and control daemon.
 
 config BR2_KUBOS_COMMAND_AND_CONTROL_INIT_LVL
 	int "Command and Control Run Level"
@@ -14,4 +14,4 @@ config BR2_KUBOS_COMMAND_AND_CONTROL_INIT_LVL
 	help
 		The initialization priority level of the KubOS Linux
 		command and control service.  The lower the number,
-		the earlierthe service is initialized.
+		the earlier the service is initialized.
