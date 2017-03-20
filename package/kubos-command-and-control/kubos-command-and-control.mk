@@ -38,12 +38,12 @@ define KUBOS_COMMAND_AND_CONTROL_INSTALL_INIT_SYSV
 endef
 
 kubos-command-and-control-fullclean: kubos-command-and-control-clean-for-reconfigure kubos-command-and-control-dirclean
-	rm -f $(BUILD_DIR)/kubos-command-and-control-master/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-command-and-control-master.tar.gz
+	rm -f $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_COMMAND_AND_CONTROL_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-command-and-control-$(KUBOS_COMMAND_AND_CONTROL_VERSION).tar.gz
 
 
 kubos-command-and-control-clean: kubos-command-and-control-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-command-and-control-master/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH); kubos clean
+	cd $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_COMMAND_AND_CONTROL_VERSION)/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH); kubos clean
 	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-command-and-control
 
 $(eval $(generic-package))
