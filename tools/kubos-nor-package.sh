@@ -17,14 +17,18 @@
  # kubos-package: Create KubOS Linux Upgrade Package (kpack)
  # 
  
-input=kubos-kernel.its
+version=$(date +%Y.%m.%d)
+input=kpack-NOR.its
 branch=master
 
 # Process command arguments
 
-while getopts "i:b:" option
+while getopts "v:i:b:" option
 do
     case $option in
+	v)
+	    version=$OPTARG
+	    ;;
 	i)
 	    input=$OPTARG
 	    ;;
@@ -38,6 +42,6 @@ do
 done
 
 # Build the package
-../buildroot-2016.11/output/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
+../../buildroot-2016.11/output/build/uboot-${branch}/tools/mkimage -f ${input} kpack-nor-${version}.itb
 
 

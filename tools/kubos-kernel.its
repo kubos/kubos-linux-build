@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * KubOS Linux Upgrade Package
- * Contains: New zImage and rootfs image
+ * KubOS Linux Kernel Package
+ * Contains: zImage
  */
 
 /dts-v1/;
 
 / {
-	description = "Kubos Bootloader Upgrade Package";
+	description = "KubOS Linux Kernel";
 	#address-cells = <1>;
 
 	images {
-		dtb@1 {
-			data = /incbin/("./../buildroot-2016.11/output/images/at91sam9g20isis.dtb");
-			type = "firmware";
+		kernel@1 {
+			data = /incbin/("./../../buildroot-2016.11/output/images/zImage");
+			type = "kernel";
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <00000000>;
-			entry = <00000000>;
+			load = <0x21880000>;
+			entry = <0x21880000>;
 			hash@1 {
 				algo = "sha256";
 			};
@@ -41,8 +41,8 @@
 	configurations {
 		default = "config@1";
 		config@1 {
-			description = "Linux Device Tree";
-			dtb = "dtb@1";
+			description = "Boot Linux kernel";
+			kernel = "kernel@1";
 		};
 	};
 };

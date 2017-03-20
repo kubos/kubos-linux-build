@@ -25,7 +25,7 @@
 
 	images {
 		kernel@1 {
-			data = /incbin/("./kernel.itb");
+			data = /incbin/("./kubos-kernel.itb");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";
@@ -37,7 +37,7 @@
 			};
 		};
 		rootfs@1 {
-			data = /incbin/("./../buildroot-2016.11/output/images/rootfs.img");
+			data = /incbin/("./../../buildroot-2016.11/output/images/rootfs.img");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";
@@ -53,7 +53,7 @@
 	configurations {
 		default = "config@1";
 		config@1 {
-			description = "Boot Linux kernel";
+			description = "Full KubOS Linux Upgrade";
 			kernel = "kernel@1";
 			rootfs = "rootfs@1";
 		};
