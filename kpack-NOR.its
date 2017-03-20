@@ -20,24 +20,12 @@
 /dts-v1/;
 
 / {
-	description = "KubOS Linux Upgrade Package";
+	description = "Kubos Bootloader Upgrade Package";
 	#address-cells = <1>;
 
 	images {
-		zImage@1 {
-			data = /incbin/("./../buildroot-2016.11/output/images/zImage");
-			type = "firmware";
-			arch = "arm";
-			os = "linux";
-			compression = "none";
-			load = <00000000>;
-			entry = <00000000>;
-			hash@1 {
-				algo = "sha256";
-			};
-		};
-		rootfs@1 {
-			data = /incbin/("./../buildroot-2016.11/output/images/rootfs.img");
+		dtb@1 {
+			data = /incbin/("./../buildroot-2016.11/output/images/at91sam9g20isis.dtb");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";
@@ -53,9 +41,8 @@
 	configurations {
 		default = "config@1";
 		config@1 {
-			description = "Boot Linux kernel";
-			zImage = "zImage@1";
-			rootfs = "rootfs@1";
+			description = "Linux Device Tree";
+			dtb = "dtb@1";
 		};
 	};
 };
