@@ -3,7 +3,8 @@
 # KubOS Telemetry Service
 #
 ###############################################
-KUBOS_TELEMETRY_VERSION = master
+UPDATE_DUMMY := $(shell kubos update) #unused dummy variable to run update before getting the version...
+KUBOS_TELEMETRY_VERSION := $(shell kubos versions 2>&1 | grep recent | awk '{print $$7}')
 KUBOS_TELEMETRY_LICENSE = Apache-2.0
 KUBOS_TELEMETRY_LICENSE_FILES = LICENSE
 KUBOS_TELEMETRY_SITE = git://github.com/kubostech/kubos
