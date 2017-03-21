@@ -4,7 +4,7 @@
 # Stop all init scripts in /home/etc/init.d
 # executing them in reversed numerical order.
 #
-for i in $(ls -r /home/etc/init.d/S??*) ;do
+for i in $(ls -r /home/etc/init.d/K??*) ;do
 
      # Ignore dangling symlinks (if any).
      [ ! -f "$i" ] && continue
