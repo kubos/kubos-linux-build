@@ -21,6 +21,6 @@
  #
 
 fw_setenv kubos_curr_tried 0
-fw_setenv kubos_bootcount 0
+fw_setenv bootcount 0
 
 exit 0
