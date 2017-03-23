@@ -20,12 +20,12 @@
 /dts-v1/;
 
 / {
-	description = "KubOS Linux Kernel Package";
+	description = "KubOS Linux Kernel";
 	#address-cells = <1>;
 
 	images {
 		kernel@1 {
-			data = /incbin/("./../../../../buildroot-2016.11/output/images/zImage");
+			data = /incbin/("./../../buildroot-2016.11/output/images/zImage");
 			type = "kernel";
 			arch = "arm";
 			os = "linux";
