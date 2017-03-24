@@ -44,7 +44,7 @@ do
 	b)  
 	  branch=${OPTARG}
 	  ;;
-	k)
+	p)
 	  package=$((package+1))
 	  ;;
 	w)  
@@ -57,55 +57,69 @@ do
 done
 
 if ${wipe}; then
-  echo 'Wiping SD card. This may take a while...'
+  echo '\nWiping SD card. This may take a while...'
   dd if=/dev/zero of=${device} bs=1MB count=4000 status=progress
   sleep 1
 fi
 
 if [ "${package}" -lt "3" ]; then
-# Create the partition table
-parted ${device} mklabel msdos
+  echo '\nCreating partitions'
 
-# Create the partitions
-parted ${device} mkpart primary linux-swap 1M 513M
-parted ${device} mkpart extended 513M 4000M
-parted ${device} mkpart logical fat16 513M 534M i
-parted ${device} mkpart logical ext4 534M 555M i
-parted ${device} mkpart logical ext4 555M 606M i
-parted ${device} mkpart logical ext4 606M 4000M
+  # Create the partition table
+  parted ${device} mklabel msdos
 
-sleep 1
+  # Create the partitions
+  parted ${device} mkpart primary linux-swap 1M 513M
+  parted ${device} mkpart extended 513M 4000M
+  parted ${device} mkpart logical fat16 513M 534M i
+  parted ${device} mkpart logical ext4 534M 555M i
+  parted ${device} mkpart logical ext4 555M 606M i
+  parted ${device} mkpart logical ext4 606M 4000M
 
-# Configure the partitions
-mkswap ${device}1
-mkfs.fat ${device}5
-mkfs.ext4 ${device}6
-mkfs.ext4 ${device}7
-mkfs.ext4 ${device}8
+  sleep 1
 
-sleep 1
+  # Configure the partitions
+  mkswap ${device}1
+  mkfs.fat ${device}5
+  mkfs.ext4 ${device}6
+  mkfs.ext4 ${device}7
+  mkfs.ext4 ${device}8
+
+  sleep 1
 fi
 
 # Load the base version of KubOS Linux
 if [ "${package}" -gt "1" ]; then
+  echo '\nBuilding the KubOS Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
   echo $PATH
   ./kubos-package.sh -b ${branch} -v base
 fi
 
 if [ "${package}" -gt "0" ]; then
+  echo '\nCopying the base package to the upgrade partition'
   mkdir -p ~/upgrade
   mount ${device}7 ~/upgrade
   cp kpack-base.itb ~/upgrade
   sleep 1
   umount ${device}7
 
+  echo '\nCopying the kernel to the boot partition'
   mkdir -p ~/boot
   mount ${device}5 ~/boot
-  cp kubos-package.itb ~/boot/package
+  cp kubos-kernel.itb ~/boot/package
   sleep 1
   umount ${device}5
+
+  echo '\nCopying the rootfs to the rootfs partition'
+  mkdir -p ~/rootfs
+  mount ${device}6 ~/rootfs
+  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C ~/rootfs
+  sleep 1
+  umount ${device}6
 fi
+
+echo '\nSD card formatted successfully'
 
 exit 0
 
