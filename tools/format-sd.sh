@@ -107,7 +107,7 @@ if [ "${package}" -gt "0" ]; then
   echo '\nCopying the kernel to the boot partition'
   mkdir -p ~/boot
   mount ${device}5 ~/boot
-  cp kubos-kernel.itb ~/boot/package
+  cp kubos-kernel.itb ~/boot/kernel
   sleep 1
   umount ${device}5
 
