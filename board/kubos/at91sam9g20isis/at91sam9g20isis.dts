@@ -22,6 +22,10 @@
 	model = "Kubos at91sam9g20isis";
 	compatible = "kubos,at91sam9g20isis", "atmel,at91sam9g20", "atmel,at91sam9";
 
+	aliases {
+		spi0 = &spi0;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -129,7 +133,16 @@
 			};
 
 			spi0: spi@fffc8000 {
-				cs-gpios = <0>, <&pioC 11 0>, <0>, <0>;
+				cs-gpios = <0>, <0>, <&pioB 17 0>, <0>;
+				status = "okay";
+				super0: super@0 {
+					compatible = "spidev";
+					reg = <2>;
+					spi-max-frequency = <1000000>;
+					spi-rx-delay-us = <1000>;
+					spi-tx-delay-us = <1000>;
+					status = "okay";
+				};
 			};
 
 			shdwc@fffffd10 {
