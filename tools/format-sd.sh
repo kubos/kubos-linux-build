@@ -49,7 +49,9 @@ do
 	p)
 	  package=$((package+1))
 	  ;;
+	s)
 	  size=${OPTARG}
+	  ;;
 	w)  
 	  wipe=true
 	  ;;
@@ -60,13 +62,13 @@ do
 done
 
 if ${wipe}; then
-  echo -e '\nWiping SD card. This may take a while...'
+  echo '\nWiping SD card. This may take a while...'
   dd if=/dev/zero of=${device} bs=1MB count=${size} status=progress
   sleep 1
 fi
 
 if [ "${package}" -lt "3" ]; then
-  echo -e '\nCreating partitions'
+  echo '\nCreating partitions'
 
   # Create the partition table
   parted ${device} mklabel msdos
@@ -93,28 +95,28 @@ fi
 
 # Load the base version of KubOS Linux
 if [ "${package}" -gt "1" ]; then
-  echo -e '\nBuilding the KubOS Linux base package'
+  echo '\nBuilding the KubOS Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
-  echo -e $PATH
+  echo $PATH
   ./kubos-package.sh -b ${branch} -v base
 fi
 
 if [ "${package}" -gt "0" ]; then
-  echo -e '\nCopying the base package to the upgrade partition'
+  echo '\nCopying the base package to the upgrade partition'
   mkdir -p ~/upgrade
   mount ${device}7 ~/upgrade
   cp kpack-base.itb ~/upgrade
   sleep 1
   umount ${device}7
 
-  echo -e '\nCopying the kernel to the boot partition'
+  echo '\nCopying the kernel to the boot partition'
   mkdir -p ~/boot
   mount ${device}5 ~/boot
   cp kubos-kernel.itb ~/boot/kernel
   sleep 1
   umount ${device}5
 
-  echo -e '\nCopying the rootfs to the rootfs partition'
+  echo '\nCopying the rootfs to the rootfs partition'
   mkdir -p ~/rootfs
   mount ${device}6 ~/rootfs
   tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C ~/rootfs
@@ -122,7 +124,7 @@ if [ "${package}" -gt "0" ]; then
   umount ${device}6
 fi
 
-echo -e '\nSD card formatted successfully'
+echo '\nSD card formatted successfully'
 
 exit 0
 
