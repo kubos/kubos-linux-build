@@ -132,6 +132,10 @@
 				pinctrl-0 = <&pinctrl_ssc0_tx>;
 			};
 
+			i2c0: i2c@fffac000 {
+				stats = "okay";
+			};
+
 			spi0: spi@fffc8000 {
 				cs-gpios = <0>, <0>, <&pioB 17 0>, <0>;
 				status = "okay";
