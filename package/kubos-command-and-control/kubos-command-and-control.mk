@@ -3,8 +3,8 @@
 # KubOS Command and Control Service
 #
 ###############################################
-UPDATE_DUMMY := $(shell kubos update) #unused dummy variable to run update before getting the version...
-KUBOS_COMMAND_AND_CONTROL_VERSION := $(shell kubos versions 2>&1 | grep recent | awk '{print $$7}')
+UPDATE_DUMMY = $(shell kubos update) #unused dummy variable to run update before getting the version...
+KUBOS_COMMAND_AND_CONTROL_VERSION = $(shell kubos versions 2>&1 | grep recent | awk '{print $$7}')
 KUBOS_COMMAND_AND_CONTROL_LICENSE = Apache-2.0
 KUBOS_COMMAND_AND_CONTROL_LICENSE_FILES = LICENSE
 KUBOS_COMMAND_AND_CONTROL_SITE = git://github.com/kubostech/kubos
@@ -16,11 +16,10 @@ KUBOS_CNC_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
 
 #Use the Kubos SDK to build the command-and-control application
 define KUBOS_COMMAND_AND_CONTROL_BUILD_CMDS
-	echo "VERSION: $(KUBOS_COMMAND_AND_CONTROL_VERSION)" && \
+	cd $(@D) && \
+	./tools/kubos_link.py --sys --app $(KUBOS_REPO_COMMAND_AND_CONTROL_PATH) && \
 	cd $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH) && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
-	kubos use $(KUBOS_COMMAND_AND_CONTROL_VERSION) && \
-	kubos link -a && \
 	kubos -t kubos-linux-isis-gcc build
 endef
 
