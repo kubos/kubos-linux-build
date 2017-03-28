@@ -102,26 +102,27 @@ if [ "${package}" -gt "1" ]; then
 fi
 
 if [ "${package}" -gt "0" ]; then
+  mkdir /tmp-kubos
+
   echo '\nCopying the base package to the upgrade partition'
-  mkdir -p ~/upgrade
-  mount ${device}7 ~/upgrade
-  cp kpack-base.itb ~/upgrade
+  mount ${device}7 /tmp-kubos
+  cp kpack-base.itb /tmp-kubos
   sleep 1
   umount ${device}7
 
   echo '\nCopying the kernel to the boot partition'
-  mkdir -p ~/boot
-  mount ${device}5 ~/boot
-  cp kubos-kernel.itb ~/boot/kernel
+  mount ${device}5 /tmp-kubos
+  cp kubos-kernel.itb /tmp-kubos/kernel
   sleep 1
   umount ${device}5
 
   echo '\nCopying the rootfs to the rootfs partition'
-  mkdir -p ~/rootfs
-  mount ${device}6 ~/rootfs
-  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C ~/rootfs
+  mount ${device}6 /tmp-kubos
+  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount ${device}6
+
+  rmdir /tmp-kubos
 fi
 
 echo '\nSD card formatted successfully'
