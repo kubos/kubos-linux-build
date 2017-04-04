@@ -133,7 +133,7 @@
 			};
 
 			i2c0: i2c@fffac000 {
-				stats = "okay";
+				status = "okay";
 			};
 
 			spi0: spi@fffc8000 {
