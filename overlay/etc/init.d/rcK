@@ -1,10 +1,9 @@
 #!/bin/sh
 
-
-# Start all init scripts in /home/etc/init.d
-# executing them in numerical order.
+# Stop all init scripts in /home/etc/init.d
+# executing them in reversed numerical order.
 #
-for i in /home/etc/init.d/S??* ;do
+for i in $(ls -r /home/etc/init.d/S??* && ls -r /etc/init.d/S??*) ;do
 
      # Ignore dangling symlinks (if any).
      [ ! -f "$i" ] && continue
@@ -14,14 +13,13 @@ for i in /home/etc/init.d/S??* ;do
 	    # Source shell script for speed.
 	    (
 		trap - INT QUIT TSTP
-		set start
+		set stop
 		. $i
 	    )
 	    ;;
 	*)
 	    # No sh extension, so fork subprocess.
-	    $i start
+	    $i stop
 	    ;;
     esac
 done
-
