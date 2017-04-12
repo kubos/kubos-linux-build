@@ -93,6 +93,23 @@
 							<AT91_PIOC 2 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;	/* PC2 gpio CD pin pull up and deglitch */
 					};
 				};
+
+				spi0 {
+					pinctrl_spi0: spi0-0 {
+						atmel,pins =
+							<AT91_PIOA 0 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PA0 periph A SPI0_MISO pin */
+							 AT91_PIOA 1 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PA1 periph A SPI0_MOSI pin */
+							 AT91_PIOA 2 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* PA2 periph A SPI0_SPCK pin */
+					};
+				};
+
+				spi0_cs {
+					pinctrl_spi0_cs: spi0-cs {
+						atmel,pins =
+							<AT91_PIOB 17 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP>;
+					};
+				};
+
 			};
 
 			dbgu: serial@fffff200 {
@@ -137,14 +154,13 @@
 			};
 
 			spi0: spi@fffc8000 {
-				cs-gpios = <0>, <0>, <&pioB 17 0>, <0>;
+				pinctrl-0 = <&pinctrl_spi0 &pinctrl_spi0_cs>;
+				cs-gpios = <0>, <0>, <&pioB 17 0>;
 				status = "okay";
 				super0: super@0 {
-					compatible = "spidev";
+					compatible = "isis,supervisor";
 					reg = <2>;
 					spi-max-frequency = <1000000>;
-					spi-rx-delay-us = <1000>;
-					spi-tx-delay-us = <1000>;
 					status = "okay";
 				};
 			};

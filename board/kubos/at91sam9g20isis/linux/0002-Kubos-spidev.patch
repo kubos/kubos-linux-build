@@ -1,9 +1,10 @@
 --- old-linux-4.4.23/drivers/spi/spidev.c	2016-09-30 03:20:43.000000000 -0500
 +++ linux-4.4.23/drivers/spi/spidev.c	2017-03-27 15:40:24.765495000 -0500
-@@ -695,6 +695,7 @@
+@@ -695,6 +695,8 @@
  static const struct of_device_id spidev_dt_ids[] = {
  	{ .compatible = "rohm,dh2228fv" },
  	{ .compatible = "lineartechnology,ltc2488" },
++	{ .compatible = "isis,supervisor" },
 +	{ .compatible = "spidev" },
  	{},
  };
