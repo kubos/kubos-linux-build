@@ -1,0 +1,4 @@
+kubos -1 users -1 =Kubos123 /home/kubos /bin/bash -
+usr -1 users -1 !- /home/usr - -
+etc -1 users -1 !- /home/etc - -
+var -1 users -1 !- /home/var - -
