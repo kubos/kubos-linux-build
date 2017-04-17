@@ -3,7 +3,7 @@
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.
 #
-for i in $(ls /etc/init.d/S??* && ls /home/etc/init.d/S??*) ;do
+for i in $(ls /etc/init.d/S??* && ls /home/system/etc/init.d/S??*) ;do
 
      # Ignore dangling symlinks (if any).
      [ ! -f "$i" ] && continue
