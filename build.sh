@@ -1,8 +1,11 @@
 #!/bin/bash
 
-board="at91sam9g20isis"
 buildroot_tar="buildroot-2016.11.tar.gz"
 buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
+
+board="$KUBOS_BOARD"
+
+echo "Building for Board: $board"
 
 cd .. #cd out of the kubos-linux-build directory
 
@@ -20,3 +23,4 @@ echo "STARTING BUILD"
 
 make
 
+cp ./output/images/sdcard.img $CIRCLE_ARTIFACTS/
