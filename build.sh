@@ -23,4 +23,11 @@ echo "STARTING BUILD"
 
 make
 
-cp ./output/images/sdcard.img $CIRCLE_ARTIFACTS/
+if [[ $board == "beagleboneblack" ]];
+then
+    echo "Copying beaglebone sdimage to $CIRCLE_ARTIFACTS"
+    cp ./output/images/sdcard.img $CIRCLE_ARTIFACTS/
+    /bin/bash post.sh
+else
+    echo "The output artifacts are not configured for board \"$board\""
+fi
