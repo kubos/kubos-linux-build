@@ -8,4 +8,4 @@ dependencies:
 
 test:
   override:
-      - docker run -t -v $PWD:$PWD -w $PWD kubostech/kubos-dev:latest $PWD/test.sh
+      - docker run -t --env KUBOS_BOARD=$KUBOS_BOARD --env CIRCLE_ARTIFACTS=$CIRCLE_ARTIFACTS -v $CIRCLE_ARTIFACTS:$CIRCLE_ARTIFACTS -v $PWD:$PWD -w $PWD kubostech/kubos-linux-dev:latest $PWD/build.sh
