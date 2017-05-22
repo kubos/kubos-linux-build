@@ -1,6 +1,4 @@
 #!/bin/bash
-echo "CIRCLE_ARTIFACTS: $CIRCLE_ARTIFACTS"
 
 artifact_url="https://$CIRCLE_BUILD_NUM-73321966-gh.circle-artifacts.com/0${CIRCLE_ARTIFACTS}/sdcard.img"
-curl --request POST --header "Content-Type: application/json" --data '{"text": "SD card image should be available at: $artifact_url"}' \
-    $ARTIFACT_WEBHOOK_URL
+curl --request POST --header "Content-Type: application/json" --data '{"text": "SD card image should be available at: '$artifact_url'"}' $ARTIFACT_WEBHOOK_URL
