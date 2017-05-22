@@ -8,4 +8,4 @@ dependencies:
 
 test:
   override:
-      - docker run -t --env KUBOS_BOARD=$KUBOS_BOARD --env CIRCLE_ARTIFACTS=$CIRCLE_ARTIFACTS --env ARTIFACT_WEBHOOK_URL=$ARTIFACT_WEBHOOK_URL -v $CIRCLE_ARTIFACTS:$CIRCLE_ARTIFACTS -v $PWD:$PWD -w $PWD kubostech/kubos-linux-dev:latest $PWD/build.sh | tee ${CIRCLE_ARTIFACTS}/full_build.log
+      - docker run -t --env KUBOS_BOARD=$KUBOS_BOARD --env CIRCLE_BUILD_NUM=$CIRCLE_BUILD_NUM --env CIRCLE_ARTIFACTS=$CIRCLE_ARTIFACTS --env ARTIFACT_WEBHOOK_URL=$ARTIFACT_WEBHOOK_URL -v $CIRCLE_ARTIFACTS:$CIRCLE_ARTIFACTS -v $PWD:$PWD -w $PWD kubostech/kubos-linux-dev:latest $PWD/build.sh | tee ${CIRCLE_ARTIFACTS}/full_build.log
