@@ -74,21 +74,20 @@ if [ "${package}" -lt "3" ]; then
   parted ${device} mklabel msdos
 
   # Create the partitions
-  parted ${device} mkpart primary linux-swap 1M 513M
-  parted ${device} mkpart extended 513M 4000M
-  parted ${device} mkpart logical fat16 513M 534M i
-  parted ${device} mkpart logical ext4 534M 555M i
-  parted ${device} mkpart logical ext4 555M 606M i
-  parted ${device} mkpart logical ext4 606M 4000M
+  parted ${device} mkpart primary linux-swap 1M 3395M
+  parted ${device} mkpart extended 3395M 4000M
+  parted ${device} mkpart logical fat16 3395M 3416M i
+  parted ${device} mkpart logical ext4 3416M 3437M i
+  parted ${device} mkpart logical ext4 3437M 3488M i
+  parted ${device} mkpart logical ext4 3488M 4000M
 
   sleep 1
 
   # Configure the partitions
-  mkswap ${device}1
+  mkfs.ext4 ${device}1
   mkfs.fat ${device}5
   mkfs.ext4 ${device}6
   mkfs.ext4 ${device}7
-  mkfs.ext4 ${device}8
 
   sleep 1
 fi
