@@ -110,6 +110,14 @@
 					};
 				};
 
+				i2c_gpio0 {
+					pinctrl_i2c_gpio0: i2c_gpio0-0 {
+						atmel,pins =
+							<AT91_PIOA 23 AT91_PERIPH_A AT91_PINCTRL_NONE
+							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE>;
+					};
+				};
+
 			};
 
 			dbgu: serial@fffff200 {
@@ -150,6 +158,15 @@
 			};
 
 			i2c0: i2c@fffac000 {
+				compatible = "i2c-gpio";
+				gpios = <&pioA 23 0 /* sda */
+					 &pioA 24 0 /* scl */
+					>;
+				i2c-gpio,delay-us = <2>;	/* ~100 kHz */
+				#address-cells = <1>;
+				#size-cells = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c_gpio0>;
 				status = "okay";
 			};
 
