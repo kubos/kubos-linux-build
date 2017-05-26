@@ -43,7 +43,7 @@
  # 
  # This script will be passed as an argument when calling the SAM-BA flashing
  # utility:
- #   $ {path to SAM-BA}/sam-ba.exe /jlink/ARM0 at91sam9g20-ISISOBC \
+ #   $ {path to SAM-BA}/sam-ba.exe \jlink\ARM0 at91sam9g20-ISISOBC \
  #        kubos-nor-flash.tcl {input arguments} [> {logfile}]
  # 
  # No output will be printed to STDOUT. Instead, it is recommended that
