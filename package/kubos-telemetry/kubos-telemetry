@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NAME=kubos-telemetry
+NAME=linux-telemetry-service
 PROG=/usr/sbin/${NAME}
 PID=/var/run/${NAME}.pid
 
