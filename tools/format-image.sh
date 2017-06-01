@@ -163,7 +163,7 @@ echo '\nSD card image created!'
 
 if [ -n "${device}" ]; then
   echo "\nFlashing image to ${device}"
-  dd if=disk.img of=${device} bs=4M status=progress
+  dd if=${image} of=${device} bs=4M status=progress
 fi
 
 exit 0
