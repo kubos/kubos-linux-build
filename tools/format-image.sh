@@ -17,7 +17,7 @@
  # Create SD Card image for use with KubOS Linux on the iOBC
  #
  # Inputs:
- #  * d {device} - sets the SD card device name for optional flashing (default /dev/sdb)
+ #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
  #  * b {branch} - sets the branch name of the uboot that has been built
  #  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate 
  #        partitions.
@@ -84,9 +84,9 @@ if [ "${package}" -lt "3" ]; then
 
   parted /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
   parted /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
-  parted /dev/loop0 mkpart logical fat16  ${boot_start}M      ${rootfs_start}M i
-  parted /dev/loop0 mkpart logical ext4   ${rootfs_start}M    ${upgrade_start}M i
-  parted /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${sd_size}M i
+  parted -a minimal /dev/loop0 mkpart logical fat16  ${boot_start}M      ${rootfs_start}M
+  parted -a minimal /dev/loop0 mkpart logical ext4   ${rootfs_start}M    ${upgrade_start}M
+  parted -a minimal /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${sd_size}M
 
   sleep 1
 
@@ -147,7 +147,7 @@ echo '\nSD card image created!'
 
 if [ -n "${device}" ]; then
   echo "\nFlashing image to ${device}"
-  # dd if=disk.img of=${device} bs=4M status=progress
+  dd if=disk.img of=${device} bs=4M status=progress
 fi
 
 exit 0

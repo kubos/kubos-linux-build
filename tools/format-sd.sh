@@ -33,7 +33,7 @@ device=/dev/sdb
 branch=master
 wipe=false
 package=0
-size=4000
+size=3800
 
 # Process command arguments
 
@@ -73,12 +73,21 @@ if [ "${package}" -lt "3" ]; then
   # Create the partition table
   parted ${device} mklabel msdos
 
+  boot_size=20
+  rootfs_size=20
+  upgrade_size=52
+
+  sd_size=`expr $size - 4`
+  upgrade_start=`expr $sd_size - $upgrade_size`
+  rootfs_start=`expr $upgrade_start - $rootfs_size`
+  boot_start=`expr $rootfs_start - $boot_size`
+
   # Create the partitions
-  parted ${device} mkpart primary ext4 1M 3907M
-  parted ${device} mkpart extended 3907M 4000M
-  parted ${device} mkpart logical fat16 3907M 3928M i
-  parted ${device} mkpart logical ext4 3928M 3949M i
-  parted ${device} mkpart logical ext4 3949M 4000M i
+  parted ${device} mkpart primary   ext4    4M                  ${boot_start}M
+  parted ${device} mkpart extended          ${boot_start}M      ${sd_size}M
+  parted -a minimal ${device} mkpart logical   fat16   ${boot_start}M      ${rootfs_start}M
+  parted -a minimal ${device} mkpart logical   ext4    ${rootfs_start}M    ${upgrade_start}M
+  parted -a minimal ${device} mkpart logical   ext4    ${upgrade_start}M   ${sd_size}M
 
   sleep 1
 
