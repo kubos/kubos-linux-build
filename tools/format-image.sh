@@ -19,6 +19,7 @@
  # Inputs:
  #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
  #  * b {branch} - sets the branch name of the uboot that has been built
+ #  * i {image}  - sets the name of the generated image file
  #  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate 
  #        partitions.
  #  * pp - Build the kpack-base.itb and kernel files and then copy them
@@ -29,14 +30,14 @@
 set -e
  
 device=""
-image=disk.img
+image=kubos-linux.img
 branch=master
 package=0
 size=3800
 
 # Process command arguments
 
-while getopts "d:b:ps:w" option
+while getopts "d:b:i:ps:w" option
 do
     case $option in
 	d)
@@ -45,6 +46,9 @@ do
 	b)  
 	  branch=${OPTARG}
 	  ;;
+    i)
+      image=${OPTARG}
+      ;;
 	p)
 	  package=$((package+1))
 	  ;;
@@ -77,10 +81,10 @@ if [ "${package}" -lt "3" ]; then
   rootfs_size=20
   upgrade_size=52
 
-  sd_size=`expr $size - 4`
-  upgrade_start=`expr $sd_size - $upgrade_size`
-  rootfs_start=`expr $upgrade_start - $rootfs_size`
-  boot_start=`expr $rootfs_start - $boot_size`
+  sd_size=`expr ${size} - 4`
+  upgrade_start=`expr ${sd_size} - ${upgrade_size}`
+  rootfs_start=`expr ${upgrade_start} - ${rootfs_size}`
+  boot_start=`expr ${rootfs_start} - ${boot_size}`
 
   parted /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
   parted /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
@@ -103,6 +107,17 @@ if [ "${package}" -lt "3" ]; then
   cd ..
 fi
 
+if [ "${package}" -gt "2" ]; then
+  echo '\nMounting existing image'
+  if [ -f ${image} ]; then
+    losetup /dev/loop0 ${image}
+  else
+    echo '\nExisting image not found!\nQuitting now.'
+    exit 1
+  fi  
+fi
+
+
 # Load the base version of KubOS Linux
 if [ "${package}" -gt "1" ]; then
   echo '\nBuilding the KubOS Linux base package'
@@ -112,11 +127,11 @@ if [ "${package}" -gt "1" ]; then
 fi
 
 if [ "${package}" -gt "0" ]; then
-  mkdir /tmp-kubos
+  mkdir -p /tmp-kubos
 
   echo '\nCopying the base package to the upgrade partition'
   mount /dev/loop0p7 /tmp-kubos
-  cp kpack-base.itb /tmp-kubos
+  cp kpack-base.itb /tmp-kubos/
   sleep 1
   umount /dev/loop0p7
 
@@ -135,9 +150,10 @@ if [ "${package}" -gt "0" ]; then
   rmdir /tmp-kubos
 fi
 
+echo '\nCleaning up ramdisk'
+losetup -d /dev/loop0
+
 if [ "${package}" -lt "3" ]; then
-  echo '\nCleaning up ramdisk'
-  losetup -d /dev/loop0
   mv ramdisk/${image} ${image}
   umount ramdisk
   rmdir ramdisk
