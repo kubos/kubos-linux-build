@@ -33,7 +33,7 @@ device=/dev/sdb
 branch=master
 wipe=false
 package=0
-size=4000
+size=3800
 
 # Process command arguments
 
@@ -73,22 +73,29 @@ if [ "${package}" -lt "3" ]; then
   # Create the partition table
   parted ${device} mklabel msdos
 
+  boot_size=20
+  rootfs_size=20
+  upgrade_size=52
+
+  sd_size=`expr $size - 4`
+  upgrade_start=`expr $sd_size - $upgrade_size`
+  rootfs_start=`expr $upgrade_start - $rootfs_size`
+  boot_start=`expr $rootfs_start - $boot_size`
+
   # Create the partitions
-  parted ${device} mkpart primary linux-swap 1M 513M
-  parted ${device} mkpart extended 513M 4000M
-  parted ${device} mkpart logical fat16 513M 534M i
-  parted ${device} mkpart logical ext4 534M 555M i
-  parted ${device} mkpart logical ext4 555M 606M i
-  parted ${device} mkpart logical ext4 606M 4000M
+  parted ${device} mkpart primary   ext4    4M                  ${boot_start}M
+  parted ${device} mkpart extended          ${boot_start}M      ${sd_size}M
+  parted -a minimal ${device} mkpart logical   fat16   ${boot_start}M      ${rootfs_start}M
+  parted -a minimal ${device} mkpart logical   ext4    ${rootfs_start}M    ${upgrade_start}M
+  parted -a minimal ${device} mkpart logical   ext4    ${upgrade_start}M   ${sd_size}M
 
   sleep 1
 
   # Configure the partitions
-  mkswap ${device}1
+  mkfs.ext4 ${device}1
   mkfs.fat ${device}5
   mkfs.ext4 ${device}6
   mkfs.ext4 ${device}7
-  mkfs.ext4 ${device}8
 
   sleep 1
 fi
