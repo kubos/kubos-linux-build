@@ -10,8 +10,10 @@ KUBOS_COMMAND_AND_CONTROL_LICENSE_FILES = LICENSE
 KUBOS_COMMAND_AND_CONTROL_SITE = git://github.com/kubostech/kubos
 # The path to the command-and-control module in the kubos repo
 KUBOS_REPO_COMMAND_AND_CONTROL_PATH = cmd-control-daemon
+KUBOS_REPO_COMMAND_AND_CONTROL_CLIENT_PATH = cmd-control-client
+KUBOS_REPO_COMMANDS_LIBRARY_PATH = commands
 # The path from the command-and-control module to the build artifact directory
-KUBOS_CNC_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
+KUBOS_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
 
 
 #Use the Kubos SDK to build the command-and-control application
@@ -21,13 +23,44 @@ define KUBOS_COMMAND_AND_CONTROL_BUILD_CMDS
 	cd $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH) && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
 	kubos -t kubos-linux-isis-gcc build
+
+
+	echo "Building the library"
+	cd $(@D) && \
+	./tools/kubos_link.py --sys --app $(KUBOS_REPO_COMMANDS_LIBRARY_PATH) && \
+	cd $(@D)/$(KUBOS_REPO_COMMANDS_LIBRARY_PATH) && \
+	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
+	kubos -t kubos-linux-isis-gcc build
+
+
+	echo "Building the client"
+	cd $(@D) && \
+	./tools/kubos_link.py --sys --app $(KUBOS_REPO_COMMAND_AND_CONTROL_CLIENT_PATH) && \
+	cd $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_CLIENT_PATH) && \
+	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
+	kubos -t kubos-linux-isis-gcc build
+
 endef
+
 
 #Install the application into the rootfs file system
 define KUBOS_COMMAND_AND_CONTROL_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
-	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH)/$(KUBOS_CNC_ARTIFACT_BUILD_PATH)/cmd-control-daemon \
+	mkdir -p $(TARGET_DIR)/home/system/var/log/
+	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_PATH)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmd-control-daemon \
 		$(TARGET_DIR)/usr/sbin/kubos-command-and-control
+
+	echo "Installing the Command Library"
+	mkdir -p $(TARGET_DIR)/usr/local/kubos
+	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_COMMANDS_LIBRARY_PATH)/$(KUBOS_ARTIFACT_BUILD_PATH)/commands \
+		$(TARGET_DIR)/usr/local/kubos/core
+	mkfifo  $(TARGET_DIR)/usr/local/kubos/client-to-server
+	mkfifo  $(TARGET_DIR)/usr/local/kubos/server-to-client
+
+	echo "Installing the Client"
+	mkdir -p $(TARGET_DIR)/usr/bin
+	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_COMMAND_AND_CONTROL_CLIENT_PATH)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmd-control-client \
+		$(TARGET_DIR)/usr/bin/c2
 endef
 
 #Install the init script
