@@ -1,0 +1,8 @@
+config BR2_PACKAGE_KUBOS_C2_CLI_CLIENT
+	bool "Command and Control Command Line Client"
+	default y
+	select BR2_PACKAGE_KUBOS_C2_DAEMON
+	help
+		Include the command line interface client for interracting with
+		the Command and Control daemon.
+
