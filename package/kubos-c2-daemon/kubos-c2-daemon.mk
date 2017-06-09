@@ -39,17 +39,17 @@ endef
 #Install the init script
 define KUBOS_C2_DAEMON_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos-c2-daemon/kubos-c2-daemon \
-		$(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_C2_DAEMON_INIT_LVL)kubos-command-and-control
+		$(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_C2_DAEMON_INIT_LVL)kubos-c2-daemon
 endef
 
 
 kubos-c2-daemon-fullclean: kubos-c2-daemon-clean-for-reconfigure kubos-c2-daemon-dirclean
-	rm -f $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_C2_DAEMON_VERSION)/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-command-and-control-$(KUBOS_C2_DAEMON_VERSION).tar.gz
+	rm -f $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION).tar.gz
 
 
 kubos-c2-daemon-clean: kubos-c2-daemon-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_C2_DAEMON_VERSION)/$(KUBOS_REPO_C2_DAEMON_PATH); kubos clean
-	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-command-and-control
+	cd $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION)/$(KUBOS_REPO_C2_DAEMON_PATH); kubos clean
+	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-c2-daemon
 
 $(eval $(generic-package))

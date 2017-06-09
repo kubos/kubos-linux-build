@@ -13,7 +13,6 @@ KUBOS_REPO_C2_CLI_CLIENT_PATH = cmd-control-client
 # The path from the command-and-control module to the build artifact directory
 KUBOS_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
 
-
 #Use the Kubos SDK to build the command-and-control application
 define KUBOS_C2_CLI_CLIENT_BUILD_CMDS
 	cd $(@D) && \
@@ -23,7 +22,6 @@ define KUBOS_C2_CLI_CLIENT_BUILD_CMDS
 	kubos -t kubos-linux-isis-gcc build
 endef
 
-
 #Install the application into the rootfs file system
 define KUBOS_C2_CLI_CLIENT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/bin
@@ -31,14 +29,11 @@ define KUBOS_C2_CLI_CLIENT_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/bin/c2
 endef
 
-
 kubos-c2-cli-client-fullclean: kubos-c2-cli-client-clean-for-reconfigure kubos-c2-cli-client-dirclean
-	rm -f $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_C2_CLI_CLIENT_VERSION)/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-command-and-control-$(KUBOS_C2_CLI_CLIENT_VERSION).tar.gz
-
+	rm -f $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION).tar.gz
 
 kubos-c2-cli-client-clean: kubos-c2-cli-client-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-command-and-control-$(KUBOS_C2_CLI_CLIENT_VERSION)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH); kubos clean
-	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-command-and-control
+	cd $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH); kubos clean
 
 $(eval $(generic-package))

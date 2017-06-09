@@ -7,11 +7,11 @@ config BR2_PACKAGE_KUBOS_C2_DAEMON
 		the command and control daemon.
 
 config BR2_KUBOS_C2_DAEMON_INIT_LVL
-	int "Command and Control Run Level"
+	int "Command and Control Daemon Run Level"
 	default 70
 	range 10 99
 	depends on BR2_PACKAGE_KUBOS_C2_DAEMON
 	help
 		The initialization priority level of the KubOS Linux
-		command and control service.  The lower the number,
-		the earlier the service is initi\lized.
+		command and control daemon.  The lower the number,
+		the earlier the service is initialized.
