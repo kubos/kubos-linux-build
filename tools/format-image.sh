@@ -150,7 +150,6 @@ if [ "${package}" -gt "0" ]; then
   echo '\nCreating the user partition overlay'
   mount /dev/loop0p1 /tmp-kubos
   cp ../user-overlay /tmp-kubos -R
-  
 
   rmdir /tmp-kubos
 fi
