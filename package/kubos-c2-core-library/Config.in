@@ -1,0 +1,9 @@
+config BR2_PACKAGE_KUBOS_C2_CORE_LIBRARY
+	bool "Command and Control Core Command Library"
+	default y
+	select BR2_PACKAGE_C2_DAEMON
+	help
+		Include KubOS Linux Command and Control Core Command Library.
+		This holds the core command implementations that are
+		run by the Command and Control Daemon
+

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NAME=kubos-command-and-control
+NAME=kubos-c2-daemon
 PROG=/usr/sbin/${NAME}
 PID=/var/run/${NAME}.pid
 
