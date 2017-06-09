@@ -30,10 +30,10 @@ define KUBOS_C2_CLI_CLIENT_INSTALL_TARGET_CMDS
 endef
 
 kubos-c2-cli-client-fullclean: kubos-c2-cli-client-clean-for-reconfigure kubos-c2-cli-client-dirclean
-	rm -f $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION)/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION).tar.gz
+	rm -f $(BUILD_DIR)/kubos-c2-cli-client-$(KUBOS_C2_CLI_CLIENT_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-c2-cli-client-$(KUBOS_C2_CLI_CLIENT_VERSION).tar.gz
 
 kubos-c2-cli-client-clean: kubos-c2-cli-client-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_CLI_CLIENT_VERSION)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH); kubos clean
+	cd $(BUILD_DIR)/kubos-c2-cli-client-$(KUBOS_C2_CLI_CLIENT_VERSION)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH); kubos clean
 
 $(eval $(generic-package))
