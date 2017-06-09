@@ -14,13 +14,15 @@
  # See the License for the specific language governing permissions and
  # limitations under the License.
  #
- # KubOS Linux Boot Healthcheck
- #
- # At the moment, this simply resets a couple UBoot variables, so that we know that
- # we booted successfully during the next reboot.
+ # KubOS Linux Boot Finalization
  #
 
+# Update the U-Boot variables to indicate that we have successfully booted
 fw_setenv kubos_curr_tried 0
 fw_setenv bootcount 0
+
+# Make sure the default user's home directory exists
+mkdir -p /home/kubos
+chown -R kubos /home/kubos
 
 exit 0

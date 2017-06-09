@@ -1,7 +1,7 @@
 diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x defconfig -x '.*' -x '*.ko*' -x '*/arm/boot/*' -x '*builtin*' -x '*.conf' -x '*generated*' -x '*.s*' -x '*.gz*' -x '*.map*' -x '*vmlinux*' -x '*.lzma' -x Image -x zImage -x '*.a*' -x mconf -x config_data.h linux-4.4.23/drivers/watchdog/at91isis_wdt.c modified-linux-4.4.23/drivers/watchdog/at91isis_wdt.c
 --- linux-4.4.23/drivers/watchdog/at91isis_wdt.c	1969-12-31 18:00:00.000000000 -0600
 +++ modified-linux-4.4.23/drivers/watchdog/at91isis_wdt.c	2016-12-02 16:41:11.706212000 -0600
-@@ -0,0 +1,404 @@
+@@ -0,0 +1,409 @@
 +/*
 + * Watchdog driver for ISIS AT91SAM9G20-based iOBC.
 + *
@@ -399,9 +399,14 @@ diff -uNr -x '*.dts' -x '*.mod*' -x '*.S' -x '*.o*' -x '.config*' -x 'auto*' -x 
 +		.name	= "at91_isis_wdt",
 +		.of_match_table = of_match_ptr(at91_isis_wdt_dt_ids),
 +	},
++	.probe		= at91isiswdt_probe,
 +};
 +
-+module_platform_driver_probe(at91isiswdt_driver, at91isiswdt_probe);
++static int __init gpio_wdt_init(void)
++{
++	return platform_driver_register(&at91isiswdt_driver);
++}
++arch_initcall(gpio_wdt_init);
 +
 +MODULE_AUTHOR("Catherine Freed <catherine@kubos.co>");
 +MODULE_DESCRIPTION("Watchdog driver for ISIS AT91SAM9G20-based OBC");
