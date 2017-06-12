@@ -147,6 +147,12 @@ if [ "${package}" -gt "0" ]; then
   sleep 1
   umount /dev/loop0p6
 
+  echo '\nCreating the user partition overlay'
+  mount /dev/loop0p1 /tmp-kubos
+  cp ../user-overlay/* /tmp-kubos -R
+  sleep 1
+  umount /dev/loop0p1
+
   rmdir /tmp-kubos
 fi
 
