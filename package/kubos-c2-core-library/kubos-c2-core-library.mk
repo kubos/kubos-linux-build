@@ -30,10 +30,10 @@ define KUBOS_C2_CORE_LIBRARY_INSTALL_TARGET_CMDS
 endef
 
 kubos-c2-core-library-fullclean: kubos-c2-core-library-clean-for-reconfigure kubos-c2-core-library-dirclean
-	rm -f $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_VERSION)/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-c2-$(KUBOS_C2_VERSION).tar.gz
+	rm -f $(BUILD_DIR)/kubos-c2-core-library-$(KUBOS_C2_CORE_LIBRARY_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-c2-core-library-$(KUBOS_C2_CORE_LIBRARY_VERSION).tar.gz
 
 kubos-c2-core-library-clean: kubos-core-library-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_VERSION)/$(KUBOS_REPO_C2_CORE_LIBRARY_PATH); kubos clean
+	cd $(BUILD_DIR)/kubos-c2-core-library-$(KUBOS_C2_CORE_LIBRARY_VERSION)/$(KUBOS_REPO_C2_CORE_LIBRARY_PATH); kubos clean
 
 $(eval $(generic-package))

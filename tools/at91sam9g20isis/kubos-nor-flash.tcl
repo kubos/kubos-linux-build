@@ -88,9 +88,9 @@ foreach arg $::argv {
 	if {[string match "uboot" $param]} {
 		set addr 0x0000A000
 	} elseif {[string match "dtb" $param]} {
-		set addr 0x00080000
+		set addr 0x00070000
 	} elseif {[string match "altos" $param]} {
-		set addr 0x00090000
+		set addr 0x00080000
 	} else {
 		puts "Unknown file type: $param"
 		continue

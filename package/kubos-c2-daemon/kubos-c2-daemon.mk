@@ -44,12 +44,12 @@ endef
 
 
 kubos-c2-daemon-fullclean: kubos-c2-daemon-clean-for-reconfigure kubos-c2-daemon-dirclean
-	rm -f $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION)/.stamp_downloaded
-	rm -f $(DL_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION).tar.gz
+	rm -f $(BUILD_DIR)/kubos-c2-daemon-$(KUBOS_C2_DAEMON_VERSION)/.stamp_downloaded
+	rm -f $(DL_DIR)/kubos-c2-daemon-$(KUBOS_C2_DAEMON_VERSION).tar.gz
 
 
 kubos-c2-daemon-clean: kubos-c2-daemon-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-c2-$(KUBOS_C2_DAEMON_VERSION)/$(KUBOS_REPO_C2_DAEMON_PATH); kubos clean
+	cd $(BUILD_DIR)/kubos-c2-daemon-$(KUBOS_C2_DAEMON_VERSION)/$(KUBOS_REPO_C2_DAEMON_PATH); kubos clean
 	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-c2-daemon
 
 $(eval $(generic-package))
