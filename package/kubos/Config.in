@@ -34,5 +34,17 @@ if BR2_PACKAGE_KUBOS
 		default BR2_KUBOS_CUSTOM_VERSION_VALUE if BR2_KUBOS_CUSTOM_VERSION
 
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-telemetry/Config.in"
-	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-command/Config.in"
+
+	menuconfig BR2_PACKAGE_KUBOS_COMMAND
+		bool "Command and Control"
+		default y
+		help
+			Enable Kubos Command and Control
+
+	if BR2_PACKAGE_KUBOS_COMMAND
+
+		source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-c2-cli-client/Config.in"
+		source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-c2-core-library/Config.in"
+		source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-c2-daemon/Config.in"
+	endif
 endif
