@@ -1,4 +1,4 @@
-config BR2_PACKAGE_KUBOS_C2_CLI_CLIENT
+config BR2_PACKAGE_KUBOS_COMMAND_C2_CLI_CLIENT
 	bool "Command and Control Command Line Client"
 	default y
 	select BR2_PACKAGE_KUBOS_C2_DAEMON
