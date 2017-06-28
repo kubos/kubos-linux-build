@@ -11,15 +11,19 @@ KUBOS_TELEMETRY_SITE = $(BUILD_DIR)/kubos-$(KUBOS_TELEMETRY_VERSION)/linux-telem
 KUBOS_TELEMETRY_SITE_METHOD = local
 KUBOS_TELEMETRY_DEPENDENCIES = kubos
 # The path from the telemetry module to the build artifact directory
-KUBOS_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
+KUBOS_ARTIFACT_BUILD_PATH = build/$(KUBOS_TARGET)/source
 
+# Link the local Kubos modules
+define KUBOS_TELEMETRY_CONFIGURE_CMDS
+	cd $(@D) && \
+	kubos link -a
+endef
 
 #Use the Kubos SDK to build the telemetry application
 define KUBOS_TELEMETRY_BUILD_CMDS
 	cd $(@D) && \
-	kubos link -a && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
-	kubos -t kubos-linux-isis-gcc build
+	kubos -t $(KUBOS_TARGET) build
 endef
 
 #Install the application into the rootfs file system
