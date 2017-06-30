@@ -79,7 +79,7 @@ if [ "${package}" -lt "3" ]; then
   # Partition sizes are now all 4MB aligned
   boot_size=20
   rootfs_size=20
-  upgrade_size=52
+  upgrade_size=100
 
   sd_size=`expr ${size} - 4`
   upgrade_start=`expr ${sd_size} - ${upgrade_size}`
