@@ -18,21 +18,21 @@ define KUBOS_TELEMETRY_CONFIGURE_CMDS
 	kubos link -a
 endef
 
-#Use the Kubos SDK to build the telemetry application
+# Use the Kubos SDK to build the telemetry application
 define KUBOS_TELEMETRY_BUILD_CMDS
 	cd $(@D) && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
 	kubos -t $(KUBOS_TARGET) build
 endef
 
-#Install the application into the rootfs file system
+# Install the application into the rootfs file system
 define KUBOS_TELEMETRY_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_ARTIFACT_BUILD_PATH)/linux-telemetry-service \
 		$(TARGET_DIR)/usr/sbin
 endef
 
-#Install the init script
+# Install the init script
 define KUBOS_TELEMETRY_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-telemetry/kubos-telemetry \
 	    $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_TELEMETRY_INIT_LVL)kubos-telemetry

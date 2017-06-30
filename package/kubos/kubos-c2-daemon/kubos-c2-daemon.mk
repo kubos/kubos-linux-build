@@ -18,14 +18,14 @@ define KUBOS_C2_DAEMON_CONFIGURE_CMDS
 	kubos link -a
 endef
 
-#Use the Kubos SDK to build the C2_DAEMON application
+# Use the Kubos SDK to build the C2_DAEMON application
 define KUBOS_C2_DAEMON_BUILD_CMDS
 	cd $(@D) && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
 	kubos -t $(KUBOS_TARGET) build
 endef
 
-#Install the application into the rootfs file system
+# Install the application into the rootfs file system
 define KUBOS_C2_DAEMON_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/bin
 	mkdir -p $(TARGET_DIR)/usr/local/kubos
@@ -37,7 +37,7 @@ define KUBOS_C2_DAEMON_INSTALL_TARGET_CMDS
 endef
 
 
-#Install the init script
+# Install the init script
 define KUBOS_C2_DAEMON_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-c2-daemon/kubos-c2-daemon \
 		$(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_C2_DAEMON_INIT_LVL)kubos-c2-daemon

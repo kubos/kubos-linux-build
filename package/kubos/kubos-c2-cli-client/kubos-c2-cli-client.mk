@@ -18,13 +18,13 @@ define KUBOS_C2_CLI_CLIENT_CONFIGURE_CMDS
 	kubos link -a
 endef
 
-#Use the Kubos SDK to build the C2_CLI_CLIENT application
+# Use the Kubos SDK to build the C2_CLI_CLIENT application
 define KUBOS_C2_CLI_CLIENT_BUILD_CMDS
 	cd $(@D) && \
 	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
 	kubos -t $(KUBOS_TARGET) build
 endef
-#Install the application into the rootfs file system
+# Install the application into the rootfs file system
 define KUBOS_C2_CLI_CLIENT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/bin
 	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmd-control-client \
