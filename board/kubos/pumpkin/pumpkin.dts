@@ -7,21 +7,4 @@
  */
 /dts-v1/;
 
-#include "am33xx.dtsi"
-#include "am335x-bone-common.dtsi"
-
-/ {
-	model = "TI AM335x BeagleBone";
-	compatible = "ti,am335x-bone", "ti,am33xx";
-};
-
-&ldo3_reg {
-	regulator-min-microvolt = <1800000>;
-	regulator-max-microvolt = <3300000>;
-	regulator-always-on;
-};
-
-&mmc1 {
-	vmmc-supply = <&ldo3_reg>;
-};
-
+#include "am33xx-bone.dtsi"
