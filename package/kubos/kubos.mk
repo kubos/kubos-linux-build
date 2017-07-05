@@ -1,6 +1,11 @@
 ###############################################
 #
-# KubOS Telemetry Service
+# Kubos Master Package
+#
+# This package downloads the Kubos repo,
+# globally links all the modules, and sets the
+# target for the subsequent Kubos child 
+# packages
 #
 ###############################################
 KUBOS_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
