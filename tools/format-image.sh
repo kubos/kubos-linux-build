@@ -149,7 +149,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCreating the user partition overlay'
   mount /dev/loop0p1 /tmp-kubos
-  cp ../user-overlay/* /tmp-kubos -R
+  cp ../common/user-overlay/* /tmp-kubos -R
   sleep 1
   umount /dev/loop0p1
 

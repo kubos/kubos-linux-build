@@ -1,0 +1,18 @@
+menuconfig BR2_PACKAGE_KUBOS
+	bool "Kubos Services"
+	default y
+	help
+		Enable KubOS Linux Services
+
+if BR2_PACKAGE_KUBOS
+	
+	config BR2_KUBOS_VERSION
+		string "Kubos Source Version"
+		default "master"
+		help
+			Release, tag, or branch of the Kubos repo to use when building Kubos
+			packages
+
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-telemetry/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-c2/Config.in"
+endif
