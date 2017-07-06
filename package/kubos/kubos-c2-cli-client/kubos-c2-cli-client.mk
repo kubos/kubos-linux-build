@@ -3,29 +3,31 @@
 # Kubos Command and Control CLI Client
 #
 ###############################################
-UPDATE_DUMMY = $(shell kubos update) #unused dummy variable to run update before getting the version...
-KUBOS_C2_CLI_CLIENT_VERSION = $(shell kubos versions 2>&1 | grep recent | awk '{print $$7}')
+KUBOS_C2_CLI_CLIENT_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 KUBOS_C2_CLI_CLIENT_LICENSE = Apache-2.0
 KUBOS_C2_CLI_CLIENT_LICENSE_FILES = LICENSE
-KUBOS_C2_CLI_CLIENT_SITE = git://github.com/kubostech/kubos
-# The path to the command-and-control module in the kubos repo
-KUBOS_REPO_C2_CLI_CLIENT_PATH = cmd-control-client
-# The path from the command-and-control module to the build artifact directory
-KUBOS_ARTIFACT_BUILD_PATH = build/kubos-linux-isis-gcc/source
+KUBOS_C2_CLI_CLIENT_SITE = $(BUILD_DIR)/kubos-$(KUBOS_C2_CLI_CLIENT_VERSION)/cmd-control-client
+KUBOS_C2_CLI_CLIENT_SITE_METHOD = local
+KUBOS_C2_CLI_CLIENT_DEPENDENCIES = kubos
+# The path from the C2_CLI_CLIENT module to the build artifact directory
+KUBOS_ARTIFACT_BUILD_PATH = build/$(KUBOS_TARGET)/source
 
-#Use the Kubos SDK to build the command-and-control application
-define KUBOS_C2_CLI_CLIENT_BUILD_CMDS
+# Link the local Kubos modules
+define KUBOS_C2_CLI_CLIENT_CONFIGURE_CMDS
 	cd $(@D) && \
-	./tools/kubos_link.py --sys --app $(KUBOS_REPO_C2_CLI_CLIENT_PATH) && \
-	cd $(@D)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH) && \
-	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
-	kubos -t kubos-linux-isis-gcc build
+	kubos link -a
 endef
 
-#Install the application into the rootfs file system
+# Use the Kubos SDK to build the C2_CLI_CLIENT application
+define KUBOS_C2_CLI_CLIENT_BUILD_CMDS
+	cd $(@D) && \
+	PATH=$(PATH):/usr/bin/iobc_toolchain/usr/bin && \
+	kubos -t $(KUBOS_TARGET) build
+endef
+# Install the application into the rootfs file system
 define KUBOS_C2_CLI_CLIENT_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/bin
-	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_REPO_C2_CLI_CLIENT_PATH)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmd-control-client \
+	$(INSTALL) -D -m 0755 $(@D)/$(KUBOS_ARTIFACT_BUILD_PATH)/cmd-control-client \
 		$(TARGET_DIR)/usr/bin/c2
 endef
 
