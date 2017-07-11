@@ -16,3 +16,8 @@
 /dts-v1/;
 
 #include "am33xx-bone.dtsi"
+
+/ {
+	model = "Pumpkin MBM2";
+	compatible = "pumpkin,mbm2", "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
+};
