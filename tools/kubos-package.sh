@@ -20,14 +20,13 @@
 version=$(date +%Y.%m.%d)
 input=kpack.its
 branch=master
-rootfs_dir=../../buildroot-2016.11/output/images
-rootfs_img=$rootfs_dir/rootfs.img
-rootfs_tar=$rootfs_dir/rootfs.tar
 rootfs_sz=13000
+rflag=false
+kernel=false
 
 # Process command arguments
 
-while getopts "s:v:i:b:" option
+while getopts "s:v:i:b:o:t:k" option
 do
     case $option in
         s)
@@ -42,14 +41,38 @@ do
 	b)
 	    branch=$OPTARG
 	    ;;
+	o)
+	    output=$OPTARG
+	    ;;
+	t)
+	    target=$OPTARG
+	    rflag=true
+	    ;;
+	k)
+	    kernel=true
+            ;;
 	\?)
 	    exit 1
 	    ;;
     esac
 done
 
-# Create kernel.itb
-./kubos-kernel.sh -b ${branch}
+if ! ${rflag}
+then
+    echo "-t target must be specified" >&2
+    exit 1
+fi
+
+rootfs_dir=../../buildroot-2016.11/${output}/images
+rootfs_img=$rootfs_dir/rootfs.img
+rootfs_tar=$rootfs_dir/rootfs.tar
+
+# Create kernel.itb if requested
+if ${kernel}
+then
+    ./kubos-kernel.sh -b ${branch} -i ../board/kubos/${target}/kubos-kernel.its -o ${output}
+    cp kubos-kernel.itb ${rootfs_dir}/kernel
+fi
 
 # Create rootfs.img
 # Currently the image needs ~13M of space. Increase if necessary.
@@ -59,7 +82,11 @@ sudo mount -o loop $rootfs_img /mnt
 sudo tar -xf $rootfs_tar -C /mnt
 sudo umount /mnt
 
+# Copy the package .its file
+cp ${input} ${rootfs_dir}/
+input_name=$(basename ${input})
+
 # Build the full package
-../../buildroot-2016.11/output/build/uboot-${branch}/tools/mkimage -f ${input} kpack-${version}.itb
+../../buildroot-2016.11/${output}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} kpack-${version}.itb
 
 

@@ -25,7 +25,7 @@
 
 	images {
 		kernel@1 {
-			data = /incbin/("./kubos-kernel.itb");
+			data = /incbin/("./kernel");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";
@@ -37,7 +37,7 @@
 			};
 		};
 		rootfs@1 {
-			data = /incbin/("./../../buildroot-2016.11/output/images/rootfs.img");
+			data = /incbin/("./rootfs.img");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";

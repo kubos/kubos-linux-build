@@ -1,9 +1,7 @@
 #!/bin/sh
 
 BOARD_DIR="$(dirname $0)"
-
-# copy the uEnv.txt to the output/images directory
-cp ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/board/kubos/pumpkin-mbm2/uEnv.txt $BINARIES_DIR/uEnv.txt
+CURR_DIR="$(pwd)"
 
 GENIMAGE_CFG="${BOARD_DIR}/genimage.cfg"
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
@@ -11,9 +9,11 @@ GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 rm -rf "${GENIMAGE_TMP}"
 
 # Create the kernel FIT file
-./${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools/kubos-kernel.sh -b pumpkin-port -i ${BOARD_DIR}/kubos-kernel.its
+cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
+./kubos-kernel.sh -b pumpkin-port -i ../${BOARD_DIR}/kubos-kernel.its -o output-pumpkin
 
 mv kubos-kernel.itb $BINARIES_DIR/kernel
+cd ${CURR_DIR}
 
 # Create the user data partition
 dd if=/dev/zero of=userpart.img bs=1M count=2000
