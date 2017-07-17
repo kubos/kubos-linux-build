@@ -16,11 +16,11 @@ KUBOS_BR_TARGET = $(lastword $(subst /, ,$(dir $(BR2_LINUX_KERNEL_CUSTOM_DTS_PAT
 ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
 	KUBOS_TARGET = kubos-linux-isis-gcc
 else ifeq ($(KUBOS_BR_TARGET),pumpkin-mbm2)
-	KUBOS_TARGET = kubos-linux-isis-gcc
+	KUBOS_TARGET = kubos-linux-pumpkin-gcc
 else
 	$(error "Unknown target: $(KUBOS_BR_TARGET)")
 endif
-
+upmpkin
 # Globally link all of the modules so that telemetry and C2 can use them
 define KUBOS_BUILD_CMDS
 	cd $(@D) && \
