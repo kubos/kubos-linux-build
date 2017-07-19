@@ -9,8 +9,9 @@ GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 rm -rf "${GENIMAGE_TMP}"
 
 # Create the kernel FIT file
+cp ${BOARD_DIR}/kubos-kernel.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
-./kubos-kernel.sh -b pumpkin-upgrade -i ../${BOARD_DIR}/kubos-kernel.its -o output-pumpkin
+./kubos-kernel.sh -b pumpkin-upgrade -i ${BINARIES_DIR}/kubos-kernel.its -o output-pumpkin
 
 mv kubos-kernel.itb $BINARIES_DIR/kernel
 cd ${CURR_DIR}
