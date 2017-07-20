@@ -15,7 +15,7 @@
  */
 /dts-v1/;
 
-#include "am33xx-bone.dtsi"
+#include "am33xx-boneblack.dtsi"
 
 / {
 	model = "Pumpkin MBM2";

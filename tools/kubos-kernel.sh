@@ -19,10 +19,11 @@
  
 input=kubos-kernel.its
 branch=master
+output=output
 
 # Process command arguments
 
-while getopts "i:b:" option
+while getopts "i:b:o:" option
 do
     case $option in
 	i)
@@ -31,6 +32,9 @@ do
 	b)
 	    branch=$OPTARG
 	    ;;
+	o)
+	    output=$OPTARG
+	    ;;
 	\?)
 	    exit 1
 	    ;;
@@ -38,6 +42,6 @@ do
 done
 
 # Build the package
-../../buildroot-2016.11/output/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
+../../buildroot-2016.11/${output}/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
 
 

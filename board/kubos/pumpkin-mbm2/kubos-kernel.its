@@ -25,7 +25,7 @@
 
 	images {
 		kernel@1 {
-			data = /incbin/("/home/catherine/glib/buildroot-2016.11/output-pumpkin/images/zImage");
+			data = /incbin/("./zImage");
 			type = "kernel";
 			arch = "arm";
 			os = "linux";
