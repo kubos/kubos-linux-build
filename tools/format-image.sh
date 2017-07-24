@@ -123,7 +123,7 @@ if [ "${package}" -gt "1" ]; then
   echo '\nBuilding the KubOS Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
   echo $PATH
-  ./kubos-package.sh -b ${branch} -v base
+  ./kubos-package.sh -k -b ${branch} -v base -o output-iobc -t at91sam9g20isis
 fi
 
 if [ "${package}" -gt "0" ]; then
@@ -143,7 +143,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCopying the rootfs to the rootfs partition'
   mount /dev/loop0p6 /tmp-kubos
-  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C /tmp-kubos
+  tar -xf ../../buildroot-2016.11/output-iobc/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount /dev/loop0p6
 
