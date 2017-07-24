@@ -27,6 +27,11 @@ size=3800
 sd_size=`expr ${size} - 4`
 input=kpack-base.itb
 
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+    echo "Please run script as root"
+    exit
+fi
+
 # Process command arguments
 
 while getopts "i:s:" option
@@ -46,26 +51,26 @@ done
 
 mkdir -p ramdisk
 
-sudo mount -t tmpfs -o size=${size}M tmpfs ramdisk/
+mount -t tmpfs -o size=${size}M tmpfs ramdisk/
 cd ramdisk/
 
-sudo dd if=/dev/zero of=aux-sd.img bs=1M count=${size}
-sudo losetup /dev/loop0 aux-sd.img 
-sudo parted /dev/loop0 mklabel msdos
-sudo parted /dev/loop0 mkpart primary ext4 4M 60M
-sudo parted /dev/loop0 mkpart primary ext4 60M ${sd_size}M
+dd if=/dev/zero of=aux-sd.img bs=1M count=${size}
+losetup /dev/loop0 aux-sd.img 
+parted /dev/loop0 mklabel msdos
+parted /dev/loop0 mkpart primary ext4 4M 60M
+parted /dev/loop0 mkpart primary ext4 60M ${sd_size}M
 
-sudo mkfs.ext4 /dev/loop0p1
+mkfs.ext4 /dev/loop0p1
 
-sudo mkdir -p /tmp-kubos
-sudo mount /dev/loop0p1 /tmp-kubos
-sudo cp ../${input} /tmp-kubos/kpack-base.itb
-sudo umount /dev/loop0p1
-sudo rmdir /tmp-kubos/
-sudo losetup -d /dev/loop0
+mkdir -p /tmp-kubos
+mount /dev/loop0p1 /tmp-kubos
+cp ../${input} /tmp-kubos/kpack-base.itb
+umount /dev/loop0p1
+rmdir /tmp-kubos/
+losetup -d /dev/loop0
 cd ..
-sudo mv ramdisk/aux-sd.img .
-sudo umount ramdisk
-sudo rmdir ramdisk
+mv ramdisk/aux-sd.img .
+umount ramdisk
+rmdir ramdisk
 
 
