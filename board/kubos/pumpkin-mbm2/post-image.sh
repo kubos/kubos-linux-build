@@ -25,6 +25,11 @@ losetup /dev/loop0 userpart.img
 mkdir /tmp-kubos
 mount /dev/loop0 /tmp-kubos
 cp ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/common/user-overlay/* /tmp-kubos -R
+
+# Create the microSD user data partition mount point
+mkdir /tmp-kubos/microsd
+
+# Cleanup
 umount /dev/loop0
 rmdir /tmp-kubos
 losetup -d /dev/loop0

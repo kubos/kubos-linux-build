@@ -61,6 +61,7 @@ parted /dev/loop0 mkpart primary ext4 4M 60M
 parted /dev/loop0 mkpart primary ext4 60M ${sd_size}M
 
 mkfs.ext4 /dev/loop0p1
+mkfs.ext4 /dev/loop0p2
 
 mkdir -p /tmp-kubos
 mount /dev/loop0p1 /tmp-kubos
