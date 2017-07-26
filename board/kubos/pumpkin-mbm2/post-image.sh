@@ -2,6 +2,8 @@
 
 BOARD_DIR="$(dirname $0)"
 CURR_DIR="$(pwd)"
+BRANCH=$2
+OUTPUT=$(basename ${BASE_DIR})
 
 GENIMAGE_CFG="${BOARD_DIR}/genimage.cfg"
 GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
@@ -11,9 +13,9 @@ rm -rf "${GENIMAGE_TMP}"
 # Create the kernel FIT file
 cp ${BOARD_DIR}/kubos-kernel.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
-./kubos-kernel.sh -b pumpkin-upgrade -i ${BINARIES_DIR}/kubos-kernel.its -o output-pumpkin
+./kubos-kernel.sh -b ${BRANCH} -i ${BINARIES_DIR}/kubos-kernel.its -o ${OUTPUT}
 
-mv kubos-kernel.itb $BINARIES_DIR/kernel
+mv kubos-kernel.itb ${BINARIES_DIR}/kernel
 cd ${CURR_DIR}
 
 # Create the user data partition
@@ -27,7 +29,7 @@ umount /dev/loop0
 rmdir /tmp-kubos
 losetup -d /dev/loop0
 
-mv userpart.img $BINARIES_DIR/userpart.img
+mv userpart.img ${BINARIES_DIR}/userpart.img
 
 # Generate the images
 genimage \
