@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2017 Kubos Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/dts-v1/;
+
+#include "am33xx-boneblack.dtsi"
+
+/ {
+	model = "Beaglebone Black";
+	compatible = "kubos,bbb", "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
+
+};
+
+&am33xx_pinmux {
+
+	i2c1_pins: pinmux_i2c1_pins {
+		pinctrl-single,pins = <
+			0x158 (PIN_INPUT_PULLUP | MUX_MODE2)	/* spi0_d1.i2c1_sda */
+			0x15c (PIN_INPUT_PULLUP | MUX_MODE2)	/* spi0_cs0.i2c1_scl */
+		>;
+	};
+
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	clock-frequency = <100000>;
+
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&uart2 {
+	status = "okay";
+};
+
+&uart3 {
+	status = "okay";
+};
+
+&uart4 {
+	status = "okay";
+};
+
+&uart5 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+
+        spidev@1 {
+		spi-max-frequency = <24000000>;
+		reg = <0>;
+		compatible = "linux,spidev";
+        };
+};
+
+
