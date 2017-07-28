@@ -77,15 +77,6 @@
 		>;
 	};
 
-	spi0_pins: pinmux_spi0_pins {
-		pinctrl-single,pins = <
-			0x150 (PIN_INPUT_PULLUP  | MUX_MODE0)    /* SCLK - P9.22*/
-			0x154 (PIN_OUTPUT_PULLUP | MUX_MODE0)    /* MOSI - P9.21*/
-			0x158 (PIN_INPUT_PULLUP  | MUX_MODE0)    /* MISO - P9.18*/
-			0x15C (PIN_OUTPUT_PULLUP | MUX_MODE0)    /* CS0  - P9.17*/
-		>;
-	};
-
 	spi1_pins: pinmux_spi1_pins {
 		pinctrl-single,pins = <
 			0x190 (PIN_INPUT_PULLUP  | MUX_MODE3)	/* SCLK - P9.31 */
@@ -134,21 +125,6 @@
 	pinctrl-name = "default";
 	pinctrl-0 = <&uart1_pins>;
 	status = "okay";
-};
-
-&spi0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&spi0_pins>;
-        ti,spi-num-cs = <1>;
-        cs-gpios = <&gpio0 5 0>;
-
-	status = "okay";
-
-        spidev@0 {
-		spi-max-frequency = <24000000>;
-		reg = <0>;
-		compatible = "spidev";
-        };
 };
 
 &spi1 {
