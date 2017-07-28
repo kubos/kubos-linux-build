@@ -17,8 +17,10 @@ ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
 	KUBOS_TARGET = kubos-linux-isis-gcc
 else ifeq ($(KUBOS_BR_TARGET),pumpkin-mbm2)
 	KUBOS_TARGET = kubos-linux-pumpkin-mbm2-gcc
+else ifeq ($(KUBOS_BR_TARGET),beaglebone-black)
+	KUBOS_TARGET = kubos-linux-beaglebone-gcc
 else
-	$(error "Unknown target: $(KUBOS_BR_TARGET)")
+	KUBOS_TARGET = unknown
 endif
 
 # Globally link all of the modules so that telemetry and C2 can use them
