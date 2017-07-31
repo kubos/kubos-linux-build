@@ -80,8 +80,8 @@
 	spi1_pins: pinmux_spi1_pins {
 		pinctrl-single,pins = <
 			0x190 (PIN_INPUT_PULLUP  | MUX_MODE3)	/* SCLK - P9.31 */
-			0x194 (PIN_INPUT_PULLUP  | MUX_MODE3)	/* MISO - P9.30 */
-			0x198 (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* MOSI - P9.29 */
+			0x194 (PIN_INPUT_PULLUP  | MUX_MODE3)	/* MISO - P9.29 */
+			0x198 (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* MOSI - P9.30 */
 			0x19c (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* CS0  - P9.28 */
 			0x164 (PIN_OUTPUT_PULLUP | MUX_MODE2)	/* CS1  - P9.42 */
 		>;
