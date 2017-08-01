@@ -37,8 +37,6 @@
 		pinctrl-single,pins = <
 			0x154 (PIN_OUTPUT | MUX_MODE1)	/* TX  - P9.21 */
 			0x150 (PIN_INPUT  | MUX_MODE1)	/* RX  - P9.22 */
-			0x0c4 (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.38 */
-			0x0c0 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.37 */
 		>;
 	};
 
@@ -120,7 +118,7 @@
 };
 
 &uart5 {
-	pinctrl-name = "default";
+	pinctrl-names = "default";
 	pinctrl-0 = <&uart5_pins>;
 	status = "okay";
 };
