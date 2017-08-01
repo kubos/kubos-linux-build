@@ -49,17 +49,17 @@
 
 	uart4_pins: pinmux_uart4_pins {
 		pinctrl-single,pins = <
-			0x070 (PIN_OUTPUT | MUX_MODE6)	/* TX  - H1.16 */
-			0x074 (PIN_INPUT  | MUX_MODE6)	/* RX  - H1.15 */
+			0x074 (PIN_OUTPUT | MUX_MODE6)	/* TX  - H1.16 */
+			0x070 (PIN_INPUT  | MUX_MODE6)	/* RX  - H1.15 */
 		>;
 	};
 
 	uart5_pins: pinmux_uart5_pins {
 		pinctrl-single,pins = <
-			0x184 (PIN_OUTPUT | MUX_MODE4)	/* TX  - H1.20 */
-			0x180 (PIN_INPUT  | MUX_MODE4)	/* RX  - H1.19 */
-			0x0dc (PIN_OUTPUT | MUX_MODE6)	/* RTS - H1.12 */
-			0x0d8 (PIN_INPUT  | MUX_MODE6)	/* CTS - H1.11 */
+			0x0c0 (PIN_OUTPUT | MUX_MODE4)	/* TX  - P8.37 */
+			0x0c4 (PIN_INPUT  | MUX_MODE4)	/* RX  - P8.38 */
+			0x0dc (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.32 */
+			0x0d8 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.31 */
 		>;
 	};
 
@@ -89,33 +89,38 @@
 	status = "okay";
 };
 
+&i2c2 {
+	/* I2C-2 conflicts with UART1 RTS/CTS */
+	status = "disabled";
+};
+
 &uart1 {
-	pinctrl-name = "default";
+	pinctrl-names = "default";
 	pinctrl-0 = <&uart1_pins>;
 	status = "okay";
 };
 
 &uart2 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart2_pins>;
 	status = "okay";
 };
 
 &uart3 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart3_pins>;
 	status = "okay";
 };
 
 &uart4 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
 	status = "okay";
 };
 
 &uart5 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5_pins>;
 	status = "okay";
 };
 
