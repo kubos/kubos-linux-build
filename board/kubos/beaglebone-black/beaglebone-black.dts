@@ -29,8 +29,7 @@
 		pinctrl-single,pins = <
 			0x184 (PIN_OUTPUT | MUX_MODE0)	/* TX  - P9.24 */
 			0x180 (PIN_INPUT  | MUX_MODE0)	/* RX  - P9.26 */
-			0x17c (PIN_OUTPUT | MUX_MODE0)	/* RTS - P9.19 */
-			0x178 (PIN_INPUT  | MUX_MODE0)	/* CTS - P9.20 */
+			/* RTS/CTS conflicts with I2C2 */
 		>;
 	};
 
@@ -38,8 +37,6 @@
 		pinctrl-single,pins = <
 			0x154 (PIN_OUTPUT | MUX_MODE1)	/* TX  - P9.21 */
 			0x150 (PIN_INPUT  | MUX_MODE1)	/* RX  - P9.22 */
-			0x0c4 (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.38 */
-			0x0c0 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.37 */
 		>;
 	};
 
@@ -53,8 +50,8 @@
 
 	uart4_pins: pinmux_uart4_pins {
 		pinctrl-single,pins = <
-			0x070 (PIN_OUTPUT | MUX_MODE6)	/* TX  - P9.13 */
-			0x074 (PIN_INPUT  | MUX_MODE6)	/* RX  - P9.11 */
+			0x074 (PIN_OUTPUT | MUX_MODE6)	/* TX  - P9.13 */
+			0x070 (PIN_INPUT  | MUX_MODE6)	/* RX  - P9.11 */
 			0x0d4 (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.33 */
 			0x0d0 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.35 */
 		>;
@@ -62,8 +59,8 @@
 
 	uart5_pins: pinmux_uart5_pins {
 		pinctrl-single,pins = <
-			0x184 (PIN_OUTPUT | MUX_MODE4)	/* TX  - P8.37 */
-			0x180 (PIN_INPUT  | MUX_MODE4)	/* RX  - P8.38 */
+			0x0c0 (PIN_OUTPUT | MUX_MODE4)	/* TX  - P8.37 */
+			0x0c4 (PIN_INPUT  | MUX_MODE4)	/* RX  - P8.38 */
 			0x0dc (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.32 */
 			0x0d8 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.31 */
 		>;
@@ -83,7 +80,6 @@
 			0x194 (PIN_INPUT_PULLUP  | MUX_MODE3)	/* MISO - P9.29 */
 			0x198 (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* MOSI - P9.30 */
 			0x19c (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* CS0  - P9.28 */
-			0x164 (PIN_OUTPUT_PULLUP | MUX_MODE2)	/* CS1  - P9.42 */
 		>;
 	};
 
@@ -98,39 +94,39 @@
 };
 
 &uart1 {
-	pinctrl-name = "default";
+	pinctrl-names = "default";
 	pinctrl-0 = <&uart1_pins>;
 	status = "okay";
 };
 
 &uart2 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart2_pins>;
 	status = "okay";
 };
 
 &uart3 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart3_pins>;
 	status = "okay";
 };
 
 &uart4 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
 	status = "okay";
 };
 
 &uart5 {
-	pinctrl-name = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5_pins>;
 	status = "okay";
 };
 
 &spi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi1_pins>;
-        ti,spi-num-cs = <2>;
+        ti,spi-num-cs = <1>;
         cs-gpios = <&gpio3 17 0>, <&gpio0 7 0>;
 
 	status = "okay";
@@ -138,12 +134,6 @@
         spidev@0 {
 		spi-max-frequency = <24000000>;
 		reg = <0>;
-		compatible = "spidev";
-        };
-
-        spidev@1 {
-		spi-max-frequency = <24000000>;
-		reg = <1>;
 		compatible = "spidev";
         };
 };
