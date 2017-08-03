@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2017 Kubos Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/dts-v1/;
+
+#include "am33xx-boneblack.dtsi"
+
+/ {
+	model = "Pumpkin MBM2";
+	compatible = "pumpkin,mbm2", "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
+
+};
+
+&am33xx_pinmux {
+
+	uart1_pins: pinmux_uart1_pins {
+		pinctrl-single,pins = <
+			0x184 (PIN_OUTPUT | MUX_MODE0)	/* TX  - H1.18 */
+			0x180 (PIN_INPUT  | MUX_MODE0)	/* RX  - H1.17 */
+			0x17c (PIN_OUTPUT | MUX_MODE0)	/* RTS - H1.10 */
+			0x178 (PIN_INPUT  | MUX_MODE0)	/* CTS - H1.9  */
+		>;
+	};
+
+	uart2_pins: pinmux_uart2_pins {
+		pinctrl-single,pins = <
+			0x154 (PIN_OUTPUT | MUX_MODE1)	/* TX  - H1.8  */
+			0x150 (PIN_INPUT  | MUX_MODE1)	/* RX  - H1.7  */
+		>;
+	};
+
+	uart3_pins: pinmux_uart3_pins {
+		pinctrl-single,pins = <
+			0x164 (PIN_OUTPUT | MUX_MODE1)	/* TX  - H1.5  */
+		>;
+	};
+
+	uart4_pins: pinmux_uart4_pins {
+		pinctrl-single,pins = <
+			0x074 (PIN_OUTPUT | MUX_MODE6)	/* TX  - H1.16 */
+			0x070 (PIN_INPUT  | MUX_MODE6)	/* RX  - H1.15 */
+		>;
+	};
+
+	uart5_pins: pinmux_uart5_pins {
+		pinctrl-single,pins = <
+			0x0c0 (PIN_OUTPUT | MUX_MODE4)	/* TX  - P8.37 */
+			0x0c4 (PIN_INPUT  | MUX_MODE4)	/* RX  - P8.38 */
+			0x0dc (PIN_OUTPUT | MUX_MODE6)	/* RTS - P8.32 */
+			0x0d8 (PIN_INPUT  | MUX_MODE6)	/* CTS - P8.31 */
+		>;
+	};
+
+	i2c1_pins: pinmux_i2c1_pins {
+		pinctrl-single,pins = <
+			0x158 (PIN_INPUT_PULLUP | MUX_MODE2)	/* SDA - H1.41 */
+			0x15c (PIN_INPUT_PULLUP | MUX_MODE2)	/* SCL - H1.43 */
+		>;
+	};
+
+	spi1_pins: pinmux_spi1_pins {
+		pinctrl-single,pins = <
+			0x190 (PIN_INPUT_PULLUP | MUX_MODE3)	/* SCLK - H1.21 */
+			0x194 (PIN_INPUT_PULLUP | MUX_MODE3)	/* MISO - H1.22 */
+			0x198 (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* MOSI - H1.23 */
+			0x19c (PIN_OUTPUT_PULLUP | MUX_MODE3)	/* CS   - H1.24 */
+		>;
+	};
+
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	clock-frequency = <100000>;
+
+	status = "okay";
+};
+
+&i2c2 {
+	/* I2C-2 conflicts with UART1 RTS/CTS */
+	status = "disabled";
+};
+
+&uart1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1_pins>;
+	status = "okay";
+};
+
+&uart2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart2_pins>;
+	status = "okay";
+};
+
+&uart3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart3_pins>;
+	status = "okay";
+};
+
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
+	status = "okay";
+};
+
+&uart5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5_pins>;
+	status = "okay";
+};
+
+&spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi1_pins>;
+        ti,spi-num-cs = <1>;
+        cs-gpios = <&gpio3 17 0>;
+
+	status = "okay";
+
+	/* This will be replaced with the SD over SPI definition in the future */
+        spidev@1 {
+		spi-max-frequency = <24000000>;
+		reg = <0>;
+		compatible = "spidev";
+        };
+};
+
+

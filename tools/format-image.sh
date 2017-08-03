@@ -20,24 +20,26 @@
  #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
  #  * b {branch} - sets the branch name of the uboot that has been built
  #  * i {image}  - sets the name of the generated image file
+ #  * o {name}   - specifies which output directory should be used
  #  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate 
  #        partitions.
  #  * pp - Build the kpack-base.itb and kernel files and then copy them
  #  * ppp - Only build and copy the files. Skip the other steps
  #  * s - Size, in MB, of SD card (default 3800)
+ #  * t {target} - target device to build image for
  # 
-
-set -e
  
 device=""
 image=kubos-linux.img
 branch=master
 package=0
 size=3800
+output=output
+target=none
 
 # Process command arguments
 
-while getopts "d:b:i:ps:w" option
+while getopts "d:b:i:ps:wo:t:" option
 do
     case $option in
 	d)
@@ -46,22 +48,40 @@ do
 	b)  
 	  branch=${OPTARG}
 	  ;;
-    i)
-      image=${OPTARG}
-      ;;
+        i)
+          image=${OPTARG}
+          ;;
 	p)
 	  package=$((package+1))
 	  ;;
 	s)
 	  size=${OPTARG}
 	  ;;
+	o)
+	  output=${OPTARG}
+	  ;;
+	t)
+	  target=$OPTARG
+	  rflag=true
+	    ;;
 	\?)
       	  exit 1
       	  ;;
     esac
 done
 
+if [ "${package}" -gt "1" ] && [ ! ${rflag} ]; then
+    echo "-t target must be specified in order to build kernel" >&2
+    exit 1
+fi
+
 if [ "${package}" -lt "3" ]; then
+
+  if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+      echo "Please run script as root"
+      exit
+  fi
+
   echo '\nCreating ramdisk'
   mkdir -p ramdisk
   mount -t tmpfs -o size=${size}M tmpfs ramdisk/
@@ -123,7 +143,7 @@ if [ "${package}" -gt "1" ]; then
   echo '\nBuilding the KubOS Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
   echo $PATH
-  ./kubos-package.sh -b ${branch} -v base
+  ./kubos-package.sh -k -b ${branch} -v base -o ${output} -t ${target}
 fi
 
 if [ "${package}" -gt "0" ]; then
@@ -143,7 +163,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCopying the rootfs to the rootfs partition'
   mount /dev/loop0p6 /tmp-kubos
-  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C /tmp-kubos
+  tar -xf ../../buildroot-2016.11/${output}/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount /dev/loop0p6
 

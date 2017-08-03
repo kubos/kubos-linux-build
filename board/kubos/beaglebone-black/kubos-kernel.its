@@ -13,37 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * KubOS Linux Upgrade Package
- * Contains: New kernel and rootfs image
+ * KubOS Linux Kernel Package
+ * Contains: zImage
  */
 
 /dts-v1/;
 
 / {
-	description = "KubOS Linux Upgrade Package";
+	description = "KubOS Linux Kernel";
 	#address-cells = <1>;
 
 	images {
 		kernel@1 {
-			data = /incbin/("./kernel");
-			type = "firmware";
+			data = /incbin/("./zImage");
+			type = "kernel";
 			arch = "arm";
 			os = "linux";
 			compression = "none";
-			load = <00000000>;
-			entry = <00000000>;
-			hash@1 {
-				algo = "sha256";
-			};
-		};
-		rootfs@1 {
-			data = /incbin/("./rootfs.img");
-			type = "firmware";
-			arch = "arm";
-			os = "linux";
-			compression = "none";
-			load = <00000000>;
-			entry = <00000000>;
+			load = <0x82800000>;
+			entry = <0x82800000>;
 			hash@1 {
 				algo = "sha256";
 			};
@@ -53,9 +41,8 @@
 	configurations {
 		default = "config@1";
 		config@1 {
-			description = "Full KubOS Linux Upgrade";
+			description = "Boot Linux kernel";
 			kernel = "kernel@1";
-			rootfs = "rootfs@1";
 		};
 	};
 };
