@@ -125,13 +125,15 @@
 			};
 
 			usart0: serial@fffb0000 {
+				/* Use default pinctrl (TX/RX only) */
+				status = "okay";
+			};
+
+			usart2: serial@fffb8000 {
 				pinctrl-0 =
-					<&pinctrl_usart0
-					 &pinctrl_usart0_rts
-					 &pinctrl_usart0_cts
-					 &pinctrl_usart0_dtr_dsr
-					 &pinctrl_usart0_dcd
-					 &pinctrl_usart0_ri>;
+					<&pinctrl_usart2
+					 &pinctrl_usart2_rts
+					 &pinctrl_usart2_cts>;
 				status = "okay";
 			};
 
