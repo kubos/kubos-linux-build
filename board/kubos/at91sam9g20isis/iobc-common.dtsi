@@ -1,0 +1,232 @@
+/*
+ * iobc-common.dtsi - Device Tree file for Kubos Linux on ISIS iOBC board (at91sam9g20isis)
+ *
+ * Copyright (C) 2012 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
+ *
+ * Licensed under GPLv2.
+ * 
+ * Modified for Kubos Linux:
+ *   This file was originally based on the at91sam9*.dts* files and has been modified
+ *   for the at91sam9g20isis board.
+ *   Changes - 
+ *     Added NOR flash configuration
+ *     Updated SDRAM size
+ *     Updated watchdog pin definition
+ *     Added SD card power pin definition
+ * Author: Catherine Garabedian <catherine@kubos.co>
+ */
+
+#include "at91sam9g20.dtsi"
+
+/ {
+	model = "Kubos at91sam9g20isis";
+	compatible = "kubos,at91sam9g20isis", "atmel,at91sam9g20", "atmel,at91sam9";
+
+	aliases {
+		spi0 = &spi0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		ds1 {
+			label = "ds1";
+			linux,default-trigger = "heartbeat";
+			gpios = <&pioC 12 GPIO_ACTIVE_HIGH>;
+		};
+		
+		ds2 {
+			label = "ds2";
+			linux,default-trigger = "disk-activity";
+			gpios = <&pioC 13 GPIO_ACTIVE_HIGH>;
+		};
+		
+		ds3 {
+			label = "ds3";
+			gpios = <&pioC 14 GPIO_ACTIVE_HIGH>;
+		};
+		
+		ds4 {
+			label = "ds4";
+			gpios = <&pioC 15 GPIO_ACTIVE_HIGH>;
+		};
+		mmc-power {
+			label = "mmc-power";
+			gpios = <&pioB 6 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+	};
+
+	chosen {
+		bootargs = "mem=32M console=ttys0,115200 root=/dev/mtdblk0p6";
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory {
+		reg = <0x20000000 0x2000000>;
+	};
+
+	clocks {
+		slow_xtal {
+			clock-frequency = <32768>;
+		};
+
+		main_xtal {
+			clock-frequency = <18432000>;
+		};
+	};
+
+	ahb {
+		apb {
+			pinctrl@fffff400 {
+				board {
+					pinctrl_pck0_as_mck: pck0_as_mck {
+						atmel,pins =
+							<AT91_PIOC 1 AT91_PERIPH_B AT91_PINCTRL_NONE>;	/* PC1 periph B */
+					};
+
+				};
+
+				mmc0_slot0 {
+					pinctrl_board_mmc0_slot0: mmc0_slot0-board {
+						atmel,pins =
+							<AT91_PIOC 2 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP_DEGLITCH>;	/* PC2 gpio CD pin pull up and deglitch */
+					};
+				};
+
+				spi0 {
+					pinctrl_spi0: spi0-0 {
+						atmel,pins =
+							<AT91_PIOA 0 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PA0 periph A SPI0_MISO pin */
+							 AT91_PIOA 1 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PA1 periph A SPI0_MOSI pin */
+							 AT91_PIOA 2 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* PA2 periph A SPI0_SPCK pin */
+					};
+				};
+
+				spi0_cs {
+					pinctrl_spi0_cs: spi0-cs {
+						atmel,pins =
+							<AT91_PIOB 17 AT91_PERIPH_GPIO AT91_PINCTRL_PULL_UP>;
+					};
+				};
+
+				i2c_gpio0 {
+					pinctrl_i2c_gpio0: i2c_gpio0-0 {
+						atmel,pins =
+							<AT91_PIOA 23 AT91_PERIPH_A AT91_PINCTRL_NONE
+							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE>;
+					};
+				};
+
+			};
+
+			dbgu: serial@fffff200 {
+				status = "okay";
+			};
+
+			usart0: serial@fffb0000 {
+				/* Use default pinctrl (TX/RX only) */
+				status = "okay";
+			};
+
+			usart2: serial@fffb8000 {
+				pinctrl-0 =
+					<&pinctrl_usart2
+					 &pinctrl_usart2_rts
+					 &pinctrl_usart2_cts>;
+				status = "okay";
+			};
+
+			usb1: gadget@fffa4000 {
+				atmel,vbus-gpio = <&pioC 5 GPIO_ACTIVE_HIGH>;
+				status = "okay";
+			};
+
+			mmc0: mmc@fffa8000 {
+				pinctrl-0 = <
+					&pinctrl_board_mmc0_slot0
+					&pinctrl_mmc0_slot0_cmd_dat0
+					&pinctrl_mmc0_slot0_dat1_3>;
+				status = "okay";
+				slot@0 {
+					reg = <0>;
+					bus-width = <4>;
+				};
+			};
+
+			ssc0: ssc@fffbc000 {
+				status = "okay";
+				pinctrl-0 = <&pinctrl_ssc0_tx>;
+			};
+
+			i2c0: i2c@fffac000 {
+				compatible = "i2c-gpio";
+				gpios = <&pioA 23 0 /* sda */
+					 &pioA 24 0 /* scl */
+					>;
+				i2c-gpio,delay-us = <2>;	/* ~100 kHz */
+				#address-cells = <1>;
+				#size-cells = <0>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_i2c_gpio0>;
+				status = "okay";
+			};
+
+			spi0: spi@fffc8000 {
+				pinctrl-0 = <&pinctrl_spi0 &pinctrl_spi0_cs>;
+				cs-gpios = <0>, <0>, <&pioB 17 0>;
+				status = "okay";
+				super0: super@0 {
+					compatible = "isis,supervisor";
+					reg = <2>;
+					spi-max-frequency = <1000000>;
+					status = "okay";
+				};
+			};
+
+			shdwc@fffffd10 {
+				atmel,wakeup-counter = <10>;
+				atmel,wakeup-rtt-timer;
+			};
+			
+			watchdog@fffffd40 {
+				compatible = "kubos,at91isis-wdt";
+				timeout-sec = <1>;
+				kubos,max-heartbeat = <50>;
+				kubos,min-heartbeat = <10>;
+    				kubos,watchdog-type = "hardware";
+    				kubos,reset-type = "all";
+				status = "okay";
+			};
+
+			gpbr: syscon@fffffd50 {
+				status = "okay";
+			};
+		};
+
+		nor0: nor_flash@10000000 {
+			compatible = "cfi-flash";
+			reg = <0x10000000 0x100000>;
+			linux,mtd-name = "physmap-flash.0";
+			bank-width = <16>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+		    	isisboot@0 {
+				label = "isisboot";
+				reg = <0x00000 0xa000>;
+			};
+
+			dtb@70000 {
+				label = "dtb";
+				reg = <0x70000 0x5000>;
+			};
+		};
+
+		usb0: ohci@00500000 {
+			num-ports = <2>;
+			status = "okay";
+		};
+	};
+};
+
