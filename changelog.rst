@@ -6,7 +6,7 @@ v1.0.2 - Oct 5 2017
 
 - Enabling ISIS-OBC daughterboard UART ports
 - Adding ethernet support for Beaglebone Black and Pumpkin MBM2
-- Adding SSH (DropBear) support for Beaglebone Black and Pumpkin MBM2
+- Adding SSH (Dropbear) support for Beaglebone Black and Pumpkin MBM2
 
 v1.0.1 - Aug 4 2017
 -------------------
