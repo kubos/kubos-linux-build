@@ -11,6 +11,8 @@ cd .. #cd out of the kubos-linux-build directory
 
 kubos update
 
+apt-get install dosfstools
+
 echo "getting buildroot"
 
 wget $buildroot_url && tar xvzf $buildroot_tar && rm $buildroot_tar
@@ -23,7 +25,7 @@ echo "STARTING BUILD"
 
 make
 
-if [[ $board == "beagleboneblack" ]];
+if [[ $board == "beaglebone-black" ]];
 then
     echo "Copying beaglebone sdimage to $CIRCLE_ARTIFACTS"
     cp ./output/images/kubos-linux.tar.gz $CIRCLE_ARTIFACTS/
