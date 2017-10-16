@@ -12,6 +12,8 @@ cd .. #cd out of the kubos-linux-build directory
 kubos update
 
 apt-get install dosfstools
+apt-get install mtools
+apt-get install genext2fs
 
 echo "getting buildroot"
 
