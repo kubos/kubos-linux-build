@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_GRAPHQL_SERVER_CORE
+	bool "python-graphql-server-core"
+	select BR2_PACKAGE_PYTHON_GRAPHQL_CORE # runtime
+	select BR2_PACKAGE_PYTHON_PROMISE # runtime
+	help
+	  GraphQL Server tools for powering your server.
+
+	  https://github.com/graphql-python/graphql-server-core

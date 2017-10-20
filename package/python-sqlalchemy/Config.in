@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_SQLALCHEMY
-	bool "python-sqlalchemy"
-	help
-	  SQLAlchemy is a Python SQL toolkit and ORM
-
-	  https://www.sqlalchemy.org/

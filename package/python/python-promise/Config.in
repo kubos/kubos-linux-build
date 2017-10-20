@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_PROMISE
+	bool "python-promise"
+	select BR2_PACKAGE_PYTHON_TYPING # runtime
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	help
+	  Promises/A+ implementation for Python.
+
+	  https://github.com/syrusakbary/promise
