@@ -63,15 +63,15 @@ then
     exit 1
 fi
 
-rootfs_dir=../../buildroot-2016.11/${output}/images
+rootfs_dir=${BASE_DIR}/images
 rootfs_img=${rootfs_dir}/rootfs.img
 rootfs_tar=${rootfs_dir}/rootfs.tar
 
 # Create kernel.itb if requested
 if ${kernel}
 then
-    cp ../board/kubos/${target}/kubos-kernel.its ../../buildroot-2016.11/${output}/images/
-    ./kubos-kernel.sh -b ${branch} -i ../../buildroot-2016.11/${output}/images/kubos-kernel.its -o ${output}
+    cp ../board/kubos/${target}/kubos-kernel.its ${BASE_DIR}/images/
+    ./kubos-kernel.sh -b ${branch} -i ${BASE_DIR}/images/kubos-kernel.its -o ${output}
     cp kubos-kernel.itb ${rootfs_dir}/kernel
 fi
 
@@ -88,6 +88,6 @@ cp ${input} ${rootfs_dir}/
 input_name=$(basename ${input})
 
 # Build the full package
-../../buildroot-2016.11/${output}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} kpack-${version}.itb
+${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} kpack-${version}.itb
 
 

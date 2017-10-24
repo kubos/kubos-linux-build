@@ -125,7 +125,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCopying the rootfs to the rootfs partition'
   mount ${device}6 /tmp-kubos
-  tar -xf ../../buildroot-2016.11/output/images/rootfs.tar -C /tmp-kubos
+  tar -xf ${BASE_DIR}/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount ${device}6
 

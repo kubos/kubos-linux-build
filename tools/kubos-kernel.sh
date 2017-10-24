@@ -42,6 +42,6 @@ do
 done
 
 # Build the package
-../../buildroot-2016.11/${output}/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
+${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
 
 
