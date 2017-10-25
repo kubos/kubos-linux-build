@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PYTHON_FLASK_GRAPHQL
+	bool "python-flask_graphql"
+	select BR2_PACKAGE_PYTHON_GRAPHQL_CORE # runtime
+	select BR2_PACKAGE_PYTHON_GRAPHQL_SERVER_CORE # runtime
+	select BR2_PACKAGE_PYTHON_FLASK # runtime
+	help
+	  Adds GraphQL support to your Flask application.
+
+	  https://github.com/graphql-python/flask-graphql

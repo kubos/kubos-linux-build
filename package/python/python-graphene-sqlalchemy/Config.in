@@ -1,0 +1,10 @@
+config BR2_PACKAGE_PYTHON_GRAPHENE_SQLALCHEMY
+	bool "python-graphene-sqlalchemy"
+	select BR2_PACKAGE_PYTHON_SQLALCHEMY
+	select BR2_PACKAGE_PYTHON_SIX
+	select BR2_PACKAGE_PYTHON_SINGLEDISPATCH
+	select BR2_PACKAGE_PYTHON_GRAPHENE
+	help
+	  SQLAlchemy integration for Graphene
+
+	  https://github.com/graphql-python/graphene-sqlalchemy

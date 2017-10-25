@@ -1,0 +1,9 @@
+config BR2_PACKAGE_PYTHON_GRAPHQL_RELAY
+	bool "python-graphql-relay"
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	select BR2_PACKAGE_PYTHON_GRAPHQL_CORE # runtime
+	select BR2_PACKAGE_PYTHON_PROMISE # runtime
+	help
+	  Relay implementation for Python.
+
+	  https://github.com/graphql-python/graphql-relay-py
