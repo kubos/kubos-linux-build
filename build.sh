@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -o pipefail
+set -o pipefail
 
 buildroot_tar="buildroot-2016.11.tar.gz"
 buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
@@ -23,7 +23,11 @@ make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 
 echo "STARTING BUILD"
 
+df -h
+
 make
+
+df -h
 
 if [[ $board == "beaglebone-black" ]];
 then
