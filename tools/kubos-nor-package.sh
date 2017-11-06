@@ -40,6 +40,7 @@ do
 	    ;;
     esac
 done
+BASE_DIR:=../../buildroot-2016.11/output
 
 # Build the package
 ${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kpack-nor-${version}.itb
