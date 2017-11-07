@@ -69,6 +69,7 @@ do
       	  ;;
     esac
 done
+BASE_DIR:=../../buildroot-2016.11/${output}
 
 if [ "${package}" -gt "1" ] && [ ! ${rflag} ]; then
     echo "-t target must be specified in order to build kernel" >&2
@@ -163,7 +164,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCopying the rootfs to the rootfs partition'
   mount /dev/loop0p6 /tmp-kubos
-  tar -xf ../../buildroot-2016.11/${output}/images/rootfs.tar -C /tmp-kubos
+  tar -xf ${BASE_DIR}/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount /dev/loop0p6
 
