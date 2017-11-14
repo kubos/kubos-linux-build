@@ -69,7 +69,7 @@ do
       	  ;;
     esac
 done
-BASE_DIR:=../../buildroot-2016.11/${output}
+: ${BASE_DIR:=../../buildroot-2016.11/${output}}
 
 if [ "${package}" -gt "1" ] && [ ! ${rflag} ]; then
     echo "-t target must be specified in order to build kernel" >&2
