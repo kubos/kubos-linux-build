@@ -1,33 +1,33 @@
- #!/bin/bash
- #
- # Copyright (C) 2017 Kubos Corporation
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- #
- # Create SD Card image for use with KubOS Linux on the iOBC
- #
- # Inputs:
- #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
- #  * b {branch} - sets the branch name of the uboot that has been built
- #  * i {image}  - sets the name of the generated image file
- #  * o {name}   - specifies which output directory should be used
- #  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate 
- #        partitions.
- #  * pp - Build the kpack-base.itb and kernel files and then copy them
- #  * ppp - Only build and copy the files. Skip the other steps
- #  * s - Size, in MB, of SD card (default 3800)
- #  * t {target} - target device to build image for
- # 
+#!/bin/bash
+#
+# Copyright (C) 2017 Kubos Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Create SD Card image for use with KubOS Linux on the iOBC
+#
+# Inputs:
+#  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
+#  * b {branch} - sets the branch name of the uboot that has been built
+#  * i {image}  - sets the name of the generated image file
+#  * o {name}   - specifies which output directory should be used
+#  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate
+#        partitions.
+#  * pp - Build the kpack-base.itb and kernel files and then copy them
+#  * ppp - Only build and copy the files. Skip the other steps
+#  * s - Size, in MB, of SD card (default 3800)
+#  * t {target} - target device to build image for
+#
  
 device=""
 image=kubos-linux.img
