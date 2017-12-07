@@ -3,7 +3,9 @@ iface lo inet loopback
 
 # Default ethernet configuration
 # Update the 'address' value to set a custom static IP
+# But in space, you're unlikely to have a gateway.
 auto eth0
 iface eth0 inet static
-	address 168.168.2.20
+	address 168.168.1.120
 	netmask 255.255.255.0
+	gateway 192.168.1.1

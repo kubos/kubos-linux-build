@@ -20,9 +20,10 @@
 version=$(date +%Y.%m.%d)
 input=kpack.its
 branch=master
-rootfs_sz=13000
+rootfs_sz=115000
 rflag=false
 kernel=false
+output="output"
 
 # Process command arguments
 
@@ -77,6 +78,7 @@ then
 fi
 
 # Create rootfs.img
+echo "** Creating rootfs.img"
 # Currently the image needs ~13M of space. Increase if necessary.
 dd if=/dev/zero of=${rootfs_img} bs=1K count=$rootfs_sz
 mkfs.ext4 ${rootfs_img}
@@ -85,10 +87,13 @@ sudo tar -xf ${rootfs_tar} -C /mnt
 sudo umount /mnt
 
 # Copy the package .its file
+echo "** Copying the package .its file."
 cp ${input} ${rootfs_dir}/
+
 input_name=$(basename ${input})
 
 # Build the full package
+echo "** Building the full package."
 ${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} kpack-${version}.itb
 
 
