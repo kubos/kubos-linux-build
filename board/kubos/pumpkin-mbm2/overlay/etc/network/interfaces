@@ -6,6 +6,7 @@ iface lo inet loopback
 # But in space, you're unlikely to have a gateway.
 auto eth0
 iface eth0 inet static
-	address 168.168.1.120
+	address 192.168.1.120
 	netmask 255.255.255.0
 	gateway 192.168.1.1
+

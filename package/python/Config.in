@@ -9,5 +9,6 @@ menu "Additional Python Packages"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-promise/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-sqlalchemy/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-typing/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-connexion/Config.in"
 
 endmenu
