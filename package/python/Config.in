@@ -1,5 +1,6 @@
 menu "Additional Python Packages"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-adafruit_bbio/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-configparser/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-connexion/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-flask_graphql/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-flask-cors/Config.in"

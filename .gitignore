@@ -1,4 +1,22 @@
-*.o.cmd
-*.itb
-*.img
+# First, ignore everything
+*
+# Now, whitelist anything that's a directory
+!*/
+
+# And keep all the file types you're interested in.
+
+!*.in
+!*.mk
+!*.hash
+!*.sh
+!*.its
+!*defconfig
+!*.conf
+!interfaces
+
+#*.o.cmd
+#*.itb
+#*.img
+
+
  
