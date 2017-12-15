@@ -14,8 +14,8 @@ rm -rf "${GENIMAGE_TMP}"
 cp ${BOARD_DIR}/kubos-kernel.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
 ./kubos-kernel.sh -b ${BRANCH} -i ${BINARIES_DIR}/kubos-kernel.its -o ${OUTPUT}
-mv kubos-kernel.itb ${BINARIES_DIR}/kernel
 
+mv kubos-kernel.itb ${BINARIES_DIR}/kernel
 cd ${CURR_DIR}
 
 # Generate the images
