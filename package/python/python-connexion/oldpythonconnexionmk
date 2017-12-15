@@ -1,0 +1,14 @@
+################################################################################
+#
+# python-connexion
+#
+################################################################################
+
+PYTHON_CONNEXION_VERSION = 1.2
+PYTHON_CONNEXION_SOURCE = connexion-$(PYTHON_CONNEXION_VERSION).tar.gz
+PYTHON_CONNEXION_SITE = https://pypi.python.org/pypi/connexion
+PYTHON_CONNEXION_SETUP_TYPE = setuptools
+PYTHON_CONNEXION_LICENSE = Apache License Version 2.0
+PYTHON_CONNEXION_LICENSE_FILES = LICENSE
+PYTHON_CONNEXION_DEPENDENCIES = python-testfixtures python-pytest-cov python-pytest python-mock python-flask python-decorator python-typing python-pathlib swagger-spec-validator python-six python-requests python-jsonschema python-inflection python-click python-pyyaml
+$(eval $(python-package))

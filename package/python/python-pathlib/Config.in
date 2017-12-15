@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_PATHLIB
+	bool "python-pathlib"
+	help
+	  Object-oriented filesystem paths.
+
+	  https://pathlib.readthedocs.org/

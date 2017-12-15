@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_SWAGGER_SPEC_VALIDATOR
+	bool "python-swagger-spec-validator"
+	select BR2_PACKAGE_PYTHON_JSONSCHEMA # runtime
+	select BR2_PACKAGE_PYTHON_SIX # runtime
+	help
+	  Validation of Swagger specifications.
+
+	  http://github.com/Yelp/swagger_spec_validator

@@ -1,0 +1,6 @@
+config BR2_PACKAGE_PYTHON_ADAFRUIT_BBIO
+	bool "python-adafruit_bbio"
+	help
+	  A module to control BeagleBone IO channels.
+
+	  https://github.com/adafruit/adafruit-beaglebone-io-python/
