@@ -6,8 +6,8 @@
  	u32 mr;
 +	u8 cs_register = spi->chip_select;
 +	
-+	if ( spi->chip_select > spi->master->num_chipselect)
-+	{
++       /* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
 +		/* 
 +		 * GPIO pins can be used as additional chip selects,
 +		 * we'll just use the CS0 registers for processing.
@@ -51,8 +51,8 @@
  	u32 mr;
 +	u8 cs_register = spi->chip_select;
 +	
-+	if ( spi->chip_select > spi->master->num_chipselect)
-+	{
++       /* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if ( spi->chip_select > 3) {
 +		cs_register = 0;
 +	}
  
