@@ -32,7 +32,19 @@ This folder contains the BuildRoot configuration files needed to build each OBC 
 
 ## Installation
 
-Create new folder
+In order to build KubOS Linux, two components are needed:
+
+- The [kubos-linux-build repo](https://github.com/kubostech/kubos-linux-build) - Contains the configurations, patches, and extra tools needed to build KubOS Linux
+- [BuildRoot](https://buildroot.org/) - The actual build system
+
+These components should be setup as children of the same parent directory. 
+There are several commands and variables in the build process which use relative file paths to navigate between the components.
+
+After the environment has been set up, all build commands will be run from the BuildRoot directory unless otherwise stated.
+
+To set up a build environment and build KubOS Linux:
+
+Create a new parent folder to contain the build environment
 
     $ mkdir kubos-linux
 
