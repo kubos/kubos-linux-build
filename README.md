@@ -32,7 +32,19 @@ This folder contains the BuildRoot configuration files needed to build each OBC 
 
 ## Installation
 
-Create new folder
+In order to build KubOS Linux, two components are needed:
+
+- The [kubos-linux-build repo](https://github.com/kubostech/kubos-linux-build) - Contains the configurations, patches, and extra tools needed to build KubOS Linux
+- [BuildRoot](https://buildroot.org/) - The actual build system
+
+These components should be setup as children of the same parent directory. 
+There are several commands and variables in the build process which use relative file paths to navigate between the components.
+
+After the environment has been set up, all build commands will be run from the BuildRoot directory unless otherwise stated.
+
+To set up a build environment and build KubOS Linux:
+
+Create a new parent folder to contain the build environment
 
     $ mkdir kubos-linux
 
@@ -40,9 +52,12 @@ Enter the new folder
 
     $ cd kubos-linux
   
-Download BuildRoot-2016.11 (more current versions of BuildRoot may work as well, but all testing has been done against 2016.11)
+Download BuildRoot-2017.02 (more current versions of BuildRoot may work as well,
+but all testing has been done against 2017.02)
 
-    $ wget https://buildroot.uclibc.org/downloads/buildroot-2016.11.tar.gz && tar xvzf buildroot-2016.11.tar.gz && rm buildroot-2016.11.tar.gz
+.. note:: All Kubos documentation will refer to v2017.02.8, which is the latest version of the LTS release at the time of this writing.
+
+    $ wget https://buildroot.uclibc.org/downloads/buildroot-2017.02.8.tar.gz && tar xvzf buildroot-2017.02.8.tar.gz && rm buildroot-2017.02.8.tar.gz
   
 Pull the kubos-linux-build repo
 
@@ -50,7 +65,7 @@ Pull the kubos-linux-build repo
   
 Move into the buildroot directory
 
-    $ cd buildroot-2016.11
+    $ cd buildroot-2017.02.8
   
 Point BuildRoot to the external kubos-linux-build folder and tell it which configuration you want to run (config files are located in
 kubos-linux-build/configs)
@@ -67,7 +82,7 @@ and it will go much more quickly (<5 min).
 
 BuildRoot documentation can be found [**here**](https://buildroot.org/docs.html)
 
-The generated files will be located in buildroot-2016.11/output/images.  They are:
+The generated files will be located in buildroot-2017.02.8/output/images.  They are:
 
 - uboot.bin   - The U-Boot binary
 - zImage      - The compressed Linux kernel file

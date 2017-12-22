@@ -56,7 +56,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2016.11/${output}}
+: ${BASE_DIR:=../../buildroot-2017.02.8/${output}}
 
 if ! ${rflag}
 then
