@@ -6,7 +6,7 @@
  	u32 mr;
 +	u8 cs_register = spi->chip_select;
 +	
-+       /* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
 +	if (spi->chip_select > 3) {
 +		/* 
 +		 * GPIO pins can be used as additional chip selects,
@@ -51,8 +51,8 @@
  	u32 mr;
 +	u8 cs_register = spi->chip_select;
 +	
-+       /* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
-+	if ( spi->chip_select > 3) {
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
 +		cs_register = 0;
 +	}
  
@@ -71,8 +71,8 @@
  	unsigned long		bus_hz;
 +	u8 cs_register = spi->chip_select;
 +	
-+       /* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
-+	if ( spi->chip_select > 3) {
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
 +		cs_register = 0;
 +	}
  
