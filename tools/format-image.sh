@@ -99,16 +99,16 @@ if [ "${package}" -lt "3" ]; then
   # Create the partitions
   # Partition sizes are now all 4MB aligned
   boot_size=20
-  rootfs_size=20
-  upgrade_size=100
+  rootfs_size=60
+  upgrade_size=240
 
   sd_size=`expr ${size} - 4`
   upgrade_start=`expr ${sd_size} - ${upgrade_size}`
   rootfs_start=`expr ${upgrade_start} - ${rootfs_size}`
   boot_start=`expr ${rootfs_start} - ${boot_size}`
 
-  parted /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
-  parted /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
+  parted -a minimal /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
+  parted -a minimal /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
   parted -a minimal /dev/loop0 mkpart logical fat16  ${boot_start}M      ${rootfs_start}M
   parted -a minimal /dev/loop0 mkpart logical ext4   ${rootfs_start}M    ${upgrade_start}M
   parted -a minimal /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${sd_size}M

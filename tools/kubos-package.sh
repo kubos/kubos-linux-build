@@ -20,7 +20,7 @@
 version=$(date +%Y.%m.%d)
 input=kpack.its
 branch=master
-rootfs_sz=13000
+rootfs_sz=60000
 rflag=false
 kernel=false
 
