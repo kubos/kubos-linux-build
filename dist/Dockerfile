@@ -1,4 +1,4 @@
-FROM  kubostech/kubos-dev:latest
+FROM  kubos/kubos-dev:latest
 
 MAINTAINER kyle@kubos.co
 
