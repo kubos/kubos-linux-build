@@ -247,25 +247,6 @@
 			};
 		};
 
-		nor0: nor_flash@10000000 {
-			compatible = "cfi-flash";
-			reg = <0x10000000 0x100000>;
-			linux,mtd-name = "physmap-flash.0";
-			bank-width = <16>;
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-		    	isisboot@0 {
-				label = "isisboot";
-				reg = <0x00000 0xa000>;
-			};
-
-			dtb@70000 {
-				label = "dtb";
-				reg = <0x70000 0x5000>;
-			};
-		};
-
 		usb0: ohci@00500000 {
 			num-ports = <2>;
 			status = "okay";
