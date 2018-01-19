@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * KubOS Linux Upgrade Package
+ * Kubos Linux Upgrade Package
  * Contains: New zImage and rootfs image
  */
 
@@ -25,7 +25,7 @@
 
 	images {
 		dtb@1 {
-			data = /incbin/("./../../buildroot-2016.11/output/images/at91sam9g20isis.dtb");
+			data = /incbin/("./../../buildroot-2017.02.8/output/images/at91sam9g20isis.dtb");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";

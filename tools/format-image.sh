@@ -1,33 +1,33 @@
- #!/bin/bash
- #
- # Copyright (C) 2017 Kubos Corporation
- #
- # Licensed under the Apache License, Version 2.0 (the "License");
- # you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     http://www.apache.org/licenses/LICENSE-2.0
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- #
- # Create SD Card image for use with KubOS Linux on the iOBC
- #
- # Inputs:
- #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
- #  * b {branch} - sets the branch name of the uboot that has been built
- #  * i {image}  - sets the name of the generated image file
- #  * o {name}   - specifies which output directory should be used
- #  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate 
- #        partitions.
- #  * pp - Build the kpack-base.itb and kernel files and then copy them
- #  * ppp - Only build and copy the files. Skip the other steps
- #  * s - Size, in MB, of SD card (default 3800)
- #  * t {target} - target device to build image for
- # 
+#!/bin/bash
+#
+# Copyright (C) 2017 Kubos Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Create SD Card image for use with Kubos Linux on the iOBC
+#
+# Inputs:
+#  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
+#  * b {branch} - sets the branch name of the uboot that has been built
+#  * i {image}  - sets the name of the generated image file
+#  * o {name}   - specifies which output directory should be used
+#  * p - Copy pre-built kpack-base.itb and kernel files to their appropriate
+#        partitions.
+#  * pp - Build the kpack-base.itb and kernel files and then copy them
+#  * ppp - Only build and copy the files. Skip the other steps
+#  * s - Size, in MB, of SD card (default 3800)
+#  * t {target} - target device to build image for
+#
  
 device=""
 image=kubos-linux.img
@@ -69,6 +69,7 @@ do
       	  ;;
     esac
 done
+: ${BASE_DIR:=../../buildroot-2017.02.8/${output}}
 
 if [ "${package}" -gt "1" ] && [ ! ${rflag} ]; then
     echo "-t target must be specified in order to build kernel" >&2
@@ -98,16 +99,16 @@ if [ "${package}" -lt "3" ]; then
   # Create the partitions
   # Partition sizes are now all 4MB aligned
   boot_size=20
-  rootfs_size=20
-  upgrade_size=100
+  rootfs_size=60
+  upgrade_size=240
 
   sd_size=`expr ${size} - 4`
   upgrade_start=`expr ${sd_size} - ${upgrade_size}`
   rootfs_start=`expr ${upgrade_start} - ${rootfs_size}`
   boot_start=`expr ${rootfs_start} - ${boot_size}`
 
-  parted /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
-  parted /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
+  parted -a minimal /dev/loop0 mkpart primary ext4   4M                  ${boot_start}M
+  parted -a minimal /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
   parted -a minimal /dev/loop0 mkpart logical fat16  ${boot_start}M      ${rootfs_start}M
   parted -a minimal /dev/loop0 mkpart logical ext4   ${rootfs_start}M    ${upgrade_start}M
   parted -a minimal /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${sd_size}M
@@ -138,9 +139,9 @@ if [ "${package}" -gt "2" ]; then
 fi
 
 
-# Load the base version of KubOS Linux
+# Load the base version of Kubos Linux
 if [ "${package}" -gt "1" ]; then
-  echo '\nBuilding the KubOS Linux base package'
+  echo '\nBuilding the Kubos Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
   echo $PATH
   ./kubos-package.sh -k -b ${branch} -v base -o ${output} -t ${target}
@@ -163,7 +164,7 @@ if [ "${package}" -gt "0" ]; then
 
   echo '\nCopying the rootfs to the rootfs partition'
   mount /dev/loop0p6 /tmp-kubos
-  tar -xf ../../buildroot-2016.11/${output}/images/rootfs.tar -C /tmp-kubos
+  tar -xf ${BASE_DIR}/images/rootfs.tar -C /tmp-kubos
   sleep 1
   umount /dev/loop0p6
 

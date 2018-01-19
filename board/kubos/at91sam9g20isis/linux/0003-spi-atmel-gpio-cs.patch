@@ -1,0 +1,92 @@
+--- linux-4.4.23/drivers/spi/spi-atmel.c	2017-12-20 16:15:01.547727089 -0600
++++ new-spi-atmel.c	2017-12-20 16:13:38.806377088 -0600
+@@ -353,22 +353,32 @@ static void cs_activate(struct atmel_spi
+ 	struct atmel_spi_device *asd = spi->controller_state;
+ 	unsigned active = spi->mode & SPI_CS_HIGH;
+ 	u32 mr;
++	u8 cs_register = spi->chip_select;
++	
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
++		/* 
++		 * GPIO pins can be used as additional chip selects,
++		 * we'll just use the CS0 registers for processing.
++		 */
++		cs_register = 0;
++	}
+ 
+ 	if (atmel_spi_is_v2(as)) {
+-		spi_writel(as, CSR0 + 4 * spi->chip_select, asd->csr);
++		spi_writel(as, CSR0 + 4 * cs_register, asd->csr);
+ 		/* For the low SPI version, there is a issue that PDC transfer
+ 		 * on CS1,2,3 needs SPI_CSR0.BITS config as SPI_CSR1,2,3.BITS
+ 		 */
+ 		spi_writel(as, CSR0, asd->csr);
+ 		if (as->caps.has_wdrbt) {
+ 			spi_writel(as, MR,
+-					SPI_BF(PCS, ~(0x01 << spi->chip_select))
++					SPI_BF(PCS, ~(0x01 << cs_register))
+ 					| SPI_BIT(WDRBT)
+ 					| SPI_BIT(MODFDIS)
+ 					| SPI_BIT(MSTR));
+ 		} else {
+ 			spi_writel(as, MR,
+-					SPI_BF(PCS, ~(0x01 << spi->chip_select))
++					SPI_BF(PCS, ~(0x01 << cs_register))
+ 					| SPI_BIT(MODFDIS)
+ 					| SPI_BIT(MSTR));
+ 		}
+@@ -390,7 +400,7 @@ static void cs_activate(struct atmel_spi
+ 		}
+ 
+ 		mr = spi_readl(as, MR);
+-		mr = SPI_BFINS(PCS, ~(1 << spi->chip_select), mr);
++		mr = SPI_BFINS(PCS, ~(1 << cs_register), mr);
+ 		if (as->use_cs_gpios && spi->chip_select != 0)
+ 			gpio_set_value(asd->npcs_pin, active);
+ 		spi_writel(as, MR, mr);
+@@ -406,12 +416,18 @@ static void cs_deactivate(struct atmel_s
+ 	struct atmel_spi_device *asd = spi->controller_state;
+ 	unsigned active = spi->mode & SPI_CS_HIGH;
+ 	u32 mr;
++	u8 cs_register = spi->chip_select;
++	
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
++		cs_register = 0;
++	}
+ 
+ 	/* only deactivate *this* device; sometimes transfers to
+ 	 * another device may be active when this routine is called.
+ 	 */
+ 	mr = spi_readl(as, MR);
+-	if (~SPI_BFEXT(PCS, mr) & (1 << spi->chip_select)) {
++	if (~SPI_BFEXT(PCS, mr) & (1 << cs_register)) {
+ 		mr = SPI_BFINS(PCS, 0xf, mr);
+ 		spi_writel(as, MR, mr);
+ 	}
+@@ -810,6 +826,12 @@ static int atmel_spi_set_xfer_speed(stru
+ {
+ 	u32			scbr, csr;
+ 	unsigned long		bus_hz;
++	u8 cs_register = spi->chip_select;
++	
++	/* Kubos-specific: AT91SAM9 has 4 CS pins (0-3) */
++	if (spi->chip_select > 3) {
++		cs_register = 0;
++	}
+ 
+ 	/* v1 chips start out at half the peripheral bus speed. */
+ 	bus_hz = as->spi_clk;
+@@ -838,9 +860,9 @@ static int atmel_spi_set_xfer_speed(stru
+ 			xfer->speed_hz, scbr, bus_hz);
+ 		return -EINVAL;
+ 	}
+-	csr = spi_readl(as, CSR0 + 4 * spi->chip_select);
++	csr = spi_readl(as, CSR0 + 4 * cs_register);
+ 	csr = SPI_BFINS(SCBR, scbr, csr);
+-	spi_writel(as, CSR0 + 4 * spi->chip_select, csr);
++	spi_writel(as, CSR0 + 4 * cs_register, csr);
+ 
+ 	return 0;
+ }

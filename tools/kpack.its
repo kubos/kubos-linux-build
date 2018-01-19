@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * KubOS Linux Upgrade Package
+ * Kubos Linux Upgrade Package
  * Contains: New kernel and rootfs image
  */
 
 /dts-v1/;
 
 / {
-	description = "KubOS Linux Upgrade Package";
+	description = "Kubos Linux Upgrade Package";
 	#address-cells = <1>;
 
 	images {
@@ -53,7 +53,7 @@
 	configurations {
 		default = "config@1";
 		config@1 {
-			description = "Full KubOS Linux Upgrade";
+			description = "Full Kubos Linux Upgrade";
 			kernel = "kernel@1";
 			rootfs = "rootfs@1";
 		};

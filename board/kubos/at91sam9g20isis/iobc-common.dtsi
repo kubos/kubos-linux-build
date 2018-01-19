@@ -24,6 +24,7 @@
 
 	aliases {
 		spi0 = &spi0;
+		spi1 = &spi1;
 	};
 
 	leds {
@@ -110,6 +111,24 @@
 					};
 				};
 
+				spi1 {
+					pinctrl_spi1: spi1-0 {
+						atmel,pins =
+							<AT91_PIOB 0 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PB0 periph A SPI1_MISO pin */
+							 AT91_PIOB 1 AT91_PERIPH_A AT91_PINCTRL_PULL_UP	/* PB1 periph A SPI1_MOSI pin */
+							 AT91_PIOB 2 AT91_PERIPH_A AT91_PINCTRL_NONE>;	/* PB2 periph A SPI1_SPCK pin */
+					};
+				};
+
+				spi1_cs {
+					pinctrl_spi1_cs: spi1-cs {
+						atmel,pins =
+							<AT91_PIOB 3 AT91_PERIPH_A AT91_PINCTRL_PULL_UP
+							 AT91_PIOC 5 AT91_PERIPH_B AT91_PINCTRL_PULL_UP
+							 AT91_PIOC 4 AT91_PERIPH_B AT91_PINCTRL_PULL_UP>;
+					};
+				};
+
 				i2c_gpio0 {
 					pinctrl_i2c_gpio0: i2c_gpio0-0 {
 						atmel,pins =
@@ -184,6 +203,30 @@
 				};
 			};
 
+			spi1: spi@fffcc000 {
+				pinctrl-0 = <&pinctrl_spi1 &pinctrl_spi1_cs>;
+				cs-gpios = <&pioB 3 0>, <&pioC 5 0>, <&pioC 4 0>;
+				status = "okay";
+				cs0@0 {
+					compatible = "spidev";
+					reg = <0>;
+					spi-max-frequency = <133000000>;
+					status = "okay";
+				};
+				cs1@0 {
+					compatible = "spidev";
+					reg = <1>;
+					spi-max-frequency = <133000000>;
+					status = "okay";
+				};
+				cs2@0 {
+					compatible = "spidev";
+					reg = <2>;
+					spi-max-frequency = <133000000>;
+					status = "okay";
+				};
+			};
+
 			shdwc@fffffd10 {
 				atmel,wakeup-counter = <10>;
 				atmel,wakeup-rtt-timer;
@@ -201,25 +244,6 @@
 
 			gpbr: syscon@fffffd50 {
 				status = "okay";
-			};
-		};
-
-		nor0: nor_flash@10000000 {
-			compatible = "cfi-flash";
-			reg = <0x10000000 0x100000>;
-			linux,mtd-name = "physmap-flash.0";
-			bank-width = <16>;
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-		    	isisboot@0 {
-				label = "isisboot";
-				reg = <0x00000 0xa000>;
-			};
-
-			dtb@70000 {
-				label = "dtb";
-				reg = <0x70000 0x5000>;
 			};
 		};
 

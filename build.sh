@@ -1,8 +1,8 @@
 #!/bin/bash
 
-set -o pipefail
+set -e -o pipefail
 
-buildroot_tar="buildroot-2016.11.tar.gz"
+buildroot_tar="buildroot-2017.02.8.tar.gz"
 buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
 
 board="$KUBOS_BOARD"

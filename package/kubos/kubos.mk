@@ -11,7 +11,7 @@
 KUBOS_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 KUBOS_LICENSE = Apache-2.0
 KUBOS_LICENSE_FILES = LICENSE
-KUBOS_SITE = git://github.com/kubostech/kubos
+KUBOS_SITE = git://github.com/kubos/kubos
 KUBOS_BR_TARGET = $(lastword $(subst /, ,$(dir $(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH))))
 ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
 	KUBOS_TARGET = kubos-linux-isis-gcc
@@ -23,7 +23,7 @@ else
 	KUBOS_TARGET = unknown
 endif
 
-# Globally link all of the modules so that telemetry and C2 can use them
+# Globally link all of the modules so that Kubos packages can use them
 define KUBOS_BUILD_CMDS
 	cd $(@D) && \
 	./tools/kubos_link.py --sys

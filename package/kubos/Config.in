@@ -1,8 +1,8 @@
 menuconfig BR2_PACKAGE_KUBOS
-	bool "Kubos Services"
+	bool "Kubos Packages"
 	default y
 	help
-		Enable KubOS Linux Services
+		Enable Kubos services and libraries
 
 if BR2_PACKAGE_KUBOS
 	
@@ -13,6 +13,4 @@ if BR2_PACKAGE_KUBOS
 			Release, tag, or branch of the Kubos repo to use when building Kubos
 			packages
 
-	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-telemetry/Config.in"
-	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-c2/Config.in"
 endif

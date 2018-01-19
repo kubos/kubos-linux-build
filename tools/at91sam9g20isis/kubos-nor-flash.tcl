@@ -14,7 +14,7 @@
  # limitations under the License.
  #
  #############################################################################
- # Flash KubOS Linux related NOR flash files on the at91sam9g20isis board
+ # Flash Kubos Linux related NOR flash files on the at91sam9g20isis board
  # using the SAM-BA flashing utility
  #############################################################################
  #
@@ -36,9 +36,9 @@
  #
  #############################################################################
  #
- # Note: The iOBC must be connected, powered, and not running KubOS Linux
+ # Note: The iOBC must be connected, powered, and not running Kubos Linux
  #  in order for this script to work. (If board is currently running 
- #  KubOS Linux, reboot the board and hold down any key to boot into the 
+ #  Kubos Linux, reboot the board and hold down any key to boot into the 
  #  U-Boot CLI instead)
  # 
  # This script will be passed as an argument when calling the SAM-BA flashing
