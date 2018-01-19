@@ -1,5 +1,22 @@
 KubOS Linux Changelog
-===============
+=====================
+
+v1.1 - Jan 19 2018
+------------------
+
+- Migrating to BuildRoot LTS v2017.02.8
+- Adding support for Python
+- Adding Python packages in order to support SQLite and GraphQL
+- Expanding the rootfs and upgrade parititions to handle the new space requirements of Python
+- Adding support for iOBC SPI bus 1
+- Improving the CircleCI automated testing
+- Removing deprecated Kubos packages
+
+Community Contributions:
+~~~~~~~~~~~~~~~~~~~~~~~~
+- Fixing discrepancies between BBB and MBM2 configurations
+- Changing the default IP address for BBB and MBM2 targets
+- Improving tools scripts' formatting and code
 
 v1.0.2 - Oct 5 2017
 -------------------
