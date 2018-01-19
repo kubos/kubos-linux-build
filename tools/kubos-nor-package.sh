@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# kubos-package: Create KubOS Linux Upgrade Package (kpack)
+# kubos-package: Create Kubos Linux Upgrade Package (kpack)
 #
  
 version=$(date +%Y.%m.%d)

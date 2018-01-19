@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * KubOS Linux Kernel Package
+ * Kubos Linux Kernel Package
  * Contains: zImage
  */
 
 /dts-v1/;
 
 / {
-	description = "KubOS Linux Kernel";
+	description = "Kubos Linux Kernel";
 	#address-cells = <1>;
 
 	images {
