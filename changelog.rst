@@ -11,7 +11,7 @@ v1.1 - Jan 19 2018
 - Adding support for iOBC SPI bus 1
 - Improving the CircleCI automated testing
 - Removing deprecated Kubos packages
-- Changing product name from "Kubos Linux" to "Kubos Linux"
+- Changing product name from "KubOS Linux" to "Kubos Linux"
 
 Community Contributions:
 ~~~~~~~~~~~~~~~~~~~~~~~~
