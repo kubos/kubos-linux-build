@@ -136,6 +136,18 @@
 							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE>;
 					};
 				};
+				
+                pwm {
+                    pinctrl_pwm: pwm {
+                        atmel,pins = 
+                            <AT91_PIOA 26 AT91_PERIPH_A AT91_PINCTRL_NONE   /* PWM0 - TIOA0 */
+                             AT91_PIOC 9  AT91_PERIPH_B AT91_PINCTRL_NONE   /* PWM1 - TIOB0 */
+                             AT91_PIOA 27 AT91_PERIPH_A AT91_PINCTRL_NONE   /* PWM2 - TIOA1 */
+                             AT91_PIOC 7  AT91_PERIPH_A AT91_PINCTRL_NONE   /* PWM3 - TIOB1 */
+                             AT91_PIOA 28 AT91_PERIPH_A AT91_PINCTRL_NONE   /* PWM4 - TIOA2 */
+                             AT91_PIOC 6  AT91_PERIPH_A AT91_PINCTRL_NONE>; /* PWM5 - TIOB2 */
+                   };          
+                };  
 
 			};
 
@@ -252,5 +264,14 @@
 			status = "okay";
 		};
 	};
+	
+   tcb_pwm0: pwm@FFFA0000 {
+       compatible = "atmel,tcb-pwm";
+       #pwm-cells = <3>;
+       tcb-block = <1>;
+       pinctrl-names = "default";
+       pinctrl-0 = <&pinctrl_pwm>;
+       status = "okay";
+    };
 };
 
