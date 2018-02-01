@@ -1,7 +1,7 @@
 # /etc/inittab
 #
 # Copyright (C) 2001 Erik Andersen <andersen@codepoet.org>
-# Copyright (C) 2017 Kubos Corporation
+# Copyright (C) 2018 Kubos Corporation
 #
 # Note: BusyBox init doesn't support runlevels.  The runlevels field is
 # completely ignored by BusyBox init. If you want runlevels, use
