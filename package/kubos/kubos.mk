@@ -23,7 +23,7 @@ else
 	KUBOS_TARGET = unknown
 endif
 
-# Globally link all of the modules so that telemetry and C2 can use them
+# Globally link all of the modules so that Kubos packages can use them
 define KUBOS_BUILD_CMDS
 	cd $(@D) && \
 	./tools/kubos_link.py --sys

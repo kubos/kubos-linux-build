@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Create SD Card image for use with KubOS Linux on the iOBC
+# Create SD Card image for use with Kubos Linux on the iOBC
 #
 # Inputs:
 #  * d {device} - sets the SD card device name for optional flashing (does not flash by default)
@@ -139,9 +139,9 @@ if [ "${package}" -gt "2" ]; then
 fi
 
 
-# Load the base version of KubOS Linux
+# Load the base version of Kubos Linux
 if [ "${package}" -gt "1" ]; then
-  echo '\nBuilding the KubOS Linux base package'
+  echo '\nBuilding the Kubos Linux base package'
   export PATH=$PATH:/usr/bin/iobc_toolchain/usr/bin
   echo $PATH
   ./kubos-package.sh -k -b ${branch} -v base -o ${output} -t ${target}

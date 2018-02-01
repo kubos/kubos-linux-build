@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# KubOS Linux Boot Finalization
+# Kubos Linux Boot Finalization
 #
 
 # Update the U-Boot variables to indicate that we have successfully booted

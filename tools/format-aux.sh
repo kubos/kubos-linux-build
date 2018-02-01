@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Create Auxiliary SD Card image for use with KubOS Linux on the
+# Create Auxiliary SD Card image for use with Kubos Linux on the
 # Pumpkin MBM2
 #
 # Inputs:
