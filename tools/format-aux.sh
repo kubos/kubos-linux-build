@@ -57,8 +57,8 @@ cd ramdisk/
 dd if=/dev/zero of=aux-sd.img bs=1M count=${size}
 losetup /dev/loop0 aux-sd.img 
 parted /dev/loop0 mklabel msdos
-parted /dev/loop0 mkpart primary ext4 4M 60M
-parted /dev/loop0 mkpart primary ext4 60M ${sd_size}M
+parted /dev/loop0 mkpart primary ext4 4M 244M
+parted /dev/loop0 mkpart primary ext4 244M ${sd_size}M
 
 mkfs.ext4 /dev/loop0p1
 mkfs.ext4 /dev/loop0p2
@@ -73,5 +73,8 @@ cd ..
 mv ramdisk/aux-sd.img .
 umount ramdisk
 rmdir ramdisk
+
+# Set the disk signature/identifier to be used with the partuuids
+echo -en " XUA" | dd of=aux-sd.img conv=notrunc seek=440 bs=1
 
 
