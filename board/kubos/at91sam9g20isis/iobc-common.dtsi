@@ -135,7 +135,7 @@
 							<AT91_PIOA 23 AT91_PERIPH_A AT91_PINCTRL_NONE
 							 AT91_PIOA 24 AT91_PERIPH_A AT91_PINCTRL_NONE>;
 					};
-				};
+				};  
 
 			};
 
@@ -252,5 +252,18 @@
 			status = "okay";
 		};
 	};
+	           
+    tcb0_pwm: pwm {
+        compatible = "atmel,tcb-pwm";
+        #pwm-cells = <3>;
+        tc-block = <0>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_tcb0_tioa0
+                 &pinctrl_tcb0_tioa1
+                 &pinctrl_tcb0_tioa2
+                 &pinctrl_tcb0_tiob0
+                 &pinctrl_tcb0_tiob1
+                 &pinctrl_tcb0_tiob2>;
+    };
 };
 
