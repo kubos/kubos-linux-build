@@ -1,6 +1,22 @@
 Kubos Linux Changelog
 =====================
 
+v1.2 - Feb 26 2018
+------------------
+
+- Adding support for iOBC PWM pins
+- Adding support for iOBC ADC pins
+- Updating BBB/MBM2 image creation to add disk signatures
+- Updating BBB/MBM2 Linux boot logic to mount system partitions by PARTUUID
+- Updating BBB/MBM2 U-Boot to dynamically select the rootfs partition based on available devices
+- Updating all U-Boot configurations to enable hush parser CLI support
+
+Bug Fixes:
+~~~~~~~~~~
+
+- BBB/MBM2 can now successfully boot into Linux without a microSD card present
+- iOBC won't get stuck in reboot loop anymore if no SD card is present
+
 v1.1 - Jan 19 2018
 ------------------
 
