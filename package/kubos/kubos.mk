@@ -15,10 +15,13 @@ KUBOS_SITE = git://github.com/kubos/kubos
 KUBOS_BR_TARGET = $(lastword $(subst /, ,$(dir $(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH))))
 ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
 	KUBOS_TARGET = kubos-linux-isis-gcc
+	CARGO_TARGET = armv5te-unknown-linux-gnueabi
 else ifeq ($(KUBOS_BR_TARGET),pumpkin-mbm2)
 	KUBOS_TARGET = kubos-linux-pumpkin-mbm2-gcc
+	CARGO_TARGET = arm-unknown-linux-gnueabihf
 else ifeq ($(KUBOS_BR_TARGET),beaglebone-black)
 	KUBOS_TARGET = kubos-linux-beaglebone-gcc
+	CARGO_TARGET = arm-unknown-linux-gnueabihf
 else
 	KUBOS_TARGET = unknown
 endif

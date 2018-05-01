@@ -1,0 +1,18 @@
+menuconfig BR2_PACKAGE_KUBOS_MAI400
+    bool "MAI-400"
+    default n
+    help
+        Include MAI-400 Kubos service.
+
+if BR2_PACKAGE_KUBOS_MAI400
+
+config BR2_KUBOS_MAI400_INIT_LVL
+    int "MAI-400 Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_MAI400
+    help
+        The initialization priority level of the MAI-400 Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+endif
