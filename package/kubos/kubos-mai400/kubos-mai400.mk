@@ -6,15 +6,16 @@
 KUBOS_MAI400_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 KUBOS_MAI400_LICENSE = Apache-2.0
 KUBOS_MAI400_LICENSE_FILES = LICENSE
-KUBOS_MAI400_SITE = $(BUILD_DIR)/kubos-$(KUBOS_MAI400_VERSION)/mai400-service
+KUBOS_MAI400_SITE = $(BUILD_DIR)/kubos-$(KUBOS_MAI400_VERSION)/services/mai400-service
 KUBOS_MAI400_SITE_METHOD = local
 KUBOS_MAI400_DEPENDENCIES = kubos
 # The path from the MAI400 module to the build artifact directory
-KUBOS_ARTIFACT_BUILD_PATH = ../../target/$(CARGO_TARGET)/release
+KUBOS_ARTIFACT_BUILD_PATH = target/$(CARGO_TARGET)/release
 
 # Use the Kubos SDK to build the MAI400 application
 define KUBOS_MAI400_BUILD_CMDS
 	cd $(@D) && \
+	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
 	cargo build --target $(CARGO_TARGET) --release && \
 	arm-linux-strip $(KUBOS_ARTIFACT_BUILD_PATH)/mai400-service
 endef
@@ -36,9 +37,8 @@ kubos-mai400-fullclean: kubos-mai400-clean kubos-mai400-clean-for-reconfigure ku
 	rm -f $(BUILD_DIR)/kubos-mai400-$(KUBOS_MAI400_VERSION)/.stamp_downloaded
 	rm -f $(DL_DIR)/kubos-mai400-$(KUBOS_MAI400_VERSION).tar.gz
 
-
 kubos-mai400-clean: kubos-mai400-clean-for-rebuild
-	cd $(BUILD_DIR)/kubos-mai400-$(KUBOS_MAI400_VERSION); cargo clean
+	cd $(BUILD_DIR)/kubos-mai400-$(KUBOS_MAI400_VERSION); PATH=$(PATH):~/.cargo/bin cargo clean
 	cd $(TARGET_DIR)/etc/init.d; rm -f S*kubos-mai400
 
 $(eval $(generic-package))
