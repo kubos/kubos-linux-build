@@ -1,6 +1,7 @@
 menuconfig BR2_PACKAGE_KUBOS_MAI400
-    bool "MAI-400"
+    bool "MAI-400 Service"
     default n
+    select BR2_PACKAGE_HAS_KUBOS_MAI400
     help
         Include MAI-400 Kubos service.
 
@@ -16,3 +17,10 @@ config BR2_KUBOS_MAI400_INIT_LVL
         The lower the number, the earlier the service is initialized.
 
 endif
+
+config BR2_PACKAGE_HAS_KUBOS_MAI400
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_MAI400
+    string
+    default "kubos"
