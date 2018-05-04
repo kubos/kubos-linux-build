@@ -12,19 +12,26 @@ KUBOS_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 KUBOS_LICENSE = Apache-2.0
 KUBOS_LICENSE_FILES = LICENSE
 KUBOS_SITE = git://github.com/kubos/kubos
+KUBOS_PROVIDES = kubos-mai400
+
 KUBOS_BR_TARGET = $(lastword $(subst /, ,$(dir $(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH))))
 ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
 	KUBOS_TARGET = kubos-linux-isis-gcc
+	CARGO_TARGET = armv5te-unknown-linux-gnueabi
 else ifeq ($(KUBOS_BR_TARGET),pumpkin-mbm2)
 	KUBOS_TARGET = kubos-linux-pumpkin-mbm2-gcc
+	CARGO_TARGET = arm-unknown-linux-gnueabihf
 else ifeq ($(KUBOS_BR_TARGET),beaglebone-black)
 	KUBOS_TARGET = kubos-linux-beaglebone-gcc
+	CARGO_TARGET = arm-unknown-linux-gnueabihf
 else
 	KUBOS_TARGET = unknown
 endif
 
+CARGO_OUTPUT_DIR = target/$(CARGO_TARGET)/release
+
 # Globally link all of the modules so that Kubos packages can use them
-define KUBOS_BUILD_CMDS
+define KUBOS_CONFIGURE_CMDS
 	cd $(@D) && \
 	./tools/kubos_link.py --sys
 endef
@@ -40,5 +47,6 @@ kubos-fullclean: kubos-clean-for-reconfigure kubos-dirclean
 
 
 kubos-clean: kubos-clean-for-rebuild
+	rm -fR $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/target
 
 $(eval $(generic-package))

@@ -12,5 +12,7 @@ if BR2_PACKAGE_KUBOS
 		help
 			Release, tag, or branch of the Kubos repo to use when building Kubos
 			packages
+			
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-mai400/Config.in"
 
 endif
