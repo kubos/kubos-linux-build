@@ -1,0 +1,20 @@
+menuconfig BR2_PACKAGE_KUBOS_PUMPKIN_WDT
+    bool "Enable Pumpkin WDT Gate"
+    default n
+    help
+        If selected, allows the Pumpkin stack's watchdog supervisor
+        to trigger a reset of the MBM2 if the watchdog is starved.
+        If not selected, only the peripheral devices are reset.
+        
+if BR2_PACKAGE_KUBOS_PUMPKIN_WDT
+
+config BR2_KUBOS_PUMPKIN_WDT_INIT_LVL
+    int "WDT Enable Run Level"
+    default 10
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_WDT
+    help
+        The initialization priority level of the WDT enable script.
+        The lower the number, the earlier the script is run.
+
+endif
