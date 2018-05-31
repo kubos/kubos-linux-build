@@ -14,5 +14,7 @@ if BR2_PACKAGE_KUBOS
 			packages
 			
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-mai400/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-novatel-oem6/Config.in"
 
 endif
+
