@@ -3,6 +3,6 @@
 # Start the Pumpkin MCU service in the background 
 # passing in the location of the config.toml file 
 # (in the same directory as the service)
-python /usr/sbin/pumpkin-mcu-service/service.py /usr/sbin/pumpkin-mcu-service/config.toml &
+python /usr/sbin/pumpkin-mcu-service/service.py /home/system/etc/config.toml &
 
 exit 0
