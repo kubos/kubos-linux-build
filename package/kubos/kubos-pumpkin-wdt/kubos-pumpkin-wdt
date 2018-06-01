@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# The script has a 10 second sleep to ensure that the
+# supervisor is fully initialized before starting.
+# We don't want to hold up the other init scripts, so
+# we'll start it in the background.
+./usr/bin/pumpkin-wdt-enable.sh &
+
+exit 0
