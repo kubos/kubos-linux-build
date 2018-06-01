@@ -2,6 +2,7 @@ config BR2_PACKAGE_PYTHON_GRAPHQL_CORE
 	bool "python-graphql-core"
 	select BR2_PACKAGE_PYTHON_SIX # runtime
 	select BR2_PACKAGE_PYTHON_PROMISE # runtime
+	select BR2_PACKAGE_PYTHON_RX # runtime
 	help
 	  GraphQL implementation for Python.
 
