@@ -7,7 +7,7 @@ menuconfig BR2_PACKAGE_KUBOS_PUMPKIN_MCU
 if BR2_PACKAGE_KUBOS_PUMPKIN_MCU
 
 config BR2_KUBOS_PUMPKIN_MCU_INIT_LVL
-    int "Serive Init Run Level"
+    int "Service Init Run Level"
     default 20
     range 10 99
     depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
