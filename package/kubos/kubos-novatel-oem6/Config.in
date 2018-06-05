@@ -1,0 +1,26 @@
+menuconfig BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+    bool "NovAtel OEM6 Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_NOVATEL_OEM6
+    help
+        Include NovAtel OEM6 Kubos service.
+
+if BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+
+config BR2_KUBOS_NOVATEL_OEM6_INIT_LVL
+    int "OEM6 Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+    help
+        The initialization priority level of the OEM6 Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_NOVATEL_OEM6
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_NOVATEL_OEM6
+    string
+    default "kubos"
