@@ -5,9 +5,7 @@ menuconfig BR2_PACKAGE_KUBOS_CORE
    select BR2_PACKAGE_KUBOS_CORE_LUA
    select BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
    help
-       Include the KubOS core services. 
-       This includes things like the telemetry database service, shell service, and file transfer service.
-       If you are building a full KubOS image, this option MUST BE SELECTED.
+       Include the KubOS core services
 
 if BR2_PACKAGE_KUBOS_CORE
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-core/kubos-core-app-service/Config.in"
