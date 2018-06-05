@@ -1,0 +1,18 @@
+menuconfig BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    bool "Pumpkin MCU Service"
+    default n
+    help
+        Include the Pumpkin MCU Kubos Service.
+        
+if BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+
+config BR2_KUBOS_PUMPKIN_MCU_INIT_LVL
+    int "Service Init Run Level"
+    default 20
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        The initialization priority level of the Pumpkin MCU Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+endif
