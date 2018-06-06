@@ -10,7 +10,7 @@ KUBOS_CLYDE_3G_EPS_POST_INSTALL_TARGET_HOOKS += CLYDE_3G_EPS_INSTALL_INIT_SYSV
 
 define CLYDE_3G_EPS_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/clyde-3g-eps-service && \
-	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
+	PATH=$(PATH):~/.cargo/bin && \
 	cargo build --target $(CARGO_TARGET) --release
 endef
 
@@ -26,5 +26,10 @@ define CLYDE_3G_EPS_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-clyde-3g-eps/kubos-clyde-3g-eps \
 	    $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_CLYDE_3G_EPS_INIT_LVL)kubos-clyde-3g-eps
 endef
+
+kubos-clyde-3g-eps-cargoclean: kubos-clyde-3g-eps-dirclean
+	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/clyde-3g-eps-service && \
+	PATH=$(PATH):~/.cargo/bin && \
+	cargo clean
 
 $(eval $(virtual-package))
