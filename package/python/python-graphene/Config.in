@@ -4,7 +4,7 @@ config BR2_PACKAGE_PYTHON_GRAPHENE
 	select BR2_PACKAGE_PYTHON_GRAPHQL_CORE # runtime
 	select BR2_PACKAGE_PYTHON_GRAPHQL_RELAY # runtime
 	select BR2_PACKAGE_PYTHON_PROMISE # runtime
-	select BR2_PACKAGE_PYTHON_ISO8601
+	select BR2_PACKAGE_PYTHON_ANISO8601 # runtime
 	help
 	  GraphQL Framework for Python.
 
