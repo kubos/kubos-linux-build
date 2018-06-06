@@ -27,4 +27,9 @@ define APP_SERVICE_INSTALL_INIT_SYSV
 	    $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_CORE_APP_SERVICE_INIT_LVL)kubos-core-app-service
 endef
 
+kubos-core-app-service-cargoclean: kubos-core-app-service-dirclean
+	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/app-service && \
+	PATH=$(PATH):~/.cargo/bin && \
+	cargo clean
+
 $(eval $(virtual-package))
