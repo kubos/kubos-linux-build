@@ -10,7 +10,7 @@ KUBOS_CORE_APP_SERVICE_POST_INSTALL_TARGET_HOOKS += APP_SERVICE_INSTALL_INIT_SYS
 
 define APP_SERVICE_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/app-service && \
-	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
+	PATH=$(PATH):~/.cargo/bin && \
 	cargo build --target $(CARGO_TARGET) --release
 endef
 
