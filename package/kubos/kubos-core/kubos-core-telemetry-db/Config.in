@@ -1,0 +1,26 @@
+menuconfig BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    bool "Telemetry Database Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_CORE_TELEMETRY_DB
+    help
+        Include Kubos telemetry database service.
+
+if BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+
+config BR2_KUBOS_CORE_TELEMETRY_DB_INIT_LVL
+    int "Telemetry Database Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    help
+        The initialization priority level of the telemetry database service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_CORE_TELEMETRY_DB
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_CORE_TELEMETRY_DB
+    string
+    default "kubos"

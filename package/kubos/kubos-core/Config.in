@@ -1,0 +1,11 @@
+menuconfig BR2_PACKAGE_KUBOS_CORE
+   bool "Kubos Core Services"
+   default y
+   select BR2_PACKAGE_KUBOS_CORE_LUA
+   select BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+   help
+       Include the KubOS core services
+
+if BR2_PACKAGE_KUBOS_CORE
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-core/kubos-core-telemetry-db/Config.in"
+endif
