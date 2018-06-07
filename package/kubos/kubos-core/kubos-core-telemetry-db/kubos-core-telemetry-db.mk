@@ -10,7 +10,7 @@ KUBOS_CORE_TELEMETRY_DB_POST_INSTALL_TARGET_HOOKS += TELEMETRY_DB_INSTALL_INIT_S
 
 define TELEMETRY_DB_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/telemetry-service && \
-	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
+    PATH=$(PATH):~/.cargo/bin && \
 	cargo build --target $(CARGO_TARGET) --release
 endef
 
@@ -26,5 +26,10 @@ define TELEMETRY_DB_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-core/kubos-core-telemetry-db/kubos-core-telemetry-db \
 	    $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_CORE_TELEMETRY_DB_INIT_LVL)kubos-core-telemetry-db
 endef
+
+kubos-core-telemetry-db-cargoclean: kubos-core-telemetry-db-dirclean
+	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/telemetry-service && \
+	PATH=$(PATH):~/.cargo/bin && \
+	cargo clean
 
 $(eval $(virtual-package))
