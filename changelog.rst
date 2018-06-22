@@ -1,6 +1,25 @@
 Kubos Linux Changelog
 =====================
 
+v1.3 - Jun 21 2018
+------------------
+
+- `Added packages for Kubos core services <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-core>`__
+- `Added package for Pumpkin MBM2 WDT <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-pumpkin-wdt>`__
+- `Added package for Pumpkin MCU service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-pumpkin-mcu>`__
+- `Added package for ClydeSpace 3G EPS service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-clyde-3g-eps>`__
+- `Added package for NovAtel OEM6 service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-novatel-oem6>`__
+- `Added package for Adcole Maryland Aerospace MAI-400 service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-mai400>`__
+- `Added default config.toml file to system overlay <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/home/system/etc/config.toml>`__
+- `Upgraded Python packages to support Graphene v2.1.1 <https://github.com/kubos/kubos-linux-build/tree/master/package/python>`__
+- Upgraded Vagrant and Docker images to use `Rust 1.26 <https://blog.rust-lang.org/2018/05/10/Rust-1.26.html>`__
+
+Bug Fixes
+~~~~~~~~~
+
+- Spelled 'package' correctly to properly include setuptools
+
+
 v1.2 - Feb 26 2018
 ------------------
 
