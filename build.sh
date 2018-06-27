@@ -24,15 +24,3 @@ make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 echo "STARTING BUILD"
 
 make
-
-if [[ $board == "beaglebone-black" ] -o [ $board == "pumpkin-mbm2" ]];
-then
-	echo "Creating Aux SD image"
-	
-	cd ../kubos-linux-build/tools
-	./kubos-package.sh -t pumpkin-mbm2 -o output -v kpack-base.itb -k
-	sudo ./format-aux.sh -i kpack-base.itb
-	tar -czf aux-sd.tar.gz aux-sd.img
-	# Delete the .img file to free disk space back up
-	rm aux-sd.img
-fi
