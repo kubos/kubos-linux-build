@@ -25,11 +25,14 @@ echo "STARTING BUILD"
 
 make
 
-if [[ $board == "beaglebone-black" ]];
+if [[ $board == "beaglebone-black" ] -o [ $board == "pumpkin-mbm2" ]];
 then
-    echo "Copying beaglebone sdimage to $CIRCLE_ARTIFACTS"
-    cp ./output/images/kubos-linux.tar.gz $CIRCLE_ARTIFACTS/
-    /bin/bash ../kubos-linux-build/post.sh
-else
-    echo "The output artifacts are not configured for board \"$board\""
+	echo "Creating Aux SD image"
+	
+	cd ../kubos-linux-build/tools
+	./kubos-package.sh -t pumpkin-mbm2 -o output -v kpack-base.itb -k
+	sudo ./format-aux.sh -i kpack-base.itb
+	tar -czf aux-sd.tar.gz aux-sd.img
+	# Delete the .img file to free disk space back up
+	rm aux-sd.img
 fi

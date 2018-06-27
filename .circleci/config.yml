@@ -1,0 +1,19 @@
+version: 2
+jobs:
+    build:
+      docker:
+        - image: kubos/kubos-linux-dev:latest
+      environment:
+        KUBOS_BOARD: $KUBOS_BOARD
+      working_directory: ~/project/kubos-linux-build
+      steps:
+        - checkout
+        - run: ./build.sh | tee full_build.log
+        # Note: store_artifacts will trigger a failure when `circleci build` is run locally
+        - store_artifacts:
+            path: full_build.log
+        - store_artifacts:
+            path: buildroot-2018.02.3/output/images/kubos-linux.tar.gz
+        - store_artifacts:
+            # Only available for BBB and MBM2 target builds
+            path: kubos-linux-build/tools/aux-sd.tar.gz
