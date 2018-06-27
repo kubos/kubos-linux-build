@@ -3,8 +3,8 @@ jobs:
     build:
       docker:
         - image: kubos/kubos-linux-dev:latest
-      environment:
-        KUBOS_BOARD: $KUBOS_BOARD
+          environment:
+            KUBOS_BOARD: $KUBOS_BOARD
       working_directory: ~/project/kubos-linux-build
       steps:
         - checkout
