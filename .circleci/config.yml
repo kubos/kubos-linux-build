@@ -12,4 +12,4 @@ jobs:
         - store_artifacts:
             path: full_build.log
         - store_artifacts:
-            path: buildroot-2017.02.8/output/images/kubos-linux.tar.gz
+            path: ../buildroot-2017.02.8/output/images/kubos-linux.tar.gz
