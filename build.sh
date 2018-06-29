@@ -24,12 +24,3 @@ make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 echo "STARTING BUILD"
 
 make
-
-if [[ $board == "beaglebone-black" ]];
-then
-    echo "Copying beaglebone sdimage to $CIRCLE_ARTIFACTS"
-    cp ./output/images/kubos-linux.tar.gz $CIRCLE_ARTIFACTS/
-    /bin/bash ../kubos-linux-build/post.sh
-else
-    echo "The output artifacts are not configured for board \"$board\""
-fi
