@@ -1,0 +1,26 @@
+menuconfig BR2_PACKAGE_KUBOS_ISIS_ANTS
+    bool "ISIS Antenna Systems Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_ISIS_ANTS
+    help
+        Include ISIS AntS Kubos service.
+
+if BR2_PACKAGE_KUBOS_ISIS_ANTS
+
+config BR2_KUBOS_ISIS_ANTS_INIT_LVL
+    int "ISIS AntS Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The initialization priority level of the ISIS AntS Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_ISIS_ANTS
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_ISIS_ANTS
+    string
+    default "kubos"
