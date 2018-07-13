@@ -42,3 +42,14 @@ database = "/home/system/kubos/telemetry.db"
 [telemetry-service.addr]
 ip = "0.0.0.0"
 port = 8005
+
+[isis-ants-service.addr]
+ip = "0.0.0.0"
+port = 8006
+
+[isis-ants-service]
+bus = "KI2C1"
+primary = "0x31"
+secondary = "0x32"
+antennas = 4
+wd_timeout = 10
