@@ -77,4 +77,6 @@ rmdir ramdisk
 # Set the disk signature/identifier to be used with the partuuids
 echo -en " XUA" | dd of=aux-sd.img conv=notrunc seek=440 bs=1
 
+tar -czf aux-sd.tar.gz aux-sd.img
+
 

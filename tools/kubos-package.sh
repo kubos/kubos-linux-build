@@ -23,6 +23,12 @@ branch=master
 rootfs_sz=60000
 rflag=false
 kernel=false
+output=output
+
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+    echo "Please run script as root"
+    exit
+fi
 
 # Process command arguments
 
@@ -80,9 +86,9 @@ fi
 # Currently the image needs ~13M of space. Increase if necessary.
 dd if=/dev/zero of=${rootfs_img} bs=1K count=$rootfs_sz
 mkfs.ext4 ${rootfs_img}
-sudo mount -o loop ${rootfs_img} /mnt
-sudo tar -xf ${rootfs_tar} -C /mnt
-sudo umount /mnt
+mount -o loop ${rootfs_img} /mnt
+tar -xf ${rootfs_tar} -C /mnt
+umount /mnt
 
 # Copy the package .its file
 cp ${input} ${rootfs_dir}/
