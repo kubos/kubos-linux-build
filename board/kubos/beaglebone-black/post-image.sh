@@ -30,7 +30,6 @@ cd ${CURR_DIR}
 
 # Generate the images
 genimage \
-	--loglevel 5 \
     --rootpath "${TARGET_DIR}" \
     --tmppath "${GENIMAGE_TMP}" \
     --inputpath "${BINARIES_DIR}" \
