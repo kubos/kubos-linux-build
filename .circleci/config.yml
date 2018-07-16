@@ -8,12 +8,7 @@ jobs:
       working_directory: ~/project/kubos-linux-build
       steps:
         - checkout
-        # Build OS
         - run: ./build.sh | tee full_build.log
-        # Build base kpack file
-        - run: cd tools; ./kubos-package.sh -k -t $KUBOS_BOARD -v base
-        # Build Aux SD image
-        - run: cd tools; ./format-aux.sh
         - store_artifacts:
             path: full_build.log
             destination: full_build.log
@@ -23,3 +18,9 @@ jobs:
         - store_artifacts:
             path: tools/aux-sd.tar.gz
             destination: aux-sd.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/aux-sd.tar.gz
+            destination: aux-sd.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/kpack-base.itb
+            destination: kpack-base.itb
