@@ -84,7 +84,7 @@ fi
 
 # Create rootfs.img
 # Currently the image needs ~13M of space. Increase if necessary.
-dd if=/dev/zero of=${rootfs_img} bs=1K count=$rootfs_sz
+dd if=/dev/zero of=${rootfs_img} bs=1K count=${rootfs_sz}
 mkfs.ext4 ${rootfs_img}
 mount -o loop ${rootfs_img} /mnt
 tar -xf ${rootfs_tar} -C /mnt
