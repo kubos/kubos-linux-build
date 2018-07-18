@@ -16,6 +16,16 @@ cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
 ./kubos-kernel.sh -b ${BRANCH} -i ${BINARIES_DIR}/kubos-kernel.its -o ${OUTPUT}
 
 mv kubos-kernel.itb ${BINARIES_DIR}/kernel
+
+# Create the base upgrade file
+cp ${BOARD_DIR}/../../../tools/kpack.its ${BINARIES_DIR}/
+cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
+./kubos-package.sh -t pumpkin-mbm2 -v base
+
+mv kpack-base.itb ${TARGET_DIR}/upgrade
+
+mkdir ${TARGET_DIR}/microsd
+
 cd ${CURR_DIR}
 
 # Generate the images
@@ -28,3 +38,15 @@ genimage \
 
 # Package it all up for easy transfer
 tar -czf ${BINARIES_DIR}/kubos-linux.tar.gz -C ${BINARIES_DIR} kubos-linux.img
+tar -czf ${BINARIES_DIR}/aux-sd.tar.gz -C ${BINARIES_DIR} aux-sd.img
+
+# Clean up
+rm ${TARGET_DIR}/upgrade/*
+rmdir ${TARGET_DIR}/microsd
+
+# Removing these just to free up disk space...
+rm ${BINARIES_DIR}/user
+rm ${BINARIES_DIR}/aux-user
+rm ${BINARIES_DIR}/upgrade
+rm ${BINARIES_DIR}/kubos-linux.img
+rm ${BINARIES_DIR}/aux-sd.img

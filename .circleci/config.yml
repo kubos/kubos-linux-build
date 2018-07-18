@@ -15,3 +15,9 @@ jobs:
         - store_artifacts:
             path: ../buildroot-2017.02.8/output/images/kubos-linux.tar.gz
             destination: kubos-linux.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/aux-sd.tar.gz
+            destination: aux-sd.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/kpack-base.itb
+            destination: kpack-base.itb
