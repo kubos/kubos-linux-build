@@ -7,20 +7,23 @@ buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
 
 board="$KUBOS_BOARD"
 
-echo "Building for Board: $board"
+latest_tag=`git tag --sort=-creatordate | head -n 1`
+sed -i "s/0.0.0/$latest_tag/g" common/linux-kubos.config
+
+echo "Building $latest_tag for Board: $board"
 
 cd .. #cd out of the kubos-linux-build directory
 
 kubos update
 
-echo "getting buildroot"
+echo "Getting Buildroot"
 
-wget $buildroot_url && tar xvzf $buildroot_tar && rm $buildroot_tar
+wget $buildroot_url && tar xzf $buildroot_tar && rm $buildroot_tar
 
 cd ./buildroot*
 
 make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 
-echo "STARTING BUILD"
+echo "Starting Build"
 
 make

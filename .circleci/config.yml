@@ -1,23 +1,61 @@
 version: 2
 jobs:
-    build:
+    build_bbb:
       docker:
         - image: kubos/kubos-linux-dev:latest
           environment:
-            KUBOS_BOARD: $KUBOS_BOARD
+            KUBOS_BOARD: beaglebone-black
       working_directory: ~/project/kubos-linux-build
       steps:
         - checkout
         - run: ./build.sh | tee full_build.log
         - store_artifacts:
             path: full_build.log
-            destination: full_build.log
+            destination: Beaglebone-Black/full_build.log
         - store_artifacts:
             path: ../buildroot-2017.02.8/output/images/kubos-linux.tar.gz
-            destination: kubos-linux.tar.gz
+            destination: Beaglebone-Black/kubos-linux.tar.gz
         - store_artifacts:
             path: ../buildroot-2017.02.8/output/images/aux-sd.tar.gz
-            destination: aux-sd.tar.gz
+            destination: Beaglebone-Black/aux-sd.tar.gz
         - store_artifacts:
             path: ../buildroot-2017.02.8/output/images/kpack-base.itb
-            destination: kpack-base.itb
+            destination: Beaglebone-Black/kpack-base.itb
+    build_mbm2:
+      docker:
+        - image: kubos/kubos-linux-dev:latest
+          environment:
+            KUBOS_BOARD: pumpkin-mbm2
+      working_directory: ~/project/kubos-linux-build
+      steps:
+        - checkout
+        - run: ./build.sh | tee full_build.log
+        - store_artifacts:
+            path: full_build.log
+            destination: Pumpkin-MBM2/full_build.log
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/kubos-linux.tar.gz
+            destination: Pumpkin-MBM2/kubos-linux.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/aux-sd.tar.gz
+            destination: Pumpkin-MBM2/aux-sd.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2017.02.8/output/images/kpack-base.itb
+            destination: Pumpkin-MBM2/kpack-base.itb
+            
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build_bbb:
+          filters:
+            tags:
+              only: /^[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: master
+      - build_mbm2:
+          filters:
+            tags:
+              only: /^[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
