@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NAME=kubos-app-service
+NAME=isis-ants-service
 PROG=/usr/sbin/${NAME}
 PID=/var/run/${NAME}.pid
 

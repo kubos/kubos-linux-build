@@ -17,7 +17,7 @@ endef
 # Install the application into the rootfs file system
 define APP_SERVICE_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
-	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/app-service \
+	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/kubos-app-service \
 		$(TARGET_DIR)/usr/sbin
 endef
 
