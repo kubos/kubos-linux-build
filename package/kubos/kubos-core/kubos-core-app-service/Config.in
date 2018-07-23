@@ -1,0 +1,27 @@
+menuconfig BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+    bool "Application Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_CORE_APP_SERVICE
+    help
+        Include Kubos application service.
+
+if BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+
+config BR2_KUBOS_CORE_APP_SERVICE_INIT_LVL
+    int "App Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+    help
+        The initialization priority level of the Kubos application service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_CORE_APP_SERVICE
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_CORE_APP_SERVICE
+    string
+    default "kubos"
+    
