@@ -1,6 +1,17 @@
 Kubos Linux Changelog
 =====================
 
+v1.4 - July 23 2018
+-------------------
+
+- Added ``nc`` command to all configurations
+- `Added package for ISIS Antenna Systems service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-isis-ants`__
+- `Added package for mission applications service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-core/kubos-core-app-service>`__
+- `Added automatic auxiliary SD image generation to BBB and MBM2 build processes <https://github.com/kubos/kubos-linux-build/blob/master/board/kubos/beaglebone-black/genimage.cfg>`__
+- `Upgraded CircleCI automation config to use the 2.0 configuration format <https://github.com/kubos/kubos-linux-build/blob/master/.circleci/config.yml>`__
+
+
+
 v1.3 - Jun 21 2018
 ------------------
 
