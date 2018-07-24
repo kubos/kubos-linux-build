@@ -37,7 +37,7 @@
 			};
 		};
 		rootfs@1 {
-			data = /incbin/("./rootfs.img");
+			data = /incbin/("./rootfs.ext4");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";

@@ -20,7 +20,6 @@
 version=$(date +%Y.%m.%d)
 input=kpack.its
 branch=master
-rootfs_sz=60000
 rflag=false
 kernel=false
 output=output
@@ -35,9 +34,6 @@ fi
 while getopts "s:v:i:b:o:t:k" option
 do
     case $option in
-        s)
-	    rootfs_sz=$OPTARG
-	    ;;
 	v)
 	    version=$OPTARG
 	    ;;
@@ -71,8 +67,6 @@ then
 fi
 
 rootfs_dir=${BASE_DIR}/images
-rootfs_img=${rootfs_dir}/rootfs.img
-rootfs_tar=${rootfs_dir}/rootfs.tar
 
 # Create kernel.itb if requested
 if ${kernel}
@@ -81,15 +75,6 @@ then
     ./kubos-kernel.sh -b ${branch} -i ${BASE_DIR}/images/kubos-kernel.its -o ${output}
     cp kubos-kernel.itb ${rootfs_dir}/kernel
 fi
-
-# Create rootfs.img
-# Currently the image needs ~13M of space. Increase if necessary.
-dd if=/dev/zero of=${rootfs_img} bs=1K count=${rootfs_sz}
-mkfs.ext4 ${rootfs_img}
-mount -o loop ${rootfs_img} /mnt
-tar -xf ${rootfs_tar} -C /mnt
-umount /mnt
-
 # Copy the package .its file
 cp ${input} ${rootfs_dir}/
 input_name=$(basename ${input})
