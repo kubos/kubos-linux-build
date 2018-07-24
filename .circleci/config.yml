@@ -3,8 +3,8 @@ jobs:
     build_bbb:
       docker:
         - image: kubos/kubos-linux-dev:latest
-          environment:
-            KUBOS_BOARD: beaglebone-black
+      environment:
+        KUBOS_BOARD: beaglebone-black
       working_directory: ~/project/kubos-linux-build
       steps:
         - checkout
@@ -24,8 +24,8 @@ jobs:
     build_mbm2:
       docker:
         - image: kubos/kubos-linux-dev:latest
-          environment:
-            KUBOS_BOARD: pumpkin-mbm2
+      environment:
+        KUBOS_BOARD: pumpkin-mbm2
       working_directory: ~/project/kubos-linux-build
       steps:
         - checkout
