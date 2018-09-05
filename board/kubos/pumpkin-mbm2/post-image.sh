@@ -22,6 +22,7 @@ cp ${BOARD_DIR}/../../../tools/kpack.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
 ./kubos-package.sh -t pumpkin-mbm2 -v base
 
+cp kpack-base.itb ${BINARIES_DIR}
 mv kpack-base.itb ${TARGET_DIR}/upgrade
 
 mkdir ${TARGET_DIR}/microsd

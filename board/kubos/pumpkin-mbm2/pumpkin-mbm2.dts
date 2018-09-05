@@ -31,6 +31,11 @@
         hw_margin_ms = <200>;
         always-running;
     };
+    
+    rtc0 {
+        compatible = "st,m41t81s";
+        reg = <0x68>;
+    };
 };
 
 &am33xx_pinmux {
