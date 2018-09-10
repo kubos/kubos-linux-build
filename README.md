@@ -5,6 +5,11 @@
 Kubos uses BuildRoot as its main Linux build tool.  This repo contains the configuration and patch files required by BuildRoot to build
 Linux for each of the OBCs that Kubos supports.
 
+## Contributing
+
+Want to get your code to space? Become a contributor! 
+Come talk to us on [Slack](https://slack.kubos.co/), and check out our [Trello](https://trello.com/b/pIWxmFua/kubos-community) to see what's being worked on, what's next on the horizon, and how you can get involved! 
+
 ## Files and folders
 
 ### external.desc
