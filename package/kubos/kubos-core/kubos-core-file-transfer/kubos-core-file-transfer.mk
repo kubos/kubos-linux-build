@@ -11,7 +11,7 @@ KUBOS_CORE_FILE_TRANSFER_POST_INSTALL_TARGET_HOOKS += FILE_TRANSFER_INSTALL_INIT
 define FILE_TRANSFER_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/file-service && \
     PATH=$(PATH):~/.cargo/bin && \
-	cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system
