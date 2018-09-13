@@ -9,7 +9,7 @@ menuconfig BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
 if BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
 
 config BR2_KUBOS_CORE_TELEMETRY_DB_INIT_LVL
-    int "Telemetry Database Service Run Level"
+    int "Telemetry Database Service Init Level"
     default 90
     range 10 99
     depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
