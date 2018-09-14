@@ -1,6 +1,7 @@
 menuconfig BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
     bool "Telemetry Database Service"
     default n
+    select BR2_PACKAGE_SQLITE
     select BR2_PACKAGE_HAS_KUBOS_CORE_TELEMETRY_DB
     help
         Include Kubos telemetry database service.
