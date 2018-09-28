@@ -1,6 +1,15 @@
 Kubos Linux Changelog
 =====================
 
+v1.6 - September 28 2018
+------------------------
+
+- `Added a community Trello board for contributors and KubOS team members <https://trello.com/b/pIWxmFua/kubos-community>`__
+- `Added telemetry database service's direct UDP port configuration to the default config.toml file <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/home/system/etc/config.toml>`__
+- Added ``CC`` envar to all Rust package makefiles
+- `Added package for file transfer service in Rust <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-core/kubos-core-file-transfer>`__
+- Updated applications service init script to trigger the OnBoot logic of all applications
+
 v1.4 - July 23 2018
 -------------------
 
