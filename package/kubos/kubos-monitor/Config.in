@@ -1,0 +1,28 @@
+menuconfig BR2_PACKAGE_KUBOS_MONITOR
+    bool "Monitor Service"
+    default y
+    select BR2_PACKAGE_HAS_KUBOS_MONITOR
+    help
+        Include Kubos monitor service.
+        
+        This service provides the ability to query the OBC's current processes and memory usage
+
+if BR2_PACKAGE_KUBOS_MONITOR
+
+config BR2_KUBOS_MONITOR_INIT_LVL
+    int "Monitor Service Init Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_MONITOR
+    help
+        The initialization priority level of the Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_MONITOR
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_MONITOR
+    string
+    default "kubos"

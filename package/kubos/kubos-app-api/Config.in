@@ -1,0 +1,10 @@
+config BR2_PACKAGE_KUBOS_APP_API
+    bool "Python App API"
+    default y
+    depends on BR2_PACKAGE_PYTHON
+    select BR2_PACKAGE_PYTHON_TOML
+    help
+        Include the Kubos app API for Python.
+        
+        This API simplifies the process of communicating with Kubos services.
+        It should be included if you intend to write mission applications using Python.
