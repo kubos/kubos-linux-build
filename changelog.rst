@@ -1,8 +1,17 @@
 Kubos Linux Changelog
 =====================
 
-v1.6 - September 28 2018
-------------------------
+v1.7 - Oct 12 2018
+------------------
+
+- `Added config info for the file transfer service to the default config.toml file <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/home/system/etc/config.toml>`__
+- `Added package for monitor service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-monitor>`__
+- `Added package for Python app API <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-app-api>`__
+- `Added package for Python I2C HAL <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-hal-i2c>`__
+- `Added package for Python service library <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-service-lib>`__
+
+v1.6 - Sept 28 2018
+-------------------
 
 - `Added a community Trello board for contributors and KubOS team members <https://trello.com/b/pIWxmFua/kubos-community>`__
 - `Added telemetry database service's direct UDP port configuration to the default config.toml file <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/home/system/etc/config.toml>`__
