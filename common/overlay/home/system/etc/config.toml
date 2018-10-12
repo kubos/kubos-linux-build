@@ -55,6 +55,9 @@ secondary = "0x32"
 antennas = 4
 wd_timeout = 10
 
+[file-transfer-service]
+storage_dir = "/home/system/file-storage"
+
 [file-transfer-service.addr]
 ip = "0.0.0.0"
 port = 8008
