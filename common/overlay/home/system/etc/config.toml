@@ -38,14 +38,15 @@ port = 8004
 
 [telemetry-service]
 database = "/home/system/kubos/telemetry.db"
+direct_port = 8005
 
 [telemetry-service.addr]
 ip = "0.0.0.0"
-port = 8005
+port = 8006
 
 [isis-ants-service.addr]
 ip = "0.0.0.0"
-port = 8006
+port = 8007
 
 [isis-ants-service]
 bus = "KI2C1"
@@ -53,3 +54,14 @@ primary = "0x31"
 secondary = "0x32"
 antennas = 4
 wd_timeout = 10
+
+[file-transfer-service]
+storage_dir = "/home/system/file-storage"
+
+[file-transfer-service.addr]
+ip = "0.0.0.0"
+port = 8008
+
+[monitor-service.addr]
+ip = "0.0.0.0"
+port = 8009

@@ -13,7 +13,13 @@ if BR2_PACKAGE_KUBOS
 			Release, tag, or branch of the Kubos repo to use when building Kubos
 			packages
 
+    
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-core/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-monitor/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-app-api/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-hal-i2c/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-service-lib/Config.in"
+    
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-clyde-3g-eps/Config.in"
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-isis-ants/Config.in"  	
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/kubos/kubos-mai400/Config.in"

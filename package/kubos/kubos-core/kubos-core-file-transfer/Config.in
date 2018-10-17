@@ -1,0 +1,26 @@
+menuconfig BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
+    bool "File Transfer Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_CORE_FILE_TRANSFER
+    help
+        Include Kubos file transfer service.
+
+if BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
+
+config BR2_KUBOS_CORE_FILE_TRANSFER_INIT_LVL
+    int "File Transfer Service Init Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
+    help
+        The initialization priority level of the file transfer service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_CORE_FILE_TRANSFER
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_CORE_FILE_TRANSFER
+    string
+    default "kubos"

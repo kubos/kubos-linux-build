@@ -11,7 +11,7 @@ KUBOS_CORE_APP_SERVICE_POST_INSTALL_TARGET_HOOKS += APP_SERVICE_INSTALL_INIT_SYS
 define APP_SERVICE_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/app-service && \
 	PATH=$(PATH):~/.cargo/bin && \
-	cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system

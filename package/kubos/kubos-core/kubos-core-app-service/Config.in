@@ -8,7 +8,7 @@ menuconfig BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
 if BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
 
 config BR2_KUBOS_CORE_APP_SERVICE_INIT_LVL
-    int "App Service Run Level"
+    int "App Service Init Level"
     default 90
     range 10 99
     depends on BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
