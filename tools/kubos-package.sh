@@ -26,7 +26,7 @@ output=output
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo "Please run script as root"
-    #exit
+    exit
 fi
 
 # Process command arguments
