@@ -44,8 +44,8 @@ arm-linux-strip ${BINARY}
 /home/vagrant/.kubos/kubos/target/debug/file-client upload manifest.toml ${TARGET_DIR}/manifest.toml -r ${1} -p 8008
 
 # Register the app with the applications service
-RESPONSE=$(echo "mutation { register(path: \"${TARGET_DIR}\"){ active, app { uuid } } }" | nc -uw1 ${1} 8000)
-if ! [[ "${RESPONSE}" =~ "\"active\":true" ]]; then
+RESPONSE=$(echo "mutation { register(path: \"${TARGET_DIR}\"){ success, errors, entry { app { uuid } } } }" | nc -uw1 ${1} 8000)
+if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mApp registration failed. Response: ${RESPONSE}\033[0m" >&2
 fi
 
@@ -53,8 +53,8 @@ fi
 UUID=$(echo `expr match "${RESPONSE}" '.*\([[:alnum:]]\{8\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{12\}\)'`)
 
 # Run the tests
-RESPONSE=$(echo "mutation { startApp(uuid: \"${UUID}\", runLevel: \"OnCommand\") }" | nc -uw1 ${1} 8000)
-if ! [[ "${RESPONSE}" =~ "\"errs\":\"\"" ]]; then
+RESPONSE=$(echo "mutation { startApp(uuid: \"${UUID}\", runLevel: \"OnCommand\") { success, errors }}" | nc -uw1 ${1} 8000)
+if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to start app. Response: ${RESPONSE}\033[0m" >&2
 fi
 
@@ -64,8 +64,8 @@ fi
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
-RESPONSE=$(echo "mutation { uninstall(uuid: \"${UUID}\", version: \"1.0\") }" | nc -uw1 ${1} 8000)
-if ! [[ "${RESPONSE}" =~ "{\"uninstall\":true}" ]]; then
+RESPONSE=$(echo "mutation { uninstall(uuid: \"${UUID}\", version: \"1.0\") { success, errors } }" | nc -uw1 ${1} 8000)
+if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to uninstall app. Response: ${RESPONSE}\033[0m" >&2
 fi
 $PASS ssh kubos@$1 'rm release-test -R'
