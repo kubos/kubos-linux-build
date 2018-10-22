@@ -51,18 +51,14 @@ mod telem_service;
 
 impl AppHandler for MyApp {
     fn on_boot(&self, _args: Vec<String>) {
-        loop {
-            // Set up the log file
-            let mut log_file = OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(LOGFILE)
-                .unwrap();
-                
-            log!(log_file, "OnBoot logic called");
+        // Set up the log file
+        let mut log_file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(LOGFILE)
+            .unwrap();
             
-            thread::sleep(Duration::from_secs(300));
-        }
+        log!(log_file, "OnBoot logic called");
     }
 
     fn on_command(&self, _args: Vec<String>) {

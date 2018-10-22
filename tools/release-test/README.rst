@@ -13,6 +13,12 @@ Pre-Requisites
 
     - `sudo apt-get install sshpass`
 
+.. note::
+
+    The test script is currently configured to run on either a Beaglebone Black or a Pumpkin MBM2.
+    If support for another OBC is added in the future, the script will need to be updated to support
+    a configurable target/toolchain.
+
 Usage
 -----
 
