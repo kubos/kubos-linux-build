@@ -3,7 +3,8 @@ menuconfig BR2_PACKAGE_KUBOS_PUMPKIN_MCU
     default n
     depends on BR2_PACKAGE_PYTHON
     select BR2_PACKAGE_PYTHON_GRAPHENE
-    select BR2_PACAKGE_KUBOS_SERVICE_LIB
+    select BR2_PACKAGE_KUBOS_SERVICE_LIB
+    select BR2_PACKAGE_KUBOS_PUMPKIN_MCU_API
     help
         Include the Pumpkin MCU Kubos Service.
         
