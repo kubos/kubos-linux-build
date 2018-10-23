@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *	 http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,24 +21,24 @@
 	model = "Pumpkin MBM2";
 	compatible = "pumpkin,mbm2", "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 
-    watchdog {
-        pinctrl-names = "default";
-        pinctrl-0 = <&wdt_pins>;
-        compatible = "linux,wdt-gpio";
-        /* Note: This pin is configurable, so may differ between stacks */
-        gpios = <&gpio2 22 GPIO_ACTIVE_LOW>;
-        hw_algo = "toggle";
-        hw_margin_ms = <200>;
-        always-running;
-    };
+	watchdog {
+		pinctrl-names = "default";
+		pinctrl-0 = <&wdt_pins>;
+		compatible = "linux,wdt-gpio";
+		/* Note: This pin is configurable, so may differ between stacks */
+		gpios = <&gpio2 22 GPIO_ACTIVE_LOW>;
+		hw_algo = "toggle";
+		hw_margin_ms = <200>;
+		always-running;
+	};
 };
 
 &am33xx_pinmux {
-    wdt_pins: pinmux_wdt_pins {
-        pinctrl-single,pins = <
-            0x0e0 (PIN_OUTPUT | MUX_MODE7)  /* H2.24 */
-        >;
-    };
+	wdt_pins: pinmux_wdt_pins {
+		pinctrl-single,pins = <
+			0x0e0 (PIN_OUTPUT | MUX_MODE7)  /* H2.24 */
+		>;
+	};
 
 	uart1_pins: pinmux_uart1_pins {
 		pinctrl-single,pins = <
@@ -102,6 +102,11 @@
 	clock-frequency = <100000>;
 
 	status = "okay";
+	
+	rtc0@68 {
+		compatible = "st,m41t81s";
+		reg = <0x68>;
+	};
 };
 
 &i2c2 {
@@ -142,17 +147,17 @@
 &spi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi1_pins>;
-        ti,spi-num-cs = <1>;
-        cs-gpios = <&gpio3 17 0>;
+	ti,spi-num-cs = <1>;
+	cs-gpios = <&gpio3 17 0>;
 
 	status = "okay";
 
 	/* This will be replaced with the SD over SPI definition in the future */
-        spidev@1 {
+	spidev@1 {
 		spi-max-frequency = <24000000>;
 		reg = <0>;
 		compatible = "spidev";
-        };
+	};
 };
 
 &tscadc {
