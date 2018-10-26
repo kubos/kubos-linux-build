@@ -1,0 +1,10 @@
+[package]
+name = "release-test"
+version = "0.1.0"
+authors = ["Catherine Garabedian <catherine@kubos.co>"]
+
+[dependencies]
+chrono = "0.4"
+failure = "0.1.2"
+getopts = "0.2"
+kubos-app = { git = "https://github.com/kubos/kubos" }
