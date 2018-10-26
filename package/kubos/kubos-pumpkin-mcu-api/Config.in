@@ -1,0 +1,7 @@
+config BR2_PACKAGE_KUBOS_PUMPKIN_MCU_API
+    bool "Pumpkin MCU Python API"
+    default n
+    depends on BR2_PACKAGE_PYTHON
+    help
+        Include the Pumpkin MCU API for Python.
+
