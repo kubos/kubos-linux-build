@@ -2,8 +2,8 @@
 
 ## Overview
 
-Kubos uses BuildRoot as its main Linux build tool.  This repo contains the configuration and patch files required by BuildRoot to build
-Linux for each of the OBCs that Kubos supports.
+Make sure you check out our [documentation for KubOS](https://docs.kubos.com) before diving straight into Kubos Linux! 
+Kubos uses BuildRoot as its main Linux build tool.  This repo contains the configuration and patch files required by BuildRoot to build Linux for each of the OBCs that Kubos supports.
 
 ## Contributing
 
