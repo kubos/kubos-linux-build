@@ -24,24 +24,41 @@ LOG_FILE=${TARGET_DIR}/test-output
 TELEM_FILE=telem-results
 TELEM_PATH=${TARGET_DIR}/${TELEM_FILE}.tar.gz
 
-# Test Setup
-# TODO: Replace with shell client command
-$PASS ssh kubos@$1 "mkdir -p ${TARGET_DIR}"
+FILE_CLIENT=/home/vagrant/.kubos/kubos/target/debug/file-client
+SHELL_CLIENT=/home/vagrant/.kubos/kubos/target/debug/kubos-shell-client
 
-# Pre-build the file transfer client
+# Pre-build the file transfer and shell clients
 kubos use -b master
 cd /home/vagrant/.kubos/kubos/clients/file-client
 git pull origin master
 cargo build
+cd ../kubos-shell-client
+cargo build
 cd ${DIR}
+
+# Setup a shell session for us to use
+RESPONSE=$(${SHELL_CLIENT} -i ${1} -p 8010 start << EOT
+EOT
+)
+
+CHANNEL_LINE=$(echo "${RESPONSE}" | grep "Starting shell session")
+# Save our shell session's channel ID for later
+CHANNEL_ID=$(echo ${CHANNEL_LINE:26})
+
+# Setup the test directory on the target OBC
+RESPONSE=$(${SHELL_CLIENT} -i ${1} -p 8010 join -c ${CHANNEL_ID} << EOT
+cd /home/kubos
+mkdir -p ${TARGET_DIR}
+EOT
+)
 
 # Build our test project
 CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo build --release --target arm-unknown-linux-gnueabihf
 arm-linux-strip ${BINARY}
 
 # Transfer our test binary to the OBC
-/home/vagrant/.kubos/kubos/target/debug/file-client upload ${BINARY} ${TARGET_DIR}/release-test -r ${1} -p 8008
-/home/vagrant/.kubos/kubos/target/debug/file-client upload manifest.toml ${TARGET_DIR}/manifest.toml -r ${1} -p 8008
+${FILE_CLIENT} upload ${BINARY} ${TARGET_DIR}/release-test -r ${1} -p 8008
+${FILE_CLIENT} upload manifest.toml ${TARGET_DIR}/manifest.toml -r ${1} -p 8008
 
 # Register the app with the applications service
 RESPONSE=$(echo "mutation { register(path: \"${TARGET_DIR}\"){ success, errors, entry { app { uuid } } } }" | nc -uw1 ${1} 8000)
@@ -59,8 +76,8 @@ if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
 fi
 
 # Get our results
-/home/vagrant/.kubos/kubos/target/debug/file-client download ${LOG_FILE} -r ${1} -p 8008
-/home/vagrant/.kubos/kubos/target/debug/file-client download ${TELEM_PATH} -r ${1} -p 8008
+${FILE_CLIENT} download ${LOG_FILE} -r ${1} -p 8008
+${FILE_CLIENT} download ${TELEM_PATH} -r ${1} -p 8008
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
@@ -68,7 +85,13 @@ RESPONSE=$(echo "mutation { uninstall(uuid: \"${UUID}\", version: \"1.0\") { suc
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to uninstall app. Response: ${RESPONSE}\033[0m" >&2
 fi
-$PASS ssh kubos@$1 'rm release-test -R'
+
+IGNORE=$(${SHELL_CLIENT} -i ${1} -p 8010 join -c ${CHANNEL_ID} << EOT
+rm release-test -R
+EOT
+)
+
+IGNORE=$(${SHELL_CLIENT} -i ${1} -p 8010 kill -c ${CHANNEL_ID})
 
 # The grep command will fail if there are no results. We need to not bail when we hit the error so
 # we can print a message
