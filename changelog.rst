@@ -1,6 +1,21 @@
 Kubos Linux Changelog
 =====================
 
+v1.8 - Nov 9 2018
+-----------------
+
+- `Added package for Pumpkin MCU API <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-pumpkin-mcu-api>`__
+- `Added package for shell service in Rust <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-core/kubos-core-shell>`__
+- Removing remaining Kubos Core Lua components
+- `Added support for the Pumpkin MBM2's RTC chip <https://docs.kubos.com/latest/os-docs/working-with-the-mbm2.html#rtc>`__
+- `Added a release candidate test to more easily verify new KubOS releases <https://github.com/kubos/kubos-linux-build/tree/master/tools/release-test>`__
+
+Bug Fixes
+~~~~~~~~~
+
+- `Updating the default file transfer service storage directory <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/home/system/etc/config.toml>`__
+
+
 v1.7 - Oct 12 2018
 ------------------
 
