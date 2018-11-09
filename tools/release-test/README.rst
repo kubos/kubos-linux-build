@@ -9,9 +9,6 @@ Pre-Requisites
 
 - Load the release candidate onto an OBC which has an ethernet connection
 - Script must be run from this directory from within an instance of the Kubos SDK
-- Install `sshpass` (needed until the shell client is completed)
-
-    - `sudo apt-get install sshpass`
 
 .. note::
 
