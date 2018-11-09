@@ -1,0 +1,26 @@
+menuconfig BR2_PACKAGE_KUBOS_CORE_SHELL
+    bool "Shell Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_CORE_SHELL
+    help
+        Include Kubos shell service.
+
+if BR2_PACKAGE_KUBOS_CORE_SHELL
+
+config BR2_KUBOS_CORE_SHELL_INIT_LVL
+    int "Shell Service Init Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_CORE_SHELL
+    help
+        The initialization priority level of the shell service.
+        The lower the number, the earlier the service is initialized.
+
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_CORE_SHELL
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_CORE_SHELL
+    string
+    default "kubos"

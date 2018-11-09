@@ -1,5 +1,0 @@
-menuconfig BR2_PACKAGE_KUBOS_CORE_LUA
-    bool
-    default n
-    help
-        Include the Kubos core services which are written in Lua.
