@@ -22,11 +22,11 @@ extern crate kubos_app;
 
 use app_service::*;
 use chrono::Utc;
+use failure::Error;
 use kubos_app::{AppHandler, ServiceConfig};
 use monitor_service::*;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::thread;
 use std::time::Duration;
 use telem_service::*;
 
@@ -50,30 +50,35 @@ mod monitor_service;
 mod telem_service;
 
 impl AppHandler for MyApp {
-    fn on_boot(&self, _args: Vec<String>) {
+    fn on_boot(&self, _args: Vec<String>) -> Result<(), Error> {
         // Set up the log file
         let mut log_file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(LOGFILE)
-            .unwrap();
+            .open(LOGFILE)?;
             
         log!(log_file, "OnBoot logic called");
+        
+        Ok(())
     }
 
-    fn on_command(&self, _args: Vec<String>) {
+    fn on_command(&self, _args: Vec<String>) -> Result<(), Error> {
         // Monitor Service Tests
-        monitor_test().unwrap();
+        monitor_test()?;
         
         // Telemetry Service Tests
-        telemetry_test().unwrap();
+        telemetry_test()?;
 
         // App Service Tests
-        apps_test().unwrap();
+        apps_test()?;
+        
+        Ok(())
     }
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let app = MyApp;
-    app_main!(&app);
+    app_main!(&app)?;
+    
+    Ok(())
 }
