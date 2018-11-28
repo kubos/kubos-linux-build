@@ -7,5 +7,5 @@ iface sl0 inet static
         address 192.168.0.2
         netmask 255.255.255.0
         pointopoint 192.168.0.1
-        pre-up slattach -s 115200 -p cslip -L /dev/ttyS0 &
+        pre-up slattach -s 115200 -p cslip -FL /dev/ttyS0 &
         post-up route add 192.168.0.2 dev lo
