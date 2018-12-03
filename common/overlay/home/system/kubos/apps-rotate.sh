@@ -16,10 +16,14 @@
 #
 # Rotate mission application log files
 
+# Maximum number of archive files to maintain for any particular log file
+MAX_COUNT=5
+
 # Check how many archive files we have for this log
-COUNT=$(find /var/log/apps/ -maxdepth 1 -name "$1.*" | wc -l)
-# If five, delete the oldest one
-if [[ ${COUNT} -gt 4 ]]
+ARCHIVE_COUNT=$(find /var/log/apps/ -maxdepth 1 -name "$1.*" | wc -l)
+
+# If at the max limit, delete the oldest one
+if [[ ${ARCHIVE_COUNT} -ge ${MAX_COUNT} ]]
 then
         OLDEST=$(find /var/log/apps/ -maxdepth 1 -name "$1.*" | sort -r | tail -n1)
         rm -rf "$OLDEST"
