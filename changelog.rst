@@ -1,6 +1,12 @@
 Kubos Linux Changelog
 =====================
 
+v1.9 - Dec 6 2018
+-----------------
+
+- Adding `rsyslog <https://www.rsyslog.com/>`__ logging support to all boards
+- `Adding SLIP support to all boards <https://docs.kubos.com/latest/os-docs/using-kubos-linux.html#slip>`__
+
 v1.8 - Nov 9 2018
 -----------------
 
