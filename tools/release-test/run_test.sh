@@ -45,8 +45,8 @@ CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo build --release --target a
 arm-linux-strip ${BINARY}
 
 # Transfer our test binary to the OBC
-kubos-file-client upload ${BINARY} ${TARGET_DIR}/release-test -r ${1} -p 8008
-kubos-file-client upload manifest.toml ${TARGET_DIR}/manifest.toml -r ${1} -p 8008
+kubos-file-client -r ${1} -p 8008 upload ${BINARY} ${TARGET_DIR}/release-test
+kubos-file-client -r ${1} -p 8008 upload manifest.toml ${TARGET_DIR}/manifest.toml
 
 # Register the app with the applications service
 RESPONSE=$(echo "mutation { register(path: \"${TARGET_DIR}\"){ success, errors, entry { app { uuid } } } }" | nc -uw1 ${1} 8000)
@@ -64,8 +64,8 @@ if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
 fi
 
 # Get our results
-kubos-file-client download ${LOG_FILE} -r ${1} -p 8008
-kubos-file-client download ${TELEM_PATH} -r ${1} -p 8008
+kubos-file-client -r ${1} -p 8008 download ${LOG_FILE}
+kubos-file-client -r ${1} -p 8008 download ${TELEM_PATH}
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
