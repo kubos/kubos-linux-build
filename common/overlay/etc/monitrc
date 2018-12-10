@@ -1,0 +1,3 @@
+SET DAEMON 10
+SET LOGFILE SYSLOG
+INCLUDE /etc/monit.d/*.cfg

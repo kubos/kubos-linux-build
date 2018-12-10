@@ -15,6 +15,26 @@ config BR2_KUBOS_CORE_FILE_TRANSFER_INIT_LVL
     help
         The initialization priority level of the file transfer service.
         The lower the number, the earlier the service is initialized.
+        
+config BR2_KUBOS_CORE_FILE_TRANSFER_RESTART_COUNT
+    int "File Transfer Service Restart Limit"
+    default 3
+    depends on BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
+    depends on BR2_PACKAGE_MONIT
+    help
+        The maximum number of times the service should be restarted within the timeframe
+        specified by BR2_KUBOS_CORE_FILE_TRANSFER_RESTART_CYCLES if it goes down
+
+config BR2_KUBOS_CORE_FILE_TRANSFER_RESTART_CYCLES
+    int "File Transfer Service Restart Limit Timeframe"
+    default 10
+    depends on BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
+    depends on BR2_PACKAGE_MONIT
+    help
+        The timeframe in which the maximum number of service restarts must occur in order
+        for the system to stop trying to recover the service.
+        
+        Equal to this number times the length of a single Monit sleep cycle (in seconds)
 
 endif
 
