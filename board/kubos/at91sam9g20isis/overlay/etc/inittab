@@ -20,10 +20,6 @@
 ::sysinit:/bin/mkdir -p /dev/pts
 ::sysinit:/bin/mkdir -p /dev/shm
 ::sysinit:/bin/mount -a
-# Mount the Kubos directories which use partuuid
-::sysinit:/bin/mount /home
-::sysinit:/bin/mount /home/microsd
-::sysinit:/bin/mount /upgrade
 # Setup hostname
 ::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
