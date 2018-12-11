@@ -1,4 +1,8 @@
+# Have our normal init system start Monit at boot
 SET INIT
+# Run Monit as a background daemon, waking every 10 seconds to perform its process monitoring
 SET DAEMON 10
+# Have all Monit output messages routed through syslog (goes to /var/log/apps)
 SET LOGFILE SYSLOG
+# Include all our other Monit configuration files
 INCLUDE /etc/monit.d/*.cfg
