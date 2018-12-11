@@ -1,0 +1,10 @@
+# Have our normal init system start Monit at boot
+SET INIT
+# Run Monit as a background daemon, waking every 10 seconds to perform its process monitoring
+SET DAEMON 10
+# Set up our log file
+SET LOGFILE /var/log/monit.log
+CHECK FILE monit PATH /var/log/monit.log
+    IF SIZE > 1 MB THEN EXEC "/home/system/kubos/system-rotate.sh monit.log"
+# Include all our other Monit configuration files
+INCLUDE /etc/monit.d/*.cfg

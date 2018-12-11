@@ -36,10 +36,15 @@ define KUBOS_CONFIGURE_CMDS
 	./tools/kubos_link.py --sys
 endef
 
+define KUBOS_INSTALL_TARGET_CMDS
+	mkdir -p $(TARGET_DIR)/etc/monit.d
+endef
+
 kubos-deepclean:
 	rm -fR $(BUILD_DIR)/kubos-*
 	rm -f $(DL_DIR)/kubos-*
 	rm -f $(TARGET_DIR)/etc/init.d/*kubos*
+	rm -f $(TARGET_DIR)/etc/monit.d/kubos*
 
 kubos-fullclean: kubos-clean-for-reconfigure kubos-dirclean
 	rm -f $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/.stamp_downloaded

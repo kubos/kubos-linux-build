@@ -19,6 +19,11 @@ define APP_SERVICE_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/kubos-app-service \
 		$(TARGET_DIR)/usr/sbin
+
+    echo 'CHECK PROCESS kubos-app-service PIDFILE /var/run/kubos-app-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-app-service.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_CORE_APP_SERVICE_INIT_LVL}kubos-core-app-service start"' >> $(TARGET_DIR)/etc/monit.d/kubos-app-service.cfg 
+    echo '    IF ${BR2_KUBOS_CORE_APP_SERVICE_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_CORE_APP_SERVICE_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-app-service.cfg  
 endef
 
 # Install the init script

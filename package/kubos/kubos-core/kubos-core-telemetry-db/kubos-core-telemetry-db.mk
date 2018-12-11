@@ -19,6 +19,11 @@ define TELEMETRY_DB_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/telemetry-service \
 		$(TARGET_DIR)/usr/sbin
+		
+    echo 'CHECK PROCESS kubos-telemetry-db PIDFILE /var/run/telemetry-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-telemetry-db.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_CORE_TELEMETRY_DB_INIT_LVL}kubos-core-telemetry-db start"' >> $(TARGET_DIR)/etc/monit.d/kubos-telemetry-db.cfg 
+    echo '    IF ${BR2_KUBOS_CORE_TELEMETRY_DB_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_CORE_TELEMETRY_DB_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-telemetry-db.cfg  
 endef
 
 # Install the init script

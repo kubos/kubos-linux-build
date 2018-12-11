@@ -19,6 +19,11 @@ define FILE_TRANSFER_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/file-service \
 		$(TARGET_DIR)/usr/sbin
+		
+    echo 'CHECK PROCESS file-service PIDFILE /var/run/file-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-file-service.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_CORE_FILE_TRANSFER_INIT_LVL}kubos-core-file-transfer start"' >> $(TARGET_DIR)/etc/monit.d/kubos-file-service.cfg 
+    echo '    IF ${BR2_KUBOS_CORE_FILE_TRANSFER_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_CORE_FILE_TRANSFER_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-file-service.cfg  
 endef
 
 # Install the init script

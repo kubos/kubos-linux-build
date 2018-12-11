@@ -19,6 +19,11 @@ define SHELL_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/shell-service \
 		$(TARGET_DIR)/usr/sbin
+		
+    echo 'CHECK PROCESS kubos-shell-service PIDFILE /var/run/shell-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-shell-service.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_CORE_SHELL_INIT_LVL}kubos-core-shell start"' >> $(TARGET_DIR)/etc/monit.d/kubos-shell-service.cfg 
+    echo '    IF ${BR2_KUBOS_CORE_SHELL_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_CORE_SHELL_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-shell-service.cfg
 endef
 
 # Install the init script

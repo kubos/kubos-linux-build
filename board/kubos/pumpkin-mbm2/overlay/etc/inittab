@@ -28,6 +28,8 @@
 ::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
 ::sysinit:/etc/init.d/rcS
+# Run Monit in standard run-levels
+::respawn:/usr/bin/monit -Ic /etc/monitrc
 
 # Put a getty on the serial port
 ttyS0::respawn:/sbin/getty -L  ttyS0 115200 vt100 # GENERIC_SERIAL
