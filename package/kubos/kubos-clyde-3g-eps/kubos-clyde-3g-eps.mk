@@ -19,6 +19,11 @@ define CLYDE_3G_EPS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/clyde-3g-eps-service \
 		$(TARGET_DIR)/usr/sbin
+		
+    echo 'CHECK PROCESS kubos-clyde-3g-eps PIDFILE /var/run/clyde-3g-eps-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-clyde-3g-eps.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_CLYDE_3G_EPS_INIT_LVL}kubos-clyde-3g-eps start"' >> $(TARGET_DIR)/etc/monit.d/kubos-clyde-3g-eps.cfg 
+    echo '    IF ${BR2_KUBOS_CLYDE_3G_EPS_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_CLYDE_3G_EPS_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-clyde-3g-eps.cfg 
 endef
 
 # Install the init script

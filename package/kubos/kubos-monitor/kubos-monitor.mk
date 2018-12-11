@@ -19,6 +19,11 @@ define MONITOR_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/monitor-service \
 		$(TARGET_DIR)/usr/sbin
+				
+    echo 'CHECK PROCESS kubos-monitor PIDFILE /var/run/monitor-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-monitor.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_MONITOR_INIT_LVL}kubos-monitor start"' >> $(TARGET_DIR)/etc/monit.d/kubos-monitor.cfg 
+    echo '    IF ${BR2_KUBOS_MONITOR_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_MONITOR_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-monitor.cfg 
 endef
 
 # Install the init script

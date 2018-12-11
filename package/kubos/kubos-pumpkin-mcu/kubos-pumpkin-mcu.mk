@@ -20,6 +20,11 @@ endef
 define KUBOS_PUMPKIN_MCU_INSTALL_INIT_SYSV
     $(INSTALL) -D -m 0755 $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-pumpkin-mcu/kubos-pumpkin-mcu \
         $(TARGET_DIR)/etc/init.d/S$(BR2_KUBOS_PUMPKIN_MCU_INIT_LVL)kubos-pumpkin-mcu
+        		
+    echo 'CHECK PROCESS kubos-pumpkin-mcu PIDFILE /var/run/TODO.pid' > $(TARGET_DIR)/etc/monit.d/kubos-pumpkin-mcu.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_PUMPKIN_MCU_INIT_LVL}kubos-pumpkin-mcu"' >> $(TARGET_DIR)/etc/monit.d/kubos-pumpkin-mcu.cfg 
+    echo '    IF ${BR2_KUBOS_PUMPKIN_MCU_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_PUMPKIN_MCU_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-pumpkin-mcu.cfg 
 endef
 
 $(eval $(generic-package))

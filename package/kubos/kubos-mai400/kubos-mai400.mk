@@ -19,6 +19,11 @@ define MAI400_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/mai400-service \
 		$(TARGET_DIR)/usr/sbin
+		
+    echo 'CHECK PROCESS kubos-mai400 PIDFILE /var/run/mai400-service.pid' > $(TARGET_DIR)/etc/monit.d/kubos-mai400.cfg
+    echo '    START PROGRAM = "/etc/init.d/S${BR2_KUBOS_MAI400_INIT_LVL}kubos-mai400 start"' >> $(TARGET_DIR)/etc/monit.d/kubos-mai400.cfg 
+    echo '    IF ${BR2_KUBOS_MAI400_RESTART_COUNT} RESTART WITHIN ${BR2_KUBOS_MAI400_RESTART_CYCLES} CYCLES THEN TIMEOUT' \
+    >> $(TARGET_DIR)/etc/monit.d/kubos-mai400.cfg
 endef
 
 # Install the init script
