@@ -17,5 +17,8 @@ CHECK FILE monit PATH /var/log/monit.log
 SET HTTPD PORT 7000
     ALLOW kubos/Kubos123
     
-# Include all our other Monit configuration files
+# Include all other Kubos Monit configuration files
 INCLUDE /etc/monit.d/*.cfg
+
+# Include all other user Monit configuration files
+INCLUDE /home/system/etc/monit.d/*.cfg
