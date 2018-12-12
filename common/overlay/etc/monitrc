@@ -15,7 +15,7 @@ CHECK FILE monit PATH /var/log/monit.log
 
 # Enable the HTTP connection so that we can use Monit's CLI to collect status information
 SET HTTPD PORT 7000
-    ALLOW kubos/Kubos123
+    ALLOW kubos:Kubos123
     
 # Include all other Kubos Monit configuration files
 INCLUDE /etc/monit.d/*.cfg
