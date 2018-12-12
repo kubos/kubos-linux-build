@@ -1,8 +1,8 @@
 # Have our normal init system start Monit at boot
 SET INIT
 
-# Run Monit as a background daemon, waking every 10 seconds to perform its process monitoring
-SET DAEMON 10
+# Run Monit as a background daemon, waking every 60 seconds to perform its process monitoring
+SET DAEMON 60
 
 # Put Monit's statefile into non-persistent storage so that way it will attempt to monitor any
 # services which previously failed too many times after a system reboot
