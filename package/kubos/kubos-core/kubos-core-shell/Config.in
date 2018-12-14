@@ -35,7 +35,7 @@ config BR2_KUBOS_CORE_SHELL_RESTART_CYCLES
         must occur before the system stops trying to recover the service.
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
-        multiplying to this number times the length of a single Monit sleep cycle (10 seconds)
+        multiplying this number by the length of a single Monit sleep cycle (60 seconds)
         
 endif
 
