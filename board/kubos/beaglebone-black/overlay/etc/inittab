@@ -24,6 +24,7 @@
 ::sysinit:/bin/mount /home
 ::sysinit:/bin/mount /home/microsd
 ::sysinit:/bin/mount /upgrade
+::sysinit:/bin/mount /envar
 # Setup hostname
 ::sysinit:/bin/hostname -F /etc/hostname
 # now run any rc scripts
