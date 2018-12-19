@@ -36,6 +36,7 @@ echo "OS Install: Stopping running services"
 for i in $(ls /var/run/*.pid); do
     kill -15 $(cat $i)
 done
+killall -15 python
 
 # Give the system a moment to settle
 sleep 2
