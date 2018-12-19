@@ -101,9 +101,11 @@ if [ "${package}" -lt "3" ]; then
   boot_size=20
   rootfs_size=60
   upgrade_size=240
+  envar_size=4
 
   sd_size=`expr ${size} - 4`
-  upgrade_start=`expr ${sd_size} - ${upgrade_size}`
+  envar_start=`expr ${sd_size} - ${envar_size}`
+  upgrade_start=`expr ${envar_start} - ${upgrade_size}`
   rootfs_start=`expr ${upgrade_start} - ${rootfs_size}`
   boot_start=`expr ${rootfs_start} - ${boot_size}`
 
@@ -111,7 +113,8 @@ if [ "${package}" -lt "3" ]; then
   parted -a minimal /dev/loop0 mkpart extended       ${boot_start}M      ${sd_size}M
   parted -a minimal /dev/loop0 mkpart logical fat16  ${boot_start}M      ${rootfs_start}M
   parted -a minimal /dev/loop0 mkpart logical ext4   ${rootfs_start}M    ${upgrade_start}M
-  parted -a minimal /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${sd_size}M
+  parted -a minimal /dev/loop0 mkpart logical ext4   ${upgrade_start}M   ${envar_start}M
+  parted -a minimal /dev/loop0 mkpart logical ext4   ${envar_start}M   ${sd_size}M
 
   sleep 1
 
@@ -122,6 +125,7 @@ if [ "${package}" -lt "3" ]; then
   mkfs.fat /dev/loop0p5
   mkfs.ext4 /dev/loop0p6
   mkfs.ext4 /dev/loop0p7
+  mkfs.ext4 /dev/loop0p8
 
   sleep 1
 
