@@ -4,6 +4,9 @@ SET INIT
 # Run Monit as a background daemon, waking every 60 seconds to perform its process monitoring
 SET DAEMON 60
 
+# Set the PID file the daemon should use so that any user can run `monit status`
+SET PIDFILE /var/run/monit.pid
+
 # Put Monit's statefile into non-persistent storage so that way it will attempt to monitor any
 # services which previously failed too many times after a system reboot
 SET STATEFILE /tmp/monit.state
