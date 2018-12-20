@@ -20,6 +20,7 @@
 # Update the U-Boot variables to indicate that we have successfully booted
 fw_setenv kubos_curr_tried 0
 fw_setenv bootcount 0
+sync
 
 # Make sure the default user's home directory exists
 mkdir -p /home/kubos
