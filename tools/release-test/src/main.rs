@@ -14,36 +14,23 @@
  * limitations under the License.
  */
 
-extern crate chrono;
 #[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate kubos_app;
+#[macro_use]
+extern crate log;
 
 use app_service::*;
-use chrono::Utc;
 use failure::Error;
 use kubos_app::{AppHandler, ServiceConfig};
 use monitor_service::*;
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::time::Duration;
 use telem_service::*;
 
 struct MyApp;
 
 const TELEMFILE: &str = "/home/kubos/release-test/telem-results";
-const LOGFILE: &str = "/home/kubos/release-test/test-output";
-
-macro_rules! log {
-    ($log_file:ident, $msg:expr) => {{
-        writeln!($log_file, "{}: {}", Utc::now(), $msg).unwrap();
-    }};
-    ($log_file:ident, $msg:expr, $($arg:tt)*) => {{
-        let message = format!($msg, $($arg)*);
-        writeln!($log_file, "{}: {}", Utc::now(), message).unwrap();
-    }};
-}
 
 mod app_service;
 mod monitor_service;
@@ -51,13 +38,7 @@ mod telem_service;
 
 impl AppHandler for MyApp {
     fn on_boot(&self, _args: Vec<String>) -> Result<(), Error> {
-        // Set up the log file
-        let mut log_file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(LOGFILE)?;
-            
-        log!(log_file, "OnBoot logic called");
+        info!("OnBoot logic called");
         
         Ok(())
     }
