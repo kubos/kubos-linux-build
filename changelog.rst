@@ -1,11 +1,20 @@
 Kubos Linux Changelog
 =====================
 
+v1.10 - Dec 20 2018
+-------------------
+
+- `Added process monitoring support to all boards <https://docs.kubos.com/latest/os-docs/monitoring.html>`__
+- `Added an installation script to make eMMC installation more streamlined for BBB and MBM2 targets <https://docs.kubos.com/latest/installation-docs/installing-linux-bbb.html#flash-the-emmc>`__
+- `Updated the default logging template to include message severity <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/etc/rsyslog.conf#L31>`__
+- Updated all boards to run `fsck` against all mounted, writeable partitions at boot time
+- Moved the U-Boot environment variables to be located in their own partition
+
 v1.9 - Dec 6 2018
 -----------------
 
-- Adding `rsyslog <https://www.rsyslog.com/>`__ logging support to all boards
-- `Adding SLIP support to all boards <https://docs.kubos.com/latest/os-docs/using-kubos-linux.html#slip>`__
+- Added `rsyslog <https://www.rsyslog.com/>`__ logging support to all boards
+- `Added SLIP support to all boards <https://docs.kubos.com/latest/os-docs/using-kubos-linux.html#slip>`__
 
 v1.8 - Nov 9 2018
 -----------------
