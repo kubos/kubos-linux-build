@@ -30,25 +30,14 @@ pub fn monitor_test() -> Result<(), Error> {
         Ok(()) => passed += 1,
         Err(_) => failed += 1,
     }
-    
-    let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOGFILE)
-        .unwrap();
-    
-    log!(log_file, "Monitor Service Test Results: Passed - {}, Failed - {}", passed, failed);
+
+    info!("Monitor Service Test Results: Passed - {}, Failed - {}", passed, failed);
     
     Ok(())
 }
 
 fn get_mem() -> Result<(), Error> {
-    let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOGFILE)
-        .unwrap();
-    
+
     let request = "{memInfo{available, total, free, lowFree}}";
 
     let response = match query(
@@ -58,7 +47,7 @@ fn get_mem() -> Result<(), Error> {
     ) {
         Ok(msg) => msg,
         Err(err) => {
-            log!(log_file, "MemInfo query failed: {}", err);
+            error!("MemInfo query failed: {}", err);
             bail!("MemInfo query failed");
         }
     };
@@ -68,9 +57,9 @@ fn get_mem() -> Result<(), Error> {
         .and_then(|msg| msg.get("available"))
         .and_then(|val| val.as_u64())
     {
-        Some(mem) => log!(log_file, "Current memory available: {} kB", mem),
+        Some(mem) => info!("Current memory available: {} kB", mem),
         None => {
-            log!(log_file, "Failed to get available mem");
+            error!("Failed to get available mem");
             bail!("Failed to get available mem")
         }
     }
@@ -79,12 +68,7 @@ fn get_mem() -> Result<(), Error> {
 }
 
 fn get_ps() -> Result<(), Error> {
-        let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOGFILE)
-        .unwrap();
-    
+
     let request = r#"{
         ps(pids: [1, 2, 3]) {
             pid,
@@ -106,9 +90,9 @@ fn get_ps() -> Result<(), Error> {
         request,
         Some(Duration::from_secs(1)),
     ) {
-        Ok(msg) => log!(log_file, "PS Response: {:?}", msg),
+        Ok(msg) => info!("PS Response: {:?}", msg),
         Err(err) => {
-            log!(log_file, "PS query failed: {}", err);
+            error!("PS query failed: {}", err);
             bail!("PS query failed");
         }
     }

@@ -26,26 +26,14 @@ pub fn apps_test() -> Result<(), Error> {
         Ok(()) => passed += 1,
         Err(_) => failed += 1,
     }
-    
-    let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOGFILE)
-        .unwrap();
-    
-    log!(log_file, "Applications Service Test Results: Passed - {}, Failed - {}", passed, failed);
+
+    info!("Applications Service Test Results: Passed - {}, Failed - {}", passed, failed);
     
     Ok(())
 }
 
 fn get_apps() -> Result<(), Error> {
-    let mut log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOGFILE)
-        .unwrap();
-
-    log!(log_file, "Querying for active applications");
+    info!("Querying for active applications");
 
     let request = r#"{
         apps {
@@ -65,11 +53,11 @@ fn get_apps() -> Result<(), Error> {
         Some(Duration::from_secs(1)),
     ) {
         Ok(msg) => {
-            log!(log_file, "App query result: {:?}", msg);
+            info!("App query result: {:?}", msg);
             Ok(())
         }
         Err(err) => {
-            log!(log_file, "App service query failed: {}", err);
+            error!("App service query failed: {}", err);
             bail!("App service query failed")
         }
     }
