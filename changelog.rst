@@ -1,6 +1,12 @@
 Kubos Linux Changelog
 =====================
 
+v1.11 - Jan 21 2019
+-------------------
+
+- `Updated the default log rotation policies <https://github.com/kubos/kubos-linux-build/blob/master/common/overlay/etc/rsyslog.conf#L31>`__
+- Updated the default logging policies to place all logs in the ``/home/system/log`` folder
+
 v1.10 - Dec 20 2018
 -------------------
 
