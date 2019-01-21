@@ -14,7 +14,7 @@ SET STATEFILE /tmp/monit.state
 # Set up our log file
 SET LOGFILE /var/log/monit.log
 CHECK FILE monit PATH /var/log/monit.log
-    IF SIZE > 1 MB THEN EXEC "/home/system/kubos/system-rotate.sh monit.log"
+    IF SIZE > 1 MB THEN EXEC "/home/system/kubos/log-rotate.sh monit.log"
 
 # Enable the HTTP connection so that we can use Monit's CLI to collect status information
 SET HTTPD UNIXSOCKET /var/run/monit.sock
