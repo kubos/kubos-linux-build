@@ -20,7 +20,7 @@ DIR=$PWD
 PASS='sshpass -p Kubos123'
 BINARY=target/arm-unknown-linux-gnueabihf/release/release-test
 TARGET_DIR=/home/kubos/release-test
-LOG_FILE=/var/log/apps/debug.log
+LOG_FILE=/var/log/app-debug.log
 TELEM_FILE=telem-results
 TELEM_PATH=${TARGET_DIR}/${TELEM_FILE}.tar.gz
 
