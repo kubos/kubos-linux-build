@@ -1,7 +1,7 @@
 config BR2_PACKAGE_KUBOS_APP_API
     bool "Python App API"
     default y
-    depends on BR2_PACKAGE_PYTHON
+    depends on BR2_PACKAGE_PYTHON3
     select BR2_PACKAGE_PYTHON_TOML
     help
         Include the Kubos app API for Python.

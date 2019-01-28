@@ -1,6 +1,6 @@
 config BR2_PACKAGE_KUBOS_HAL_I2C
     bool "Python I2C HAL"
     default y
-    depends on BR2_PACKAGE_PYTHON
+    depends on BR2_PACKAGE_PYTHON3
     help
         Include the Kubos I2C HAL for Python.
