@@ -3,7 +3,7 @@ jobs:
     build_bbb:
       docker:
         - image: kubos/kubos-linux-dev:latest
-      resource_class: large
+      resource_class: xlarge
       environment:
         KUBOS_BOARD: beaglebone-black
       working_directory: ~/project/kubos-linux-build
@@ -25,7 +25,7 @@ jobs:
     build_mbm2:
       docker:
         - image: kubos/kubos-linux-dev:latest
-      resource_class: large
+      resource_class: xlarge
       environment:
         KUBOS_BOARD: pumpkin-mbm2
       working_directory: ~/project/kubos-linux-build

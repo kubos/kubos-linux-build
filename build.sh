@@ -26,4 +26,4 @@ make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 
 echo "Starting Build"
 
-make
+make -j9
