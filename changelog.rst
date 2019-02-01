@@ -1,6 +1,16 @@
 Kubos Linux Changelog
 =====================
 
+v1.12 - Feb 1 2019
+------------------
+
+- Updated all configurations and packages to use Python3
+
+Bug Fixes
+~~~~~~~~~
+
+- Corrected Monit's log rotation script
+
 v1.11 - Jan 21 2019
 -------------------
 
