@@ -30,12 +30,6 @@ endif
 
 CARGO_OUTPUT_DIR = target/$(CARGO_TARGET)/release
 
-# Globally link all of the modules so that Kubos packages can use them
-define KUBOS_CONFIGURE_CMDS
-	cd $(@D) && \
-	./tools/kubos_link.py --sys
-endef
-
 define KUBOS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/etc/monit.d
 endef
