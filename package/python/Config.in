@@ -1,5 +1,6 @@
 menu "Additional Python Packages"
     source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-aniso8601/Config.in"
+    source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-flask_graphql/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-graphene/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-graphql-core/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-graphql-relay/Config.in"

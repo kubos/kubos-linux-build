@@ -1,5 +1,6 @@
 config BR2_PACKAGE_PYTHON_FLASK_GRAPHQL
 	bool "python-flask_graphql"
+	default n
 	select BR2_PACKAGE_PYTHON_GRAPHQL_CORE # runtime
 	select BR2_PACKAGE_PYTHON_GRAPHQL_SERVER_CORE # runtime
 	select BR2_PACKAGE_PYTHON_FLASK # runtime

@@ -1,7 +1,8 @@
 config BR2_PACKAGE_KUBOS_SERVICE_LIB
     bool "Kubos Service Python Library"
     default n
-    depends on BR2_PACKAGE_PYTHON
+    depends on BR2_PACKAGE_PYTHON3
+    select BR2_PACKAGE_PYTHON_FLASK_GRAPHQL
     select BR2_PACKAGE_PYTHON_GRAPHENE
     select BR2_PACKAGE_PYTHON_TOML
     help
