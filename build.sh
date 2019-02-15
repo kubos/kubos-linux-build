@@ -14,8 +14,6 @@ echo "Building $latest_tag for Board: $board"
 
 cd .. #cd out of the kubos-linux-build directory
 
-kubos update
-
 echo "Getting Buildroot"
 
 wget $buildroot_url && tar xzf $buildroot_tar && rm $buildroot_tar
