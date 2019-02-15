@@ -1,6 +1,14 @@
 Kubos Linux Changelog
 =====================
 
+v1.13 - Feb 15 2019
+-------------------
+
+- Added ``curl`` to all configurations to support HTTP communication with Kubos services
+- Added Python Flask-GraphQL package to support HTTP operations for Python-based Kubos services
+- Updated default configuration in response to removal of yotta from main kubos repo
+- Removed ``kubos link`` operation from main Kubos package Makefile
+
 v1.12 - Feb 1 2019
 ------------------
 
