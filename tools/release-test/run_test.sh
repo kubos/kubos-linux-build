@@ -60,11 +60,14 @@ fi
 # Extract the UUID so we can start the application
 UUID=$(echo `expr match "${RESPONSE}" '.*\([[:alnum:]]\{8\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{12\}\)'`)
 
-# Run the tests
+# Kick off the tests
 RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(uuid: \\\"${UUID}\\\", runLevel: \\\"OnCommand\\\") { success, errors }}\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to start app. Response: ${RESPONSE}\033[0m" >&2
 fi
+
+# Give the tests a moment to run
+sleep 1
 
 # Get our results
 kubos-file-client -r ${1} -p 8008 download ${LOG_FILE} test-output

@@ -46,7 +46,6 @@ echo "OS Install: Prepping the file system"
 umount -l /home
 
 # Copy the SD card over to the eMMC
-# TODO: Adjust size so it doesn't throw the "out of space" warning
 echo "OS Install: Copying SD card contents over to eMMC. This process should take 10-15 minutes to complete"
 BLOCKS=$(cat /sys/class/block/mmcblk1/size)
-dd if=/dev/mmcblk0 of=/dev/mmcblk1 count=${BLOCKS}
+dd if=/dev/mmcblk0 count=${BLOCKS} status=noxfer | pv -s `expr ${BLOCKS} / 2` | of=/dev/mmcblk1
