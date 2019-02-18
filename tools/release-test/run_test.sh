@@ -24,6 +24,9 @@ LOG_FILE=/var/log/app-debug.log
 TELEM_FILE=telem-results
 TELEM_PATH=${TARGET_DIR}/${TELEM_FILE}.tar.gz
 
+# Get the latest version of the Kubos repo to build with
+cargo update
+
 # Setup a shell session for us to use
 RESPONSE=$(kubos-shell-client -i ${1} -p 8010 start << EOT
 EOT
@@ -41,7 +44,7 @@ EOT
 )
 
 # Build our test project
-CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo build --release --target arm-unknown-linux-gnueabihf
+PKG_CONFIG_ALLOW_CROSS=1 CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo build --release --target arm-unknown-linux-gnueabihf
 arm-linux-strip ${BINARY}
 
 # Transfer our test binary to the OBC
@@ -49,7 +52,7 @@ kubos-file-client -r ${1} -p 8008 upload ${BINARY} ${TARGET_DIR}/release-test
 kubos-file-client -r ${1} -p 8008 upload manifest.toml ${TARGET_DIR}/manifest.toml
 
 # Register the app with the applications service
-RESPONSE=$(echo "mutation { register(path: \"${TARGET_DIR}\"){ success, errors, entry { app { uuid } } } }" | nc -uw1 ${1} 8000)
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { register(path: \\\"${TARGET_DIR}\\\"){ success, errors, entry { app { uuid } } } }\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mApp registration failed. Response: ${RESPONSE}\033[0m" >&2
 fi
@@ -58,7 +61,7 @@ fi
 UUID=$(echo `expr match "${RESPONSE}" '.*\([[:alnum:]]\{8\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{12\}\)'`)
 
 # Run the tests
-RESPONSE=$(echo "mutation { startApp(uuid: \"${UUID}\", runLevel: \"OnCommand\") { success, errors }}" | nc -uw1 ${1} 8000)
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(uuid: \\\"${UUID}\\\", runLevel: \\\"OnCommand\\\") { success, errors }}\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to start app. Response: ${RESPONSE}\033[0m" >&2
 fi
@@ -69,7 +72,7 @@ kubos-file-client -r ${1} -p 8008 download ${TELEM_PATH}
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
-RESPONSE=$(echo "mutation { uninstall(uuid: \"${UUID}\", version: \"1.0\") { success, errors } }" | nc -uw1 ${1} 8000)
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { uninstall(uuid: \\\"${UUID}\\\", version: \\\"1.0\\\") { success, errors } }\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to uninstall app. Response: ${RESPONSE}\033[0m" >&2
 fi
