@@ -1,6 +1,18 @@
 Kubos Linux Changelog
 =====================
 
+v1.14 - Mar 29 2019
+-------------------
+
+- `Added a progress bar to the OS install script for BBB and MBM2 <https://docs.kubos.com/latest/installation-docs/installing-linux-bbb.html#flash-the-emmc>`__
+- Added the Kubos service Python library to the default MBM2 and BBB configurations
+- Added ``PKG_CONFIG_ALLOW_CROSS=1`` to app service Makefile
+
+Bug Fixes
+~~~~~~~~~
+
+- Updated the ``BR2_TAR_OPTIONS`` setting so that builds won't fail in CI
+
 v1.13 - Feb 15 2019
 -------------------
 
