@@ -52,16 +52,13 @@ kubos-file-client -r ${1} -p 8008 upload ${BINARY} ${TARGET_DIR}/release-test
 kubos-file-client -r ${1} -p 8008 upload manifest.toml ${TARGET_DIR}/manifest.toml
 
 # Register the app with the applications service
-RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { register(path: \\\"${TARGET_DIR}\\\"){ success, errors, entry { app { uuid } } } }\"}")
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { register(path: \\\"${TARGET_DIR}\\\"){ success, errors } }\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mApp registration failed. Response: ${RESPONSE}\033[0m" >&2
 fi
 
-# Extract the UUID so we can start the application
-UUID=$(echo `expr match "${RESPONSE}" '.*\([[:alnum:]]\{8\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{4\}-[[:alnum:]]\{12\}\)'`)
-
 # Kick off the tests
-RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(uuid: \\\"${UUID}\\\", runLevel: \\\"OnCommand\\\") { success, errors }}\"}")
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(name: \\\"release-test\\\", runLevel: \\\"OnCommand\\\") { success, errors }}\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to start app. Response: ${RESPONSE}\033[0m" >&2
 fi
@@ -75,7 +72,7 @@ kubos-file-client -r ${1} -p 8008 download ${TELEM_PATH}
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
-RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { uninstall(uuid: \\\"${UUID}\\\", version: \\\"1.0\\\") { success, errors } }\"}")
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { uninstall(name: \\\"release-test\\\", version: \\\"1.0\\\") { success, errors } }\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to uninstall app. Response: ${RESPONSE}\033[0m" >&2
 fi
