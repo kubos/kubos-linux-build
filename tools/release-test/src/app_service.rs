@@ -39,7 +39,6 @@ fn get_apps() -> Result<(), Error> {
         apps {
             active,
             app {
-                uuid,
                 name,
                 version,
                 author
