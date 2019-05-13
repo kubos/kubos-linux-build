@@ -1,6 +1,0 @@
-config BR2_PACKAGE_PYTHON_SQLALCHEMY
-	bool "python-sqlalchemy"
-	help
-	  Database Abstraction Library.
-
-	  http://www.sqlalchemy.org
