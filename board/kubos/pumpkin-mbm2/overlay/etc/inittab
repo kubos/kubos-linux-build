@@ -19,11 +19,11 @@
 ::sysinit:/bin/mkdir -p /dev/pts
 ::sysinit:/bin/mkdir -p /dev/shm
 # Check & clean partitions
-::sysinit:/usr/sbin/fsck -p /dev/mmcblk0p1
-::sysinit:/usr/sbin/fsck -p /dev/mmcblk0p2
-::sysinit:/usr/sbin/fsck -p /dev/mmcblk1p2
-::sysinit:/usr/sbin/fsck -p /dev/mmcblk1p3
-::sysinit:/usr/sbin/fsck -p /dev/mmcblk1p4
+::sysinit:/sbin/fsck -p /dev/mmcblk0p1
+::sysinit:/sbin/fsck -p /dev/mmcblk0p2
+::sysinit:/sbin/fsck -p /dev/mmcblk1p2
+::sysinit:/sbin/fsck -p /dev/mmcblk1p3
+::sysinit:/sbin/fsck -p /dev/mmcblk1p4
 # Mount up partitions with data
 ::sysinit:/bin/mount -o remount,rw /
 ::sysinit:/bin/mount -a

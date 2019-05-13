@@ -45,4 +45,3 @@ config BR2_PACKAGE_HAS_KUBOS_CORE_APP_SERVICE
 config BR2_PACKAGE_PROVIDES_KUBOS_CORE_APP_SERVICE
     string
     default "kubos"
-    
