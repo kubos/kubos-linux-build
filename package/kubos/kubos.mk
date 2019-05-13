@@ -8,11 +8,18 @@
 # packages
 #
 ###############################################
-KUBOS_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 KUBOS_LICENSE = Apache-2.0
 KUBOS_LICENSE_FILES = LICENSE
 KUBOS_SITE = git://github.com/kubos/kubos
 KUBOS_PROVIDES = kubos-mai400
+
+VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
+# If the version specified is a branch name, we need to go fetch the SHA1 for the branch's HEAD
+ifeq ($(shell git ls-remote --heads $(KUBOS_SITE) $(VERSION) | wc -l), 1)
+	KUBOS_VERSION := $(shell git ls-remote $(KUBOS_SITE) $(VERSION) | cut -c1-8)
+else
+	KUBOS_VERSION = $(VERSION)
+endif
 
 KUBOS_BR_TARGET = $(lastword $(subst /, ,$(dir $(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH))))
 ifeq ($(KUBOS_BR_TARGET),at91sam9g20isis)
