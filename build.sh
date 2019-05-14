@@ -22,6 +22,10 @@ cd ./buildroot*
 
 make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
 
+echo "Removing old toolchain"
+
+rm /usr/bin/bbb_toolchain -R
+
 echo "Starting Build"
 
 make
