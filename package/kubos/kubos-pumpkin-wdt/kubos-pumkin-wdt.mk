@@ -3,7 +3,7 @@
 # Pumpkin Stack Gating Watchdog Enable Installation
 #
 #####################################################
-KUBOS_PUMPKIN_WDT_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
+KUBOS_PUMPKIN_WDT_VERSION = $(KUBOS_VERSION)
 KUBOS_PUMPKIN_WDT_LICENSE = Apache-2.0
 KUBOS_PUMPKIN_WDT_LICENSE_FILES = LICENSE
 KUBOS_PUMPKIN_WDT_SITE = $(BR2_EXTERNAL_KUBOS_LINUX_PATH)/package/kubos/kubos-pumpkin-wdt
