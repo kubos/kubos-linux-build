@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-buildroot_tar="buildroot-2017.02.8.tar.gz"
+buildroot_tar="buildroot-2019.02.2.tar.gz"
 buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
 
 board="$KUBOS_BOARD"
@@ -21,6 +21,10 @@ wget $buildroot_url && tar xzf $buildroot_tar && rm $buildroot_tar
 cd ./buildroot*
 
 make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
+
+echo "Removing old toolchain"
+
+rm /usr/bin/bbb_toolchain -R
 
 echo "Starting Build"
 
