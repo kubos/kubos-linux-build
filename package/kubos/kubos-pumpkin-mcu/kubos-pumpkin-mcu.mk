@@ -3,7 +3,7 @@
 # Pumpkin MCU Python Service Installation
 #
 #####################################################
-KUBOS_PUMPKIN_MCU_VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
+KUBOS_PUMPKIN_MCU_VERSION = $(KUBOS_VERSION)
 KUBOS_PUMPKIN_MCU_LICENSE = Apache-2.0
 KUBOS_PUMPKIN_MCU_LICENSE_FILES = LICENSE
 KUBOS_PUMPKIN_MCU_SITE = $(BUILD_DIR)/kubos-$(KUBOS_PUMPKIN_MCU_VERSION)/services/pumpkin-mcu-service
