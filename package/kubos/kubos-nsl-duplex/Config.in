@@ -1,0 +1,47 @@
+menuconfig BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    bool "NSL Duplex Comms Service"
+    default n
+    select BR2_PACKAGE_HAS_KUBOS_NSL_DUPLEX
+    help
+        Include NSL Duplex Kubos comms service.
+
+if BR2_PACKAGE_KUBOS_NSL_DUPLEX
+
+config BR2_KUBOS_NSL_DUPLEX_INIT_LVL
+    int "Duplex Service Run Level"
+    default 90
+    range 10 99
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The initialization priority level of the NSL Duplex Kubos service.
+        The lower the number, the earlier the service is initialized.
+
+config BR2_KUBOS_NSL_DUPLEX_RESTART_COUNT
+    int "Service Restart Limit"
+    default 3
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    depends on BR2_PACKAGE_MONIT
+    help
+        The maximum number of times the service should be restarted within the timeframe
+        specified by BR2_KUBOS_NSL_DUPLEX_RESTART_CYCLES if it goes down
+
+config BR2_KUBOS_NSL_DUPLEX_RESTART_CYCLES
+    int "Service Restart Limit Timeframe"
+    default 10
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    depends on BR2_PACKAGE_MONIT
+    help
+        The number of Monit monitoring cycles in which the maximum number of service restarts
+        must occur before the system stops trying to recover the service.
+        
+        The resulting maximum timeframe in which the restarts must occur can be calculated by
+        multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+        
+endif
+
+config BR2_PACKAGE_HAS_KUBOS_NSL_DUPLEX
+    bool
+
+config BR2_PACKAGE_PROVIDES_KUBOS_NSL_DUPLEX
+    string
+    default "kubos"
