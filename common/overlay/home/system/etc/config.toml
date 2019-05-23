@@ -77,7 +77,7 @@ bus = "/dev/ttyS2"
 max_num_handlers = 10
 downlink_ports = [15001]
 timeout = 15000
-satellite_ip = "127.0.0.2"
+ip = "127.0.0.2"
 
 [nsl-duplex-comms-service.addr]
 ip = "127.0.0.2"
