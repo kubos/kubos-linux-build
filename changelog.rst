@@ -1,6 +1,13 @@
 Kubos Linux Changelog
 =====================
 
+v1.15 - May 23 2019
+-------------------
+
+- Migrated to lastest Buildroot LTS release, 2019.02.2
+- `Added useful Python libraries to default BBB and MBM2 configs (mostly related to peripheral interaction) <https://github.com/kubos/kubos-linux-build/blob/master/configs/beaglebone-black_defconfig>`__
+- `Added package for NSL EyeStar-D2 Duplex radio comms service <https://github.com/kubos/kubos-linux-build/tree/master/package/kubos/kubos-nsl-duplex>`__
+
 v1.14 - Apr 3 2019
 ------------------
 
