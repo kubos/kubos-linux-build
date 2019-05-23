@@ -25,7 +25,7 @@
 
 	images {
 		dtb@1 {
-			data = /incbin/("./../../buildroot-2017.02.8/output/images/at91sam9g20isis.dtb");
+			data = /incbin/("./../../buildroot-2019.02.2/output/images/at91sam9g20isis.dtb");
 			type = "firmware";
 			arch = "arm";
 			os = "linux";

@@ -19,7 +19,7 @@
  
 version=$(date +%Y.%m.%d)
 input=kpack-NOR.its
-branch=master
+branch=1.0
 
 # Process command arguments
 
@@ -40,7 +40,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2017.02.8/output}
+: ${BASE_DIR:=../../buildroot-2019.02.2/output}
 
 # Build the package
 ${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kpack-nor-${version}.itb

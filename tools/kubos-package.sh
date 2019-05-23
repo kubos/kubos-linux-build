@@ -19,7 +19,7 @@
  
 version=$(date +%Y.%m.%d)
 input=kpack.its
-branch=master
+branch=1.0
 rflag=false
 kernel=false
 output=output
@@ -58,7 +58,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2017.02.8/${output}}
+: ${BASE_DIR:=../../buildroot-2019.02.2/${output}}
 
 if ! ${rflag}
 then
