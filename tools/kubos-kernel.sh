@@ -18,7 +18,7 @@
 #
  
 input=kubos-kernel.its
-branch=master
+branch=1.0
 output=output
 
 # Process command arguments
@@ -40,7 +40,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2017.02.8/${output}}
+: ${BASE_DIR:=../../buildroot-2019.02.2/${output}}
 
 # Build the package
 ${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb

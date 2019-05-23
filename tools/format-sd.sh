@@ -60,7 +60,7 @@ do
       	  ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2017.02.8/output}
+: ${BASE_DIR:=../../buildroot-2019.02.2/output}
 
 if ${wipe}; then
   echo '\nWiping SD card. This may take a while...'
