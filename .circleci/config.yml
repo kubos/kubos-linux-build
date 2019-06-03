@@ -42,6 +42,27 @@ jobs:
         - store_artifacts:
             path: ../buildroot-2019.02.2/output/images/kpack-base.itb
             destination: Pumpkin-MBM2/kpack-base.itb
+    build_iobc:
+      docker:
+        - image: kubos/kubos-linux-dev:latest
+      environment:
+        KUBOS_BOARD: at91sam9g20isis
+      working_directory: ~/project/kubos-linux-build
+      steps:
+        - checkout
+        - run: ./build.sh | tee full_build.log
+        - store_artifacts:
+            path: full_build.log
+            destination: iOBC/full_build.log
+        - store_artifacts:
+            path: ../buildroot-2019.02.2/output/images/kubos-linux.tar.gz
+            destination: iOBC/kubos-linux.tar.gz
+        - store_artifacts:
+            path: ../buildroot-2019.02.2/output/images/at91sam9g20isis.dtb
+            destination: iOBC/at91sam9g20isis.dtb
+        - store_artifacts:
+            path: ../buildroot-2019.02.2/output/images/u-boot.bin
+            destination: iOBC/u-boot.bin
             
 workflows:
   version: 2
@@ -54,6 +75,12 @@ workflows:
             branches:
               ignore: master
       - build_mbm2:
+          filters:
+            tags:
+              only: /^[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - build_iobc:
           filters:
             tags:
               only: /^[0-9]+(\.[0-9]+)*$/
