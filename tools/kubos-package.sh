@@ -80,6 +80,6 @@ cp ${input} ${rootfs_dir}/
 input_name=$(basename ${input})
 
 # Build the full package
-${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} kpack-${version}.itb
+${BASE_DIR}/build/uboot-${branch}/tools/mkimage -E -f ${rootfs_dir}/${input_name} kpack-${version}.itb
 
 
