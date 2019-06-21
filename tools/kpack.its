@@ -49,13 +49,4 @@
 			};
 		};
 	};
-
-	configurations {
-		default = "config@1";
-		config@1 {
-			description = "Full Kubos Linux Upgrade";
-			kernel = "kernel@1";
-			rootfs = "rootfs@1";
-		};
-	};
 };

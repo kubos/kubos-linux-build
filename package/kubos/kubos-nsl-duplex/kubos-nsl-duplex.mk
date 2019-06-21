@@ -19,6 +19,8 @@ endef
 # Install the application into the rootfs file system
 define NSL_DUPLEX_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/usr/sbin
+	PATH=$(PATH):~/.cargo/bin:$(HOST_DIR)/usr/bin && \
+	arm-linux-strip $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/nsl-duplex-d2-comms-service
 	$(INSTALL) -D -m 0755 $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/$(CARGO_OUTPUT_DIR)/nsl-duplex-d2-comms-service \
 		$(TARGET_DIR)/usr/sbin
 		
