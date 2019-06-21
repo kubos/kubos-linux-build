@@ -20,7 +20,7 @@ mv kubos-kernel.itb ${BINARIES_DIR}/kernel
 # Create the base upgrade file
 cp ${BOARD_DIR}/../../../tools/kpack.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
-./kubos-package.sh -t beaglebone-black -v base
+./kubos-package.sh -b ${BRANCH} -t beaglebone-black -v base
 
 mv kpack-base.itb ${TARGET_DIR}/upgrade
 
