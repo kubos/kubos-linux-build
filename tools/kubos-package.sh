@@ -19,7 +19,7 @@
  
 version=$(date +%Y.%m.%d)
 input=kpack.its
-branch=1.0
+branch=1.1
 rflag=false
 kernel=false
 output=output
@@ -28,6 +28,10 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
     echo "Please run script as root"
     exit
 fi
+
+# Make sure that we can find the `dtc` command
+# (The binary is target-independent so we can just use the one in the BBB toolchain directory)
+export PATH=$PATH:/usr/bin/bbb_toolchain/usr/bin
 
 # Process command arguments
 
