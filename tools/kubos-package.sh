@@ -21,7 +21,6 @@ version=$(date +%Y.%m.%d)
 input=kpack.its
 branch=1.1
 rflag=false
-kernel=false
 output=output
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
@@ -35,7 +34,7 @@ export PATH=$PATH:/usr/bin/bbb_toolchain/usr/bin
 
 # Process command arguments
 
-while getopts "s:v:i:b:o:t:k" option
+while getopts "v:i:b:o:t:" option
 do
     case $option in
 	v)
@@ -54,9 +53,6 @@ do
 	    target=$OPTARG
 	    rflag=true
 	    ;;
-	k)
-	    kernel=true
-            ;;
 	\?)
 	    exit 1
 	    ;;
@@ -72,13 +68,6 @@ fi
 
 rootfs_dir=${BASE_DIR}/images
 
-# Create kernel.itb if requested
-if ${kernel}
-then
-    cp ../board/kubos/${target}/kubos-kernel.its ${BASE_DIR}/images/
-    ./kubos-kernel.sh -b ${branch} -i ${BASE_DIR}/images/kubos-kernel.its -o ${output}
-    cp kubos-kernel.itb ${rootfs_dir}/kernel
-fi
 # Copy the package .its file
 cp ${input} ${rootfs_dir}/
 input_name=$(basename ${input})
