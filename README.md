@@ -2,12 +2,12 @@
 
 ## Overview
 
-Check out the official [Kubos Linux](https://docs.kubos.com/latest/os-docs/index.html) documentation for the most current instructions on how to setup and interact with Kubos Linux on specific boards. 
+Check out the official [Kubos Linux](https://docs.kubos.com/latest/os-docs/linux-docs/index.html) documentation for the most current instructions on how to setup and interact with Kubos Linux on specific boards. 
 Kubos uses BuildRoot as its main Linux build tool.  This repo contains the configuration and patch files required by BuildRoot to build Linux for each of the OBCs that Kubos supports.
 
 ## Contributing
 
-Want to get your code to space? Become a contributor! Check out our doc on [contributing to KubOS](https://docs.kubos.com/latest/dev-docs/contribution-process.html) 
+Want to get your code to space? Become a contributor! Check out our doc on [contributing to KubOS](https://docs.kubos.com/latest/contributing/contribution-process.html) 
 and come talk to us on [Slack](https://slack.kubos.co/) to join our community. 
 Or, if you're just looking to give some feedback, 
 submit an [issue](https://github.com/kubos/kubos-linux-build/issues) with your feature requests or bug reports! 
@@ -59,12 +59,12 @@ Enter the new folder
 
     $ cd kubos-linux
   
-Download BuildRoot-2017.02 (more current versions of BuildRoot may work as well,
-but all testing has been done against 2017.02)
+Download BuildRoot-2019.02.2 (more current versions of BuildRoot may work as well,
+but all testing has been done against 2019.02.2)
 
-.. note:: All Kubos documentation will refer to v2017.02.8, which is the latest version of the LTS release at the time of this writing.
+.. note:: All Kubos documentation will refer to v2019.02.2, which is the latest version of the LTS release at the time of this writing.
 
-    $ wget https://buildroot.uclibc.org/downloads/buildroot-2017.02.8.tar.gz && tar xvzf buildroot-2017.02.8.tar.gz && rm buildroot-2017.02.8.tar.gz
+    $ wget https://buildroot.uclibc.org/downloads/buildroot-2019.02.2.tar.gz && tar xvzf buildroot-2019.02.2.tar.gz && rm buildroot-2019.02.2.tar.gz
   
 Pull the kubos-linux-build repo
 
@@ -72,7 +72,7 @@ Pull the kubos-linux-build repo
   
 Move into the buildroot directory
 
-    $ cd buildroot-2017.02.8
+    $ cd buildroot-2019.02.2
   
 Point BuildRoot to the external kubos-linux-build folder and tell it which configuration you want to run (config files are located in
 kubos-linux-build/configs)
@@ -89,11 +89,14 @@ and it will go much more quickly (<5 min).
 
 BuildRoot documentation can be found [**here**](https://buildroot.org/docs.html)
 
-The generated files will be located in buildroot-2017.02.8/output/images.  They are:
+The generated files will be located in buildroot-2019.02.2/output/images.  They are:
 
 - uboot.bin   - The U-Boot binary
-- zImage      - The compressed Linux kernel file
+- kernel      - The compressed Linux kernel file
 - {board}.dtb - The Device Tree Binary that Linux uses to configure itself for your board
 - rootfs.tar  - The root file system.  Contains BusyBox and other libraries
-  
+
+These files may be further packaged into various system images.
+Specific details are listed in the appropriate [Building Linux for {OBC}](https://docs.kubos.com/latest/deep-dive/index.html#kubos-linux)
+doc.
 
