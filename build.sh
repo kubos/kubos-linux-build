@@ -2,30 +2,23 @@
 
 set -e -o pipefail
 
-buildroot_tar="buildroot-2019.02.2.tar.gz"
-buildroot_url="https://buildroot.uclibc.org/downloads/$buildroot_tar"
+klb_dir=$(cd `dirname "$0"`; pwd)
+. "$klb_dir/tools/deps.sh"
 
-board="$KUBOS_BOARD"
+# cd out of the kubos-linux-build directory
+cd "$klb_dir/.."
 
-latest_tag=`git tag --sort=-creatordate | head -n 1`
-sed -i "s/0.0.0/$latest_tag/g" common/linux-kubos.config
+echo "Getting Buildroot $buildroot_version"
 
-echo "Building $latest_tag for Board: $board"
+wget "$buildroot_url" && tar xzf "$buildroot_tar" && rm "$buildroot_tar"
 
-cd .. #cd out of the kubos-linux-build directory
+cd "$buildroot_dir_abs"
 
-echo "Getting Buildroot"
-
-wget $buildroot_url && tar xzf $buildroot_tar && rm $buildroot_tar
-
-cd ./buildroot*
-
-make BR2_EXTERNAL=../kubos-linux-build ${board}_defconfig
+echo "Configuring Buildroot for $klb_board"
+make BR2_EXTERNAL=$klb_dir ${klb_board}_defconfig
 
 echo "Removing old toolchains"
-
 rm /usr/bin/*_toolchain -R
 
-echo "Starting Build"
-
+echo "Building KubOS $klb_latest_tag"
 make

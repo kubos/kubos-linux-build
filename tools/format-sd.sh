@@ -28,7 +28,10 @@
 #
 
 set -e
- 
+
+klb_dir=$(cd `dirname "$0"`/..; pwd)
+. "$klb_dir/tools/deps.sh"
+
 device=/dev/sdb
 branch=master
 wipe=false
@@ -60,7 +63,7 @@ do
       	  ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2019.02.2/output}
+: ${BASE_DIR:=../../$buildroot_dirname/output}
 
 if ${wipe}; then
   echo '\nWiping SD card. This may take a while...'

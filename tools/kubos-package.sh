@@ -16,10 +16,13 @@
 #
 # kubos-package: Create Kubos Linux Upgrade Package (kpack)
 #
- 
+
+klb_dir=$(cd `dirname "$0"`/..; pwd)
+. "$klb_dir/tools/deps.sh"
+
 version=$(date +%Y.%m.%d)
 input=kpack.its
-branch=1.1
+branch=$uboot_branch
 rflag=false
 output=output
 
@@ -58,7 +61,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2019.02.2/${output}}
+: ${BASE_DIR:=../../$buildroot_dirname/${output}}
 
 if ! ${rflag}
 then

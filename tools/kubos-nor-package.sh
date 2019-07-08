@@ -16,10 +16,13 @@
 #
 # kubos-package: Create Kubos Linux Upgrade Package (kpack)
 #
- 
+
+klb_dir=$(cd `dirname "$0"`/..; pwd)
+. "$klb_dir/tools/deps.sh"
+
 version=$(date +%Y.%m.%d)
 input=kpack-NOR.its
-branch=1.0
+branch=$uboot_branch_iobc
 
 # Process command arguments
 
@@ -40,9 +43,24 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2019.02.2/output}
+: ${BASE_DIR:=../../$buildroot_dirname/output}
 
-# Build the package
-${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kpack-nor-${version}.itb
+rootfs_dir=${BASE_DIR}/images
+
+if [[ ! -d "$rootfs_dir" ]]; then
+    echo "Buildroot images dir doesn't exist: $rootfs_dir"
+    exit 1
+fi
+
+# copy the package its ile
+cp ${input} ${rootfs_dir}/
+input_name=$(basename ${input})
+
+# Build the package relative to buildroot
+out_dir=$PWD
+
+pushd ${rootfs_dir}
+${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${rootfs_dir}/${input_name} "${out_dir}/kpack-nor-${version}.itb"
+popd
 
 

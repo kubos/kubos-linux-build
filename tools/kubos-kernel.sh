@@ -16,9 +16,11 @@
 #
 # kubos-package: Create Kubos Linux Upgrade Package (kpack)
 #
- 
+klb_dir=$(cd `dirname "$0"`/..; pwd)
+. "$klb_dir/tools/deps.sh"
+
 input=kubos-kernel.its
-branch=1.0
+branch=$uboot_branch_iobc
 output=output
 
 # Process command arguments
@@ -40,7 +42,7 @@ do
 	    ;;
     esac
 done
-: ${BASE_DIR:=../../buildroot-2019.02.2/${output}}
+: ${BASE_DIR:=../../$buildroot_dirname/${output}}
 
 # Build the package
 ${BASE_DIR}/build/uboot-${branch}/tools/mkimage -f ${input} kubos-kernel.itb
