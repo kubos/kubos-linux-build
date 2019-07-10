@@ -1,6 +1,18 @@
 Kubos Linux Changelog
 =====================
 
+v1.16 - July 10 2019
+--------------------
+
+- `Set up release image auto-generation for the iOBC <https://github.com/kubos/kubos-linux-build/blob/master/board/kubos/at91sam9g20isis/post-image.sh>`__
+- Updated the way OS upgrade files are generated to reduce the RAM overhead for system upgrade/recovery
+
+Bug Fixes
+~~~~~~~~~
+
+- Updated all build helper scripts to use latest Buildroot and U-Boot versions
+- Restricted the iOBC rootfs size to 20M to prevent memory overflow when doing system upgrade/recovery
+
 v1.15 - May 23 2019
 -------------------
 
