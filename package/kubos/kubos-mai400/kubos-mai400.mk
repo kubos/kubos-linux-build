@@ -11,7 +11,7 @@ KUBOS_MAI400_POST_INSTALL_TARGET_HOOKS += MAI400_INSTALL_INIT_SYSV
 define MAI400_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/mai400-service && \
 	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
-	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --package mai400-service --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system
