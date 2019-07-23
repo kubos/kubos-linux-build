@@ -11,7 +11,7 @@ KUBOS_CORE_TELEMETRY_DB_POST_INSTALL_TARGET_HOOKS += TELEMETRY_DB_INSTALL_INIT_S
 define TELEMETRY_DB_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/telemetry-service && \
     PATH=$(PATH):~/.cargo/bin && \
-	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --package telemetry-service --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system

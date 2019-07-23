@@ -11,7 +11,7 @@ KUBOS_MONITOR_POST_INSTALL_TARGET_HOOKS += MONITOR_INSTALL_INIT_SYSV
 define MONITOR_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/monitor-service && \
 	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
-	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --package monitor-service --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system

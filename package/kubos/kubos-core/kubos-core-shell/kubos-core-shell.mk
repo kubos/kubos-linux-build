@@ -11,7 +11,7 @@ KUBOS_CORE_SHELL_POST_INSTALL_TARGET_HOOKS += SHELL_INSTALL_INIT_SYSV
 define SHELL_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/shell-service && \
     PATH=$(PATH):~/.cargo/bin && \
-	CC=$(TARGET_CC) cargo build --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) cargo build --package shell-service --target $(CARGO_TARGET) --release
 endef
 
 # Install the application into the rootfs file system
