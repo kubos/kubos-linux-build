@@ -2,7 +2,7 @@ version: 2
 jobs:
     build_bbb:
       docker:
-        - image: kubos/kubos-linux-dev:latest
+        - image: kubos/kubos-dev:latest
       environment:
         KUBOS_BOARD: beaglebone-black
       working_directory: ~/project/kubos-linux-build
@@ -23,7 +23,7 @@ jobs:
             destination: Beaglebone-Black/kpack-base.itb
     build_mbm2:
       docker:
-        - image: kubos/kubos-linux-dev:latest
+        - image: kubos/kubos-dev:latest
       environment:
         KUBOS_BOARD: pumpkin-mbm2
       working_directory: ~/project/kubos-linux-build
@@ -44,7 +44,7 @@ jobs:
             destination: Pumpkin-MBM2/kpack-base.itb
     build_iobc:
       docker:
-        - image: kubos/kubos-linux-dev:latest
+        - image: kubos/kubos-dev:latest
       environment:
         KUBOS_BOARD: at91sam9g20isis
       working_directory: ~/project/kubos-linux-build
