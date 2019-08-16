@@ -18,7 +18,7 @@
 #
  
 input=kubos-kernel.its
-branch=1.0
+branch=1.2
 output=output
 
 # Process command arguments
