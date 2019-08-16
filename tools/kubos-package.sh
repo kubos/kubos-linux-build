@@ -19,7 +19,7 @@
  
 version=$(date +%Y.%m.%d)
 input=kpack.its
-branch=1.1
+branch=1.2
 rflag=false
 output=output
 

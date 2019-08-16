@@ -31,7 +31,7 @@
  
 device=""
 image=kubos-linux.img
-branch=1.0
+branch=1.2
 package=0
 size=3800
 output=output
