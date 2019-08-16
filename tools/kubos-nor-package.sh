@@ -19,7 +19,7 @@
  
 version=$(date +%Y.%m.%d)
 input=kpack-NOR.its
-branch=1.0
+branch=1.2
 
 # Process command arguments
 
