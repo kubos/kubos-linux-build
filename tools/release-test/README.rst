@@ -8,6 +8,14 @@ Pre-Requisites
 --------------
 
 - Load the release candidate onto an OBC which has an ethernet connection
+- Update the OBC's service config file to add the file transfer service downlink information, then
+  start the file transfer service::
+
+    [file-transfer-service]
+    storage_dir = "/home/system/file-storage"
+    downlink_ip = "{host IP}"
+    downlink_port = 8080
+    
 - Script must be run from this directory from within an instance of the Kubos SDK
 
 .. note::

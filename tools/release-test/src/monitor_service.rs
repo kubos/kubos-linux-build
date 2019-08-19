@@ -41,7 +41,7 @@ fn get_mem() -> Result<(), Error> {
     let request = "{memInfo{available, total, free, lowFree}}";
 
     let response = match query(
-        &ServiceConfig::new("monitor-service"),
+        &ServiceConfig::new("monitor-service")?,
         request,
         Some(Duration::from_secs(1)),
     ) {
@@ -86,7 +86,7 @@ fn get_ps() -> Result<(), Error> {
     }"#;
 
     match query(
-        &ServiceConfig::new("monitor-service"),
+        &ServiceConfig::new("monitor-service")?,
         request,
         Some(Duration::from_secs(1)),
     ) {
