@@ -48,8 +48,8 @@ PKG_CONFIG_ALLOW_CROSS=1 CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo b
 arm-linux-strip ${BINARY}
 
 # Transfer our test binary to the OBC
-kubos-file-client -r ${1} -p 8008 upload ${BINARY} ${TARGET_DIR}/release-test
-kubos-file-client -r ${1} -p 8008 upload manifest.toml ${TARGET_DIR}/manifest.toml
+kubos-file-client -r ${1} -p 8008 -P 8080 upload ${BINARY} ${TARGET_DIR}/release-test
+kubos-file-client -r ${1} -p 8008 -P 8080 upload manifest.toml ${TARGET_DIR}/manifest.toml
 
 # Register the app with the applications service
 RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { register(path: \\\"${TARGET_DIR}\\\"){ success, errors } }\"}")
@@ -67,8 +67,8 @@ fi
 sleep 1
 
 # Get our results
-kubos-file-client -r ${1} -p 8008 download ${LOG_FILE} test-output
-kubos-file-client -r ${1} -p 8008 download ${TELEM_PATH}
+kubos-file-client -r ${1} -p 8008 -P 8080 download ${LOG_FILE} test-output
+kubos-file-client -r ${1} -p 8008 -P 8080 download ${TELEM_PATH}
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup

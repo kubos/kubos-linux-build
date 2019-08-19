@@ -47,7 +47,7 @@ fn get_apps() -> Result<(), Error> {
     }"#;
 
     match query(
-        &ServiceConfig::new("app-service"),
+        &ServiceConfig::new("app-service")?,
         request,
         Some(Duration::from_secs(1)),
     ) {
