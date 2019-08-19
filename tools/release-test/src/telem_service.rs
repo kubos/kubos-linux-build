@@ -58,7 +58,7 @@ pub fn insert() -> Result<(), Error> {
     "#;
 
     match query(
-        &ServiceConfig::new("telemetry-service"),
+        &ServiceConfig::new("telemetry-service")?,
         &request,
         Some(Duration::from_secs(1)),
     ) {
@@ -102,7 +102,7 @@ pub fn normal_query() -> Result<(), Error> {
     }"#;
 
     match query(
-        &ServiceConfig::new("telemetry-service"),
+        &ServiceConfig::new("telemetry-service")?,
         request,
         Some(Duration::from_secs(1)),
     ) {
@@ -125,7 +125,7 @@ pub fn routed_query() -> Result<(), Error> {
     );
 
     match query(
-        &ServiceConfig::new("telemetry-service"),
+        &ServiceConfig::new("telemetry-service")?,
         &request,
         Some(Duration::from_secs(1)),
     ) {
@@ -152,7 +152,7 @@ pub fn delete() -> Result<(), Error> {
     "#;
 
     match query(
-        &ServiceConfig::new("telemetry-service"),
+        &ServiceConfig::new("telemetry-service")?,
         request,
         Some(Duration::from_secs(1)),
     ) {
