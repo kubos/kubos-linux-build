@@ -1,6 +1,13 @@
 Kubos Linux Changelog
 =====================
 
+v1.17 - Aug 15 2019
+-------------------
+
+- Updated Rust-based packages to ensure only requested package is built
+
+**Note:** This release is being generated primarily to pick up changes in the `KubOS core services <https://docs.kubos.com/1.16.0/changelog.html#v1-17-0-aug-15-2019>`__
+
 v1.16 - July 10 2019
 --------------------
 
