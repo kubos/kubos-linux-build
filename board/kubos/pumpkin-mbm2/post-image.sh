@@ -18,9 +18,8 @@ cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
 mv kubos-kernel.itb ${BINARIES_DIR}/kernel
 
 # Create the base upgrade file
-cp ${BOARD_DIR}/../../../tools/kpack.its ${BINARIES_DIR}/
 cd ${BR2_EXTERNAL_KUBOS_LINUX_PATH}/tools
-./kubos-package.sh -b ${BRANCH} -t pumpkin-mbm2 -v base
+./kubos-package.sh -b ${BRANCH} -t pumpkin-mbm2 -v base -i ${BOARD_DIR}/kpack.its
 
 mv kpack-base.itb ${TARGET_DIR}/upgrade
 
