@@ -36,13 +36,20 @@ fn get_apps() -> Result<(), Error> {
     info!("Querying for active applications");
 
     let request = r#"{
-        apps {
+        registeredApps {
             active,
             app {
                 name,
                 version,
                 author
             }
+        },
+        appStatus {
+            name,
+            version,
+            runLevel,
+            startTime,
+            running
         }
     }"#;
 
