@@ -1,6 +1,17 @@
 Kubos Linux Changelog
 =====================
 
+v1.18 - Sept 13 2019
+--------------------
+
+- `Improving OS recovery logic <https://docs.kubos.com/1.18.0/ecosystem/linux-docs/kubos-linux-recovery.html>`__
+- Adding device tree file to base upgrade image for BBB and MBM2 targets
+
+Bug Fixes
+~~~~~~~~~
+
+- Increasing iOBC rootfs size to allow room for Monit and Dropbear temporary files
+
 v1.17 - Aug 15 2019
 -------------------
 
