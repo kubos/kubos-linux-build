@@ -46,7 +46,7 @@ config BR2_KUBOS_CORE_FILE_TRANSFER_IP
         
 config BR2_KUBOS_CORE_FILE_TRANSFER_PORT
     int "File Transfer Service Port"
-    default 8008
+    default 8070
     depends on BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
     help
         The port which the file transfer service should use to receive GraphQL requests

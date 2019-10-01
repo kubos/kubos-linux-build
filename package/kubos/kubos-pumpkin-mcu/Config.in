@@ -28,7 +28,7 @@ config BR2_KUBOS_PUMPKIN_MCU_IP
         
 config BR2_KUBOS_PUMPKIN_MCU_PORT
     int "Service Port"
-    default 8004
+    default 8150
     depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
     help
         The port which the service should use to receive GraphQL requests

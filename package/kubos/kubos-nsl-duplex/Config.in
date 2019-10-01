@@ -46,7 +46,7 @@ config BR2_KUBOS_NSL_DUPLEX_RESTART_CYCLES
         
 config BR2_KUBOS_NSL_DUPLEX_PORT
     int "Service GraphQL Port"
-    default 8089
+    default 8140
     depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
     help
         The port which the service should use to receive GraphQL requests
@@ -60,7 +60,7 @@ config BR2_KUBOS_NSL_DUPLEX_PORT
         
 config BR2_KUBOS_NSL_DUPLEX_DOWNLINK_PORTS
     string "Comms Downlink Ports"
-    default "[15001]"
+    default "[8080]"
     depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
     help
         The port/s which will receive intra-system messages to be downlinked.

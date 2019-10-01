@@ -46,7 +46,7 @@ config BR2_KUBOS_NOVATEL_OEM6_IP
         
 config BR2_KUBOS_NOVATEL_OEM6_PORT
     int "Service Port"
-    default 8003
+    default 8130
     depends on BR2_PACKAGE_KUBOS_NOVATEL_OEM6
     help
         The port which the service should use to receive GraphQL requests

@@ -48,7 +48,7 @@ config BR2_KUBOS_MONITOR_IP
         
 config BR2_KUBOS_MONITOR_PORT
     int "Service Port"
-    default 8009
+    default 8030
     depends on BR2_PACKAGE_KUBOS_MONITOR
     help
         The port which the service should use to receive GraphQL requests  
