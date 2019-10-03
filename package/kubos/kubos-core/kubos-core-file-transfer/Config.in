@@ -75,7 +75,7 @@ config BR2_KUBOS_CORE_FILE_TRANSFER_STORAGE
         
 config BR2_KUBOS_CORE_FILE_TRANSFER_CHUNK_SIZE
     int "File Transfer Chunk Size"
-    default 4096
+    default 1024
     depends on BR2_PACKAGE_KUBOS_CORE_FILE_TRANSFER
     help
         Each file is broken up into equally sized chunks prior to transfer.
