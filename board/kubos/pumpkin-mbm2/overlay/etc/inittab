@@ -24,6 +24,9 @@
 ::sysinit:/sbin/fsck -p /dev/mmcblk1p2
 ::sysinit:/sbin/fsck -p /dev/mmcblk1p3
 ::sysinit:/sbin/fsck -p /dev/mmcblk1p4
+# Check & clean partitions in no-SD-card case
+::sysinit:/sbin/fsck -p /dev/mmcblk0p3
+::sysinit:/sbin/fsck -p /dev/mmcblk0p4
 # Mount up partitions with data
 ::sysinit:/bin/mount -o remount,rw /
 ::sysinit:/bin/mount -a
