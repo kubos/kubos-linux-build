@@ -36,7 +36,28 @@ config BR2_KUBOS_CORE_APP_SERVICE_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+
+config BR2_KUBOS_CORE_APP_SERVICE_IP
+    string "App Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+    help
+        The IP address which the app service should use to receive GraphQL requests
         
+config BR2_KUBOS_CORE_APP_SERVICE_PORT
+    int "App Service Port"
+    default 8000
+    depends on BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+    help
+        The port which the app service should use to receive GraphQL requests
+
+config BR2_KUBOS_CORE_APP_SERVICE_REGISTRY
+    string "App Service Registry Directory"
+    default "/home/system/kubos/apps"
+    depends on BR2_PACKAGE_KUBOS_CORE_APP_SERVICE
+    help
+        The directory which the app service should use to store all registry entries
+
 endif
 
 config BR2_PACKAGE_HAS_KUBOS_CORE_APP_SERVICE

@@ -36,6 +36,27 @@ config BR2_KUBOS_CLYDE_3G_EPS_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+
+config BR2_KUBOS_CLYDE_3G_EPS_IP
+    string "Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_CLYDE_3G_EPS
+    help
+        The IP address which the service should use to receive GraphQL requests
+        
+config BR2_KUBOS_CLYDE_3G_EPS_PORT
+    int "Service Port"
+    default 8100
+    depends on BR2_PACKAGE_KUBOS_CLYDE_3G_EPS
+    help
+        The port which the service should use to receive GraphQL requests
+
+config BR2_KUBOS_CLYDE_3G_EPS_BUS
+    string "I2C Bus"
+    default "/dev/i2c-1"
+    depends on BR2_PACKAGE_KUBOS_CLYDE_3G_EPS
+    help
+        The I2C bus which the EPS device is connected to
         
 endif
 

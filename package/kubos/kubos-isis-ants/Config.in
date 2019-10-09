@@ -36,7 +36,58 @@ config BR2_KUBOS_ISIS_ANTS_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+ 
+ config BR2_KUBOS_ISIS_ANTS_IP
+    string "Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The IP address which the service should use to receive GraphQL requests
         
+config BR2_KUBOS_ISIS_ANTS_PORT
+    int "Service Port"
+    default 8110
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The port which the service should use to receive GraphQL requests   
+           
+config BR2_KUBOS_ISIS_ANTS_BUS
+    string "I2C Bus"
+    default "/dev/i2c-0"
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The I2C bus the antenna device is connected to
+           
+config BR2_KUBOS_ISIS_ANTS_PRIMARY
+    string "Primary Controller I2C Address"
+    default "0x31"
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The I2C address of the primary antenna controller
+           
+config BR2_KUBOS_ISIS_ANTS_SECONDARY
+    string "Secondary Controller I2C Address"
+    default "0x32"
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The I2C address of the secondary microcontroller.
+        If no secondary contoller is present, this value should be "0x00".
+           
+config BR2_KUBOS_ISIS_ANTS_COUNT
+    int "Number of Antennas"
+    default 4
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The number of antennas present in the system. Expected value: 2 or 4.
+           
+config BR2_KUBOS_ISIS_ANTS_WDT
+    int "Watchdog Timeout"
+    default 10
+    depends on BR2_PACKAGE_KUBOS_ISIS_ANTS
+    help
+        The interval, in seconds, at which the antenna system's watchdog should be automatically kicked.
+        To disable automatic kicking, this value should be 0.
+             
 endif
 
 config BR2_PACKAGE_HAS_KUBOS_ISIS_ANTS
