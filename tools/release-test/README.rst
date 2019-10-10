@@ -4,18 +4,30 @@ KubOS Release Candidate Test
 This project is used to test all of the default Kubos services to verify that a release candidate
 is good.
 
+Test Contents
+-------------
+
+- run_test.sh - Main test starting point. Builds, installs, and runs a test application. Also tests
+  the file and shell clients
+- src/main.rs - App main file
+- src/app_service.rs - Tests querying the applications service
+- src/monitor_sevice.rs - Tests querying the monitor service
+- src/telem_service.rs - Tests the telemetry service. Tests queries, routed queries, inserts, and
+  deletion
+
 Pre-Requisites
 --------------
 
 - Load the release candidate onto an OBC which has an ethernet connection
-- Update the OBC's service config file to add the file transfer service downlink information, then
-  start the file transfer service::
+- Update the OBC's service config file (``/etc/kubos-config.toml``) to set the correct downlink IP
+  information::
 
     [file-transfer-service]
     storage_dir = "/home/system/file-storage"
     downlink_ip = "{host IP}"
     downlink_port = 8080
     
+- Restart the file service: ``/etc/init.d/S90kubos-core-file-transfer restart``
 - Script must be run from this directory from within an instance of the Kubos SDK
 
 .. note::
@@ -47,24 +59,17 @@ The `telem-results` file should have a single line which looks like this::
     
 The `test-output` file should have quite a few lines which look like this::
 
-    2018-12-20T00:58:49.494360+00:00 Kubos rust-mission-app[602]:<info> Current memory available: 495680 kB
-    2018-12-20T00:58:49.504938+00:00 Kubos rust-mission-app[602]:<info> PS Response: Object({"ps": Array([Object({"cmd": String("init      "), "gid": Number(0), "grp": String(
-    "root"), "mem": Number(2863104), "pid": Number(1), "ppid": Number(0), "rss": Number(320), "state": String("S"), "threads": Number(1), "uid": Number(0), "usr": String("root
-    ")}), Object({"cmd": String("kthreadd"), "gid": Number(0), "grp": String("root"), "mem": Number(0), "pid": Number(2), "ppid": Number(0), "rss": Number(0), "state": String(
-    "S"), "threads": Number(1), "uid": Number(0), "usr": String("root")}), Object({"cmd": String("ksoftirqd/0"), "gid": Number(0), "grp": String("root"), "mem": Number(0), "pi
-    d": Number(3), "ppid": Number(2), "rss": Number(0), "state": String("R"), "threads": Number(1), "uid": Number(0), "usr": String("root")})])})
-    2018-12-20T00:58:49.506157+00:00 Kubos rust-mission-app[602]:<info> Monitor Service Test Results: Passed - 2, Failed - 0
-    2018-12-20T00:58:49.524911+00:00 Kubos rust-mission-app[602]:<info> Test value saved to database
-    2018-12-20T00:58:49.529381+00:00 Kubos rust-mission-app[602]:<info> Query Response: Object({"telemetry": Array([Object({"parameter": String("param"), "subsystem": String("
-    release"), "timestamp": Number(1545267529.5085287), "value": String("value")})])})
-    2018-12-20T00:58:49.534371+00:00 Kubos rust-mission-app[602]:<info> Routed query Response: Object({"routedTelemetry": String("/home/kubos/release-test/telem-results.tar.gz
-    ")})
-    2018-12-20T00:58:49.551377+00:00 Kubos rust-mission-app[602]:<info> Entries deleted: 1
-    2018-12-20T00:58:49.552118+00:00 Kubos rust-mission-app[602]:<info> Telemetry DB Service Test Results: Passed - 4, Failed - 0
-    2018-12-20T00:58:49.552554+00:00 Kubos rust-mission-app[602]:<info> Querying for active applications
-    2018-12-20T00:58:49.556063+00:00 Kubos rust-mission-app[602]:<info> App query result: Object({"apps": Array([Object({"active": Bool(true), "app": Object({"author": String(
-    "Catherine Garabedian"), "name": String("release-test"), "uuid": String("ff9ac352-4479-4605-9bbd-ea895e18f8b8"), "version": String("1.0")})})])})
-    2018-12-20T00:58:49.556801+00:00 Kubos rust-mission-app[602]:<info> Applications Service Test Results: Passed - 1, Failed - 0
+    1970-01-01T00:11:39.398508+00:00 Kubos release-test[1281]:<info> Current memory available: 496824 kB
+    1970-01-01T00:11:39.420550+00:00 Kubos release-test[1281]:<info> PS Response: Object({"ps": Array([Object({"cmd": String("init      "), "gid": Number(0), "grp": String("root"), "mem": Number(2912256), "pid": Number(1), "ppid": Number(0), "rss": Number(356), "state": String("S"), "threads": Number(1), "uid": Number(0), "usr": String("root")}), Object({"cmd": String("kthreadd"), "gid": Number(0), "grp": String("root"), "mem": Number(0), "pid": Number(2), "ppid": Number(0), "rss": Number(0), "state": String("S"), "threads": Number(1), "uid": Number(0), "usr": String("root")}), Object({"cmd": String("ksoftirqd/0"), "gid": Number(0), "grp": String("root"), "mem": Number(0), "pid": Number(3), "ppid": Number(2), "rss": Number(0), "state": String("S"), "threads": Number(1), "uid": Number(0), "usr": String("root")})])})
+    1970-01-01T00:11:39.420904+00:00 Kubos release-test[1281]:<info> Monitor Service Test Results: Passed - 2, Failed - 0
+    1970-01-01T00:11:39.452770+00:00 Kubos release-test[1281]:<info> Test value saved to database
+    1970-01-01T00:11:39.469786+00:00 Kubos release-test[1281]:<info> Query Response: Object({"telemetry": Array([Object({"parameter": String("param"), "subsystem": String("release"), "timestamp": Number(699.430852541), "value": String("value")})])})
+    1970-01-01T00:11:39.486181+00:00 Kubos release-test[1281]:<info> Routed query Response: Object({"routedTelemetry": String("/home/kubos/release-test/telem-results.tar.gz")})
+    1970-01-01T00:11:39.514802+00:00 Kubos release-test[1281]:<info> Entries deleted: 1
+    1970-01-01T00:11:39.515014+00:00 Kubos release-test[1281]:<info> Telemetry DB Service Test Results: Passed - 4, Failed - 0
+    1970-01-01T00:11:39.515102+00:00 Kubos release-test[1281]:<info> Querying for active applications
+    1970-01-01T00:11:39.530459+00:00 Kubos release-test[1281]:<info> App query result: Object({"appStatus": Array([Object({"name": String("release-test"), "running": Bool(true), "startTime": String("1970-01-01T00:11:39.356796416+00:00"), "version": String("1.0")})]), "registeredApps": Array([Object({"active": Bool(true), "app": Object({"author": String("Catherine Garabedian"), "name": String("release-test"), "version": String("1.0")})})])})
+    1970-01-01T00:11:39.530768+00:00 Kubos release-test[1281]:<info> Applications Service Test Results: Passed - 1, Failed - 0
 
 Verification
 ------------

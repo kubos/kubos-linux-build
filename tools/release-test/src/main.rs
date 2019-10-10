@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Kubos Corporation
+ * Copyright (C) 2019 Kubos Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-#[macro_use]
-extern crate failure;
-#[macro_use]
-extern crate kubos_app;
-#[macro_use]
-extern crate log;
-
 use app_service::*;
 use failure::Error;
-use kubos_app::{AppHandler, ServiceConfig};
+use kubos_app::*;
 use monitor_service::*;
 use std::time::Duration;
 use telem_service::*;
-
-struct MyApp;
 
 const TELEMFILE: &str = "/home/kubos/release-test/telem-results";
 
@@ -36,30 +27,17 @@ mod app_service;
 mod monitor_service;
 mod telem_service;
 
-impl AppHandler for MyApp {
-    fn on_boot(&self, _args: Vec<String>) -> Result<(), Error> {
-        info!("OnBoot logic called");
-        
-        Ok(())
-    }
-
-    fn on_command(&self, _args: Vec<String>) -> Result<(), Error> {
-        // Monitor Service Tests
-        monitor_test()?;
-        
-        // Telemetry Service Tests
-        telemetry_test()?;
-
-        // App Service Tests
-        apps_test()?;
-        
-        Ok(())
-    }
-}
-
 fn main() -> Result<(), Error> {
-    let app = MyApp;
-    app_main!(&app)?;
+    logging_setup!("release-test", log::LevelFilter::Info)?;
+    
+    // Monitor Service Tests
+    monitor_test()?;
+        
+    // Telemetry Service Tests
+    telemetry_test()?;
+
+    // App Service Tests
+    apps_test()?;
     
     Ok(())
 }
