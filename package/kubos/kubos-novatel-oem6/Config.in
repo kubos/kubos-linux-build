@@ -36,7 +36,28 @@ config BR2_KUBOS_NOVATEL_OEM6_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+
+config BR2_KUBOS_NOVATEL_OEM6_IP
+    string "Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+    help
+        The IP address which the service should use to receive GraphQL requests
         
+config BR2_KUBOS_NOVATEL_OEM6_PORT
+    int "Service Port"
+    default 8130
+    depends on BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+    help
+        The port which the service should use to receive GraphQL requests
+
+config BR2_KUBOS_NOVATEL_OEM6_BUS
+    string "UART Bus"
+    default "/dev/ttyS4"
+    depends on BR2_PACKAGE_KUBOS_NOVATEL_OEM6
+    help
+        The UART bus which the OEM6 device is connected to
+
 endif
 
 config BR2_PACKAGE_HAS_KUBOS_NOVATEL_OEM6

@@ -36,6 +36,20 @@ config BR2_KUBOS_MAI400_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
+ 
+config BR2_KUBOS_MAI400_IP
+    string "Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_MAI400
+    help
+        The IP address which the service should use to receive GraphQL requests
+        
+config BR2_KUBOS_MAI400_PORT
+    int "Service Port"
+    default 8120
+    depends on BR2_PACKAGE_KUBOS_MAI400
+    help
+        The port which the service should use to receive GraphQL requests
         
 endif
 

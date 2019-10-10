@@ -37,6 +37,63 @@ config BR2_KUBOS_NSL_DUPLEX_RESTART_CYCLES
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
         
+ config BR2_KUBOS_NSL_DUPLEX_IP
+    string "Service GraphQL IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The IP address which the service should use to receive GraphQL requests
+        
+config BR2_KUBOS_NSL_DUPLEX_PORT
+    int "Service GraphQL Port"
+    default 8140
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The port which the service should use to receive GraphQL requests
+
+ config BR2_KUBOS_NSL_DUPLEX_COMMS_IP
+    string "Comms IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The IP address which will receive intra-system messages to be downlinked
+        
+config BR2_KUBOS_NSL_DUPLEX_DOWNLINK_PORTS
+    string "Comms Downlink Ports"
+    default "[8080]"
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The port/s which will receive intra-system messages to be downlinked.
+        Each port should correspond to a unique way for information to be downlinked.
+        
+config BR2_KUBOS_NSL_DUPLEX_HANDLERS
+    int "Maximum Concurrent Message Handlers"
+    default 50
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The maximum number of received message handlers which may be operating at one time
+        
+config BR2_KUBOS_NSL_DUPLEX_TIMEOUT
+    int "Message Handler Timeout"
+    default 1500
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The length of time, in milliseconds, a message handler should wait for a reply
+
+config BR2_KUBOS_NSL_DUPLEX_BUS
+    string "UART Bus"
+    default "/dev/ttyS1"
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The UART bus which the NSL Duplex device is connected to
+
+config BR2_KUBOS_NSL_DUPLEX_PING
+    int "Idle Ping Frequency"
+    default 10
+    depends on BR2_PACKAGE_KUBOS_NSL_DUPLEX
+    help
+        The interval, in seconds, at which ping packets should be sent when the downlink queue is empty
+
 endif
 
 config BR2_PACKAGE_HAS_KUBOS_NSL_DUPLEX

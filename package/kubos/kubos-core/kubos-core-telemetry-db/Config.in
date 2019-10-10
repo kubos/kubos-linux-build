@@ -37,7 +37,35 @@ config BR2_KUBOS_CORE_TELEMETRY_DB_RESTART_CYCLES
         
         The resulting maximum timeframe in which the restarts must occur can be calculated by
         multiplying this number by the length of a single Monit sleep cycle (60 seconds)
-     
+
+config BR2_KUBOS_CORE_TELEMETRY_DB_IP
+    string "Telemetry Database Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    help
+        The IP address which the telemetry database service should use to receive GraphQL requests
+        
+config BR2_KUBOS_CORE_TELEMETRY_DB_PORT
+    int "Telemetry Database Service Port"
+    default 8020
+    depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    help
+        The port which the telemetry database service should use to receive GraphQL requests
+
+config BR2_KUBOS_CORE_TELEMETRY_DB_DATABASE
+    string "Telemetry Database Location"
+    default "/home/system/kubos/telemetry.db"
+    depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    help
+        The location of the telemetry database
+        
+config BR2_KUBOS_CORE_TELEMETRY_DB_DIRECT_PORT
+    int "Telemetry Database Service Port"
+    default 8021
+    depends on BR2_PACKAGE_KUBOS_CORE_TELEMETRY_DB
+    help
+        The UDP port which should be used for receiving asynchronous/bulk telemetry insert requests
+        
 endif
 
 config BR2_PACKAGE_HAS_KUBOS_CORE_TELEMETRY_DB

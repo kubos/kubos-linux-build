@@ -12,6 +12,11 @@ KUBOS_LICENSE = Apache-2.0
 KUBOS_LICENSE_FILES = LICENSE
 KUBOS_SITE = git://github.com/kubos/kubos
 KUBOS_PROVIDES = kubos-mai400
+KUBOS_INSTALL_STAGING = YES
+KUBOS_TARGET_FINALIZE_HOOKS += KUBOS_CREATE_CONFIG
+
+KUBOS_CONFIG_FRAGMENT_DIR = $(STAGING_DIR)/etc/kubos
+KUBOS_CONFIG_FILE = $(TARGET_DIR)/etc/kubos-config.toml
 
 VERSION = $(call qstrip,$(BR2_KUBOS_VERSION))
 # If the version specified is a branch name, we need to go fetch the SHA1 for the branch's HEAD
@@ -37,20 +42,35 @@ endif
 
 CARGO_OUTPUT_DIR = target/$(CARGO_TARGET)/release
 
+define KUBOS_INSTALL_STAGING_CMDS
+	mkdir -p $(KUBOS_CONFIG_FRAGMENT_DIR)
+endef
+
 define KUBOS_INSTALL_TARGET_CMDS
 	mkdir -p $(TARGET_DIR)/etc/monit.d
 endef
+
+define KUBOS_CREATE_CONFIG
+	# Collect all config fragment files into the final master config.toml file
+	cat $(KUBOS_CONFIG_FRAGMENT_DIR)/* > $(KUBOS_CONFIG_FILE)
+endef
+
 
 kubos-deepclean:
 	rm -fR $(BUILD_DIR)/kubos-*
 	rm -f $(DL_DIR)/kubos-*
 	rm -f $(TARGET_DIR)/etc/init.d/*kubos*
 	rm -f $(TARGET_DIR)/etc/monit.d/kubos*
+	rm -fR $(KUBOS_CONFIG_FRAGMENT_DIR)
+	rm -fR $(BUILD_DIR)/../staging/etc/kubos
+	rm -f $(KUBOS_CONFIG_FILE)
 
 kubos-fullclean: kubos-clean-for-reconfigure kubos-dirclean
 	rm -f $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/.stamp_downloaded
 	rm -f $(DL_DIR)/kubos-$(KUBOS_VERSION).tar.gz
-
+	rm -fR $(KUBOS_CONFIG_FRAGMENT_DIR)
+	rm -fR $(BUILD_DIR)/../staging/etc/kubos
+	rm -f $(KUBOS_CONFIG_FILE)
 
 kubos-clean: kubos-clean-for-rebuild
 	rm -fR $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/target

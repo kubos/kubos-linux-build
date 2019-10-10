@@ -19,4 +19,148 @@ config BR2_KUBOS_PUMPKIN_MCU_INIT_LVL
         The initialization priority level of the Pumpkin MCU Kubos service.
         The lower the number, the earlier the service is initialized.
 
+config BR2_KUBOS_PUMPKIN_MCU_IP
+    string "Service IP Address"
+    default "0.0.0.0"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        The IP address which the service should use to receive GraphQL requests
+        
+config BR2_KUBOS_PUMPKIN_MCU_PORT
+    int "Service Port"
+    default 8150
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        The port which the service should use to receive GraphQL requests
+
+config BR2_KUBOS_PUMPKIN_MCU_AIM2
+    bool "Enable AIM2"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable ADACS Interface Module 2 support
+
+config BR2_KUBOS_PUMPKIN_MCU_AIM2_ADDR
+    int "AIM2 I2C Address" if BR2_KUBOS_PUMPKIN_MCU_AIM2
+    default 86
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the AIM2's I2C address
+        
+config BR2_KUBOS_PUMPKIN_MCU_BIM
+    bool "Enable BIM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable Bus Interface Module support
+
+config BR2_KUBOS_PUMPKIN_MCU_BIM_ADDR
+    int "BIM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_BIM
+    default 82
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the BIM's I2C address
+
+config BR2_KUBOS_PUMPKIN_MCU_BM2
+    bool "Enable BM2"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable Battery Module 2 support
+
+config BR2_KUBOS_PUMPKIN_MCU_BM2_ADDR
+    int "BM2 I2C Address" if BR2_KUBOS_PUMPKIN_MCU_BM2
+    default 92
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the BM2's I2C address
+        
+config BR2_KUBOS_PUMPKIN_MCU_BSM
+    bool "Enable BSM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable Battery Switch Module support
+
+config BR2_KUBOS_PUMPKIN_MCU_BSM_ADDR
+    int "BSM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_BSM
+    default 88
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the BSM's I2C address
+
+config BR2_KUBOS_PUMPKIN_MCU_DASA
+    bool "Enable DASA"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable DASA support
+
+config BR2_KUBOS_PUMPKIN_MCU_DASA_ADDR
+    int "DASA I2C Address" if BR2_KUBOS_PUMPKIN_MCU_DASA
+    default 93
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the DASA's I2C address
+
+config BR2_KUBOS_PUMPKIN_MCU_EPSM
+    bool "Enable EPSM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable EPS Module 1 support
+
+config BR2_KUBOS_PUMPKIN_MCU_EPSM_ADDR
+    int "EPSM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_EPSM
+    default 84
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the EPSM's I2C address
+        
+config BR2_KUBOS_PUMPKIN_MCU_GPSRM
+    bool "Enable GPSRM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable GPS Receiver Module support
+
+config BR2_KUBOS_PUMPKIN_MCU_GPSRM_ADDR
+    int "GPSRM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_GPSRM
+    default 81
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the GPSRM's I2C address
+
+config BR2_KUBOS_PUMPKIN_MCU_PIM
+    bool "Enable PIM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable Payload Interface Module support
+
+config BR2_KUBOS_PUMPKIN_MCU_PIM_ADDR
+    int "PIM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_PIM
+    default 83
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the PIM's I2C address
+
+config BR2_KUBOS_PUMPKIN_MCU_RHM
+    bool "Enable RHM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable RHM support
+
+config BR2_KUBOS_PUMPKIN_MCU_RHM_ADDR
+    int "RHM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_RHM
+    default 85
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the RHM's I2C address
+        
+config BR2_KUBOS_PUMPKIN_MCU_SIM
+    bool "Enable SIM"
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Enable Solar Interface Module support
+
+config BR2_KUBOS_PUMPKIN_MCU_SIM_ADDR
+    int "SIM I2C Address" if BR2_KUBOS_PUMPKIN_MCU_SIM
+    default 80
+    depends on BR2_PACKAGE_KUBOS_PUMPKIN_MCU
+    help
+        Decimal value of the SIM's I2C address
+        
 endif
