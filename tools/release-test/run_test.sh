@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# Copyright (C) 2017 Kubos Corporation
+# Copyright (C) 2019 Kubos Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
 fi
 
 # Kick off the tests
-RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(name: \\\"release-test\\\", runLevel: \\\"OnCommand\\\") { success, errors }}\"}")
+RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { startApp(name: \\\"release-test\\\") { success, errors }}\"}")
 if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to start app. Response: ${RESPONSE}\033[0m" >&2
 fi
