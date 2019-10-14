@@ -18,10 +18,10 @@ endef
 
 # Generate the config settings for the service and add them to a fragment file
 define FILE_TRANSFER_INSTALL_STAGING_CMDS
-	echo '[file-service.addr]' > $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
+	echo '[file-transfer-service.addr]' > $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
 	echo 'ip = ${BR2_KUBOS_CORE_FILE_TRANSFER_IP}' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
 	echo -e 'port = ${BR2_KUBOS_CORE_FILE_TRANSFER_PORT}\n' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
-	echo '[file-service]' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
+	echo '[file-transfer-service]' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
 	echo 'storage_dir = ${BR2_KUBOS_CORE_FILE_TRANSFER_STORAGE}' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
 	echo 'timeout = ${BR2_KUBOS_CORE_FILE_TRANSFER_TIMEOUT}' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
 	echo 'chunk_size = ${BR2_KUBOS_CORE_FILE_TRANSFER_CHUNK_SIZE}' >> $(KUBOS_CONFIG_FRAGMENT_DIR)/file-service
