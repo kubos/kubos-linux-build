@@ -1,6 +1,14 @@
 Kubos Linux Changelog
 =====================
 
+v1.19 - Oct 30 2019
+-------------------
+
+- `Added Scheduler Service package <https://docs.kubos.com/1.19.0/ecosystem/services/scheduler.html>`__
+- `Migrated to new default service ports <https://docs.kubos.com/master/1.19.0/ecosystem/services/service-dev.html#service-configuration>`__
+- Added partition verification for BBB/MBM2 when no SD card is present
+- Updated release testing script
+
 v1.18 - Sept 13 2019
 --------------------
 
