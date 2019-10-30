@@ -28,7 +28,7 @@ TELEM_PATH=${TARGET_DIR}/${TELEM_FILE}.tar.gz
 cargo update
 
 # Setup a shell session for us to use
-RESPONSE=$(kubos-shell-client -i ${1} -p 8010 start << EOT
+RESPONSE=$(kubos-shell-client -i ${1} -p 8050 start << EOT
 EOT
 )
 
@@ -37,7 +37,7 @@ CHANNEL_LINE=$(echo "${RESPONSE}" | grep "Starting shell session")
 CHANNEL_ID=$(echo ${CHANNEL_LINE:26})
 
 # Setup the test directory on the target OBC
-RESPONSE=$(kubos-shell-client -i ${1} -p 8010 join -c ${CHANNEL_ID} << EOT
+RESPONSE=$(kubos-shell-client -i ${1} -p 8050 join -c ${CHANNEL_ID} << EOT
 cd /home/kubos
 mkdir -p ${TARGET_DIR}
 EOT
@@ -48,8 +48,8 @@ PKG_CONFIG_ALLOW_CROSS=1 CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo b
 arm-linux-strip ${BINARY}
 
 # Transfer our test binary to the OBC
-kubos-file-client -r ${1} -p 8008 -P 8080 upload ${BINARY} ${TARGET_DIR}/release-test
-kubos-file-client -r ${1} -p 8008 -P 8080 upload manifest.toml ${TARGET_DIR}/manifest.toml
+kubos-file-client -r ${1} -p 8040 -P 8080 upload ${BINARY} ${TARGET_DIR}/release-test
+kubos-file-client -r ${1} -p 8040 -P 8080 upload manifest.toml ${TARGET_DIR}/manifest.toml
 
 # Register the app with the applications service
 RESPONSE=$(curl ${1}:8000 -H "Content-Type: application/json" --data "{\"query\":\"mutation { register(path: \\\"${TARGET_DIR}\\\"){ success, errors } }\"}")
@@ -67,8 +67,8 @@ fi
 sleep 1
 
 # Get our results
-kubos-file-client -r ${1} -p 8008 -P 8080 download ${LOG_FILE} test-output
-kubos-file-client -r ${1} -p 8008 -P 8080 download ${TELEM_PATH}
+kubos-file-client -r ${1} -p 8040 -P 8080 download ${LOG_FILE} test-output
+kubos-file-client -r ${1} -p 8040 -P 8080 download ${TELEM_PATH}
 tar -xzf ${TELEM_FILE}.tar.gz ${TELEM_FILE}
 
 # Test Cleanup
@@ -77,12 +77,12 @@ if ! [[ "${RESPONSE}" =~ "\"success\":true" ]]; then
     echo -e "\033[0;31mFailed to uninstall app. Response: ${RESPONSE}\033[0m" >&2
 fi
 
-IGNORE=$(kubos-shell-client -i ${1} -p 8010 join -c ${CHANNEL_ID} << EOT
+IGNORE=$(kubos-shell-client -i ${1} -p 8050 join -c ${CHANNEL_ID} << EOT
 rm release-test -R
 EOT
 )
 
-IGNORE=$(kubos-shell-client -i ${1} -p 8010 kill -c ${CHANNEL_ID})
+IGNORE=$(kubos-shell-client -i ${1} -p 8050 kill -c ${CHANNEL_ID})
 
 # The grep command will fail if there are no results. We need to not bail when we hit the error so
 # we can print a message
