@@ -87,7 +87,7 @@ The full build process will take a while.  Running on a Linux VM, it took about 
 twenty minutes.  Once this build process has completed once, you can run other BuildRoot commands to rebuild only certain sections
 and it will go much more quickly (<5 min).
 
-> Note: if you're using vagrant, as with the Kubos SDK, do not use a shared folder for the kubos-linux-build or buildroot directories, as the build process uses hardlinks that error with vagrant's shared folders.  
+> Note: If you're using Vagrant, as with the Kubos SDK, do not use a shared folder for the kubos-linux-build or buildroot directories, as the build process uses hardlinks that error with vagrant's shared folders.  
 
 BuildRoot documentation can be found [**here**](https://buildroot.org/docs.html)
 
