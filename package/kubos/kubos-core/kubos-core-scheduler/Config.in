@@ -1,6 +1,6 @@
 menuconfig BR2_PACKAGE_KUBOS_CORE_SCHEDULER
     bool "Scheduler Service"
-    default n
+    default y
     select BR2_PACKAGE_HAS_KUBOS_CORE_SCHEDULER
     help
         Include Kubos application service.
