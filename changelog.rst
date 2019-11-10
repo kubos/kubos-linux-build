@@ -5,6 +5,7 @@ v1.19 - Oct 30 2019
 -------------------
 
 - `Added Scheduler Service package <https://docs.kubos.com/1.19.0/ecosystem/services/scheduler.html>`__
+    - **note**: The scheduler service is currently not included in Kubos Linux builds for the iOBC.
 - `Migrated to new default service ports <https://docs.kubos.com/master/1.19.0/ecosystem/services/service-dev.html#service-configuration>`__
 - Added partition verification for BBB/MBM2 when no SD card is present
 - Updated release testing script
