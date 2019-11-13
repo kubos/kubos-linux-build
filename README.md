@@ -81,7 +81,7 @@ kubos-linux-build/configs)
   
 Build everything
 
-    $ make
+    $ sudo make
   
 The full build process will take a while.  Running on a Linux VM, it took about an hour.  Running in native Linux, it took about
 twenty minutes.  Once this build process has completed once, you can run other BuildRoot commands to rebuild only certain sections
