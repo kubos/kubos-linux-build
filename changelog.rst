@@ -1,6 +1,11 @@
 Kubos Linux Changelog
 =====================
 
+v1.20 - Nov 22 2019
+-------------------
+
+- Changing all `BR2_KUBOS_VERSION` to lock on the current release instead of building from master
+
 v1.19 - Oct 30 2019
 -------------------
 
