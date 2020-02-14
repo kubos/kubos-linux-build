@@ -15,7 +15,7 @@ KUBOS_NSL_DUPLEX_POST_INSTALL_TARGET_HOOKS += NSL_DUPLEX_INSTALL_INIT_SYSV
 define NSL_DUPLEX_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/nsl-duplex-d2-comms-service && \
 	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
-	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) cargo build --package nsl-duplex-d2-comms-service --target $(CARGO_TARGET) --release
+	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package nsl-duplex-d2-comms-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file
