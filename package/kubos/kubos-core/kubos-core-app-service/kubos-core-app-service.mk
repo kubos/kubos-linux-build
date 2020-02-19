@@ -13,7 +13,7 @@ KUBOS_CORE_APP_SERVICE_POST_INSTALL_TARGET_HOOKS += APP_SERVICE_INSTALL_INIT_SYS
 define APP_SERVICE_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/app-service && \
 	PATH=$(PATH):~/.cargo/bin && \
-	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) cargo build --package kubos-app-service --target $(CARGO_TARGET) --release
+	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package kubos-app-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file

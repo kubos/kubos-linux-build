@@ -13,7 +13,7 @@ KUBOS_MONITOR_POST_INSTALL_TARGET_HOOKS += MONITOR_INSTALL_INIT_SYSV
 define MONITOR_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/monitor-service && \
 	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
-	CC=$(TARGET_CC) cargo build --package monitor-service --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package monitor-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file

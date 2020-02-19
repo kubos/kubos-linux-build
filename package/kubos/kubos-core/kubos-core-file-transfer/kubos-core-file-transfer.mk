@@ -13,7 +13,7 @@ KUBOS_CORE_FILE_TRANSFER_POST_INSTALL_TARGET_HOOKS += FILE_TRANSFER_INSTALL_INIT
 define FILE_TRANSFER_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/file-service && \
 	PATH=$(PATH):~/.cargo/bin && \
-	CC=$(TARGET_CC) cargo build --package file-service --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package file-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file

@@ -13,7 +13,7 @@ KUBOS_CORE_SCHEDULER_POST_INSTALL_TARGET_HOOKS += SCHEDULER_INSTALL_INIT_SYSV
 define SCHEDULER_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/scheduler-service && \
 	PATH=$(PATH):~/.cargo/bin && \
-	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) cargo build --package scheduler-service --target $(CARGO_TARGET) --release
+	PKG_CONFIG_ALLOW_CROSS=1 CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package scheduler-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file

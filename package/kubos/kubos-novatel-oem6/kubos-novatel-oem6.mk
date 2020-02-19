@@ -13,7 +13,7 @@ KUBOS_NOVATEL_OEM6_POST_INSTALL_TARGET_HOOKS += OEM6_INSTALL_INIT_SYSV
 define OEM6_BUILD_CMDS
 	cd $(BUILD_DIR)/kubos-$(KUBOS_VERSION)/services/novatel-oem6-service && \
 	PATH=$(PATH):~/.cargo/bin:/usr/bin/iobc_toolchain/usr/bin && \
-	CC=$(TARGET_CC) cargo build --package novatel-oem6-service --target $(CARGO_TARGET) --release
+	CC=$(TARGET_CC) RUSTFLAGS="-Clinker=$(TARGET_CC)" cargo build --package novatel-oem6-service --target $(CARGO_TARGET) --release
 endef
 
 # Generate the config settings for the service and add them to a fragment file
