@@ -36,6 +36,9 @@ else ifeq ($(KUBOS_BR_TARGET),pumpkin-mbm2)
 else ifeq ($(KUBOS_BR_TARGET),beaglebone-black)
 	KUBOS_TARGET = kubos-linux-beaglebone-gcc
 	CARGO_TARGET = arm-unknown-linux-gnueabihf
+else ifeq ($(KUBOS_BR_TARGET),ruag-csbc)
+	KUBOS_TARGET = kubos-linux-csbc-gcc
+	CARGO_TARGET = powerpc-unknown-linux-gnuspe
 else
 	KUBOS_TARGET = unknown
 endif
