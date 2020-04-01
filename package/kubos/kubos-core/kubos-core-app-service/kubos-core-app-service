@@ -7,7 +7,7 @@ PID=/var/run/${NAME}.pid
 case "$1" in
     start)
     echo "Starting ${NAME}: "
-    start-stop-daemon -q -m -b -p ${PID} --exec ${PROG} -S -- -b
+    start-stop-daemon -q -m -b -p ${PID} --exec ${PROG} -S
     rc=$?
     if [ $rc -eq 0 ]
     then
