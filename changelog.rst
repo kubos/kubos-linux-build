@@ -1,7 +1,7 @@
 Kubos Linux Changelog
 =====================
 
-v1.21 - Apr 3 2019
+v1.21 - Apr 3 2020
 ------------------
 
 - Added USB support for the Beaglebone Black
