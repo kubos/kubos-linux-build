@@ -1,6 +1,22 @@
 Kubos Linux Changelog
 =====================
 
+v1.21 - Apr 3 2020
+------------------
+
+- Added USB support for the Beaglebone Black
+
+Bug Fixes
+~~~~~~~~~
+
+- Removed now-defunct `-b` flag from app service init script
+
+Community Contributions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added `-Clinker` flag to Rust-based Kubos service Makefiles to fix cross-compilation for certain host environments
+- Fixed Readme doc link
+
 v1.20 - Nov 22 2019
 -------------------
 
