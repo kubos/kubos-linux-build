@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Copyright (C) 2018 Kubos Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copy a KubOS image from the SD card to the eMMC
+
+# Make sure the user's sure they want to wipe out their eMMC
+echo "** Warning ** This script will wipe out the current contents of the eMMC"
+echo "Are you sure you want to proceed? (y/N)"
+read ANSWER
+
+# Check if there *isn't* a 'y' in the answer
+if [ "$ANSWER" == "${ANSWER#[Yy]}" ] ;then
+    echo "Cancelling installation. Script exiting"
+    exit
+fi
+
+# Stop monit
+echo "OS Install: Pausing monitoring"
+monit unmonitor all
+
+# Stop all the services
+echo "OS Install: Stopping running services"
+for i in $(ls /var/run/*.pid); do
+    kill -15 $(cat $i)
+done
+killall -15 python
+
+# Give the system a moment to settle
+sleep 2
+
+# Unmount /home
+echo "OS Install: Prepping the file system"
+umount -l /home
+
+# Copy the SD card over to the eMMC
+echo "OS Install: Copying SD card contents over to eMMC. This process should take 10-15 minutes to complete"
+BLOCKS=$(cat /sys/class/block/mmcblk1/size)
+dd if=/dev/mmcblk0 count=${BLOCKS} status=noxfer | pv -s `expr ${BLOCKS} / 2`k | dd of=/dev/mmcblk1
