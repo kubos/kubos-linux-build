@@ -1,0 +1,7 @@
+--- old-python-numpy/python-numpy.mk	2020-05-18 20:25:21.245819710 -0700
++++ python-numpy/python-numpy.mk	2020-05-18 19:39:07.325819710 -0700
+@@ -33,3 +33,4 @@
+ PYTHON_NUMPY_INSTALL_STAGING = YES
+ 
+ $(eval $(python-package))
++# $(eval $(host-python-package))
