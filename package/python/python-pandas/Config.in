@@ -1,0 +1,8 @@
+config BR2_PACKAGE_PYTHON_PANDAS
+	bool "python-pandas"
+	select BR2_PACKAGE_HOST_PYTHON_NEWER_CYTHON
+	select BR2_PACKAGE_HOST_PYTHON_NUMPY
+	help
+	  Practical, real-world data analysis in Python
+
+	  https://pandas.pydata.org/

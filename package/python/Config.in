@@ -6,4 +6,7 @@ menu "Additional Python Packages"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-graphql-relay/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-promise/Config.in"
 	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-rx/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-pandas/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-host-numpy/Config.in"
+	source "$BR2_EXTERNAL_KUBOS_LINUX_PATH/package/python/python-newer-cython/Config.in"
 endmenu
