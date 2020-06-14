@@ -20,7 +20,7 @@
 /dts-v1/;
 
 / {
-	description = "Kubos Linux Upgrade Package for BBB";
+	description = "Kubos Linux Upgrade Package for Raspberry Pi 0";
 	#address-cells = <1>;
 
 	images {
