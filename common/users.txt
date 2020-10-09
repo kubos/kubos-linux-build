@@ -1,2 +1,4 @@
-kubos -1 users -1 =Kubos123 /home/kubos /bin/sh -
-system -1 users -1 !- /home/system - -
+#<username> <uid>   <group> <gid>   <password>  <home>          <shell> <groups> <comment>
+kubos       -1      root    -1      =Kubos123   /home/kubos     /bin/sh -
+guest       -1      guest   -1      =Guest123   /home/guest     /bin/sh -
+system      -1      users   -1      !-          /home/system    -       -

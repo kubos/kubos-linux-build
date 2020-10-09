@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2017 Kubos Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Kubos Linux Kernel Package
+ * Contains: zImage
+ */
+
+/dts-v1/;
+
+/ {
+	description = "Kubos Linux Kernel";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			data = /incbin/("./zImage");
+			type = "kernel";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0x82800000>;
+			entry = <0x82800000>;
+			hash@1 {
+				algo = "sha256";
+			};
+		};
+	};
+
+	configurations {
+		default = "config@1";
+		config@1 {
+			description = "Boot Linux kernel";
+			kernel = "kernel@1";
+		};
+	};
+};
