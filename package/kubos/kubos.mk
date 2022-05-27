@@ -10,7 +10,7 @@
 ###############################################
 KUBOS_LICENSE = Apache-2.0
 KUBOS_LICENSE_FILES = LICENSE
-KUBOS_SITE = git://github.com/kubos/kubos
+KUBOS_SITE = git://github.com/Cube-OS/cubeOS
 KUBOS_PROVIDES = kubos-mai400
 KUBOS_INSTALL_STAGING = YES
 KUBOS_TARGET_FINALIZE_HOOKS += KUBOS_CREATE_CONFIG
